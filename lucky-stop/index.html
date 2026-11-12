@@ -1,0 +1,3196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1e1b4b" />
+    <title>Lucky Stop · 2D Cartoon Arcade</title>
+    <!-- Google Fonts for 2D Cartoon Cel-Shaded Craft -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&family=Lilita+One&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --c-dark-outline: #0c1222;
+        --c-shadow-depth: #070a14;
+        
+        --c-bg-top: #2563eb;
+        --c-bg-mid: #1e1b4b;
+        --c-bg-bot: #0f172a;
+
+        --c-yellow: #fde047;
+        --c-yellow-shadow: #ca8a04;
+        --c-orange: #fb923c;
+        --c-orange-shadow: #c2410c;
+        --c-cyan: #38bdf8;
+        --c-cyan-shadow: #0284c7;
+        --c-emerald: #34d399;
+        --c-emerald-shadow: #059669;
+        --c-rose: #fb7185;
+        --c-rose-shadow: #e11d48;
+        --c-purple: #c084fc;
+        --c-purple-shadow: #7e22ce;
+
+        --font-cartoon: "Lilita One", "Fredoka", -apple-system, sans-serif;
+        --font-num: "Fredoka", "Outfit", -apple-system, sans-serif;
+        --font-ui: "Plus Jakarta Sans", -apple-system, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--c-bg-bot);
+        color: #ffffff;
+        font-family: var(--font-ui);
+        touch-action: none;
+      }
+
+      button {
+        font: inherit;
+        border: none;
+        outline: none;
+        background: none;
+      }
+
+      #game {
+        position: fixed;
+        inset: 0;
+        isolation: isolate;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% 12%, rgba(56, 189, 248, 0.4) 0%, transparent 45%),
+          radial-gradient(circle at 85% 35%, rgba(251, 146, 60, 0.25) 0%, transparent 40%),
+          radial-gradient(circle at 15% 75%, rgba(192, 132, 252, 0.25) 0%, transparent 45%),
+          linear-gradient(180deg, #1e3a8a 0%, #1e1b4b 45%, #0f172a 100%);
+      }
+
+      /* Playful Cartoon Pop Dot Pattern */
+      #game::after {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        background-image:
+          radial-gradient(rgba(255, 255, 255, 0.12) 2px, transparent 2px);
+        background-size: 24px 24px;
+        pointer-events: none;
+        opacity: 0.65;
+      }
+
+      /* Vibrant Cartoon Sunburst Center Glow */
+      #game::before {
+        position: absolute;
+        inset: -20%;
+        z-index: -2;
+        content: "";
+        background:
+          radial-gradient(ellipse at 50% 40%, rgba(96, 165, 250, 0.35) 0%, transparent 60%);
+        pointer-events: none;
+      }
+
+      /* Dynamic Screen Edge Glow */
+      #vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        pointer-events: none;
+        opacity: 0;
+        will-change: opacity, box-shadow;
+        transform: translateZ(0);
+        transition: opacity 280ms ease, box-shadow 280ms ease;
+      }
+
+      #vignette.fever {
+        opacity: 1;
+        box-shadow: inset 0 0 75px rgba(52, 211, 153, 0.7), inset 0 0 25px #fde047;
+        animation: fever-pulse 700ms ease-in-out infinite alternate;
+      }
+
+      #vignette.suspense {
+        opacity: 1;
+        box-shadow: inset 0 0 90px rgba(244, 63, 94, 0.8), inset 0 0 30px #fb923c;
+        animation: suspense-pulse 500ms ease-in-out infinite alternate;
+      }
+
+      @keyframes fever-pulse {
+        from { opacity: 0.6; }
+        to { opacity: 1; }
+      }
+
+      @keyframes suspense-pulse {
+        from { opacity: 0.5; }
+        to { opacity: 1; }
+      }
+
+      /* Cartoon Companion Mute Button */
+      .mute-top-btn {
+        position: fixed;
+        top: calc(max(10px, env(safe-area-inset-top) + 8px));
+        right: 52px;
+        z-index: 40;
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #f1f5f9, #cbd5e1);
+        color: var(--c-dark-outline);
+        cursor: pointer;
+        touch-action: manipulation;
+        box-shadow: 0 4px 0 var(--c-dark-outline), 0 6px 12px rgba(0, 0, 0, 0.3);
+        transition: transform 90ms ease, background 150ms ease;
+      }
+
+      .mute-top-btn:active {
+        transform: translateY(3px);
+        box-shadow: 0 1px 0 var(--c-dark-outline);
+      }
+
+      .mute-top-btn svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2.5;
+      }
+
+      /* Fullscreen FX Canvas */
+      #fxCanvas {
+        position: absolute;
+        inset: 0;
+        z-index: 25;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      /* Fullscreen Balanced Layout */
+      .layout {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: min(440px, 100%);
+        margin: auto;
+        padding: calc(max(54px, env(safe-area-inset-top) + 46px)) 16px calc(max(18px, env(safe-area-inset-bottom) + 12px));
+        gap: 14px;
+      }
+
+      /* 1. Cartoon Top Bar */
+      .top-bar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .cartoon-pill {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 88px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 3px solid var(--c-dark-outline);
+        box-shadow: 0 4px 0 var(--c-dark-outline), inset 0 2px 0 rgba(255, 255, 255, 0.5);
+      }
+
+      .streak-card {
+        margin-top: 22px;
+        background: linear-gradient(180deg, #fb923c, #ea580c);
+      }
+
+      .pill-label {
+        font-family: var(--font-cartoon);
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #fff;
+        text-shadow: 0 1.5px 0 var(--c-dark-outline);
+        line-height: 1.1;
+        margin-bottom: 3px;
+        white-space: nowrap;
+      }
+
+      .pill-val-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        line-height: 1;
+      }
+
+      .streak-icon {
+        font-size: 16px;
+        line-height: 1;
+        filter: drop-shadow(0 2px 0 var(--c-dark-outline));
+      }
+
+      .pill-val {
+        font-family: var(--font-cartoon);
+        font-size: 19px;
+        color: #fef08a;
+        text-shadow: 0 2px 0 var(--c-dark-outline);
+        line-height: 1;
+      }
+
+      .center-brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .game-logo-img {
+        height: clamp(26px, 4.5vh, 34px);
+        width: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 0 var(--c-dark-outline)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+      }
+
+      .fever-tracker {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 2px solid var(--c-dark-outline);
+        background: #0f172a;
+        box-shadow: 0 2px 0 var(--c-dark-outline);
+      }
+
+      .fever-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.25);
+        transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+      }
+
+      .fever-dot.active {
+        background: var(--c-yellow);
+        box-shadow: 0 0 8px var(--c-yellow);
+        transform: scale(1.3);
+      }
+
+      .shield-card {
+        margin-top: 22px;
+        background: linear-gradient(180deg, #38bdf8, #0284c7);
+      }
+
+      .shield-icon {
+        font-size: 15px;
+        line-height: 1;
+        filter: drop-shadow(0 2px 0 var(--c-dark-outline));
+      }
+
+      .shield-card .pill-val {
+        color: #e0f2fe;
+      }
+
+      /* 2. Three Chubby Cartoon Vault Windows */
+      .slots-bay {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 4px;
+        padding: 8px;
+        border-radius: 26px;
+        border: 3.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #312e81, #1e1b4b);
+        box-shadow: 0 6px 0 var(--c-dark-outline), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+      }
+
+      .slot-card {
+        position: relative;
+        height: clamp(74px, 10.8vh, 88px);
+        border-radius: 18px;
+        border: 3px dashed rgba(255, 255, 255, 0.3);
+        background: radial-gradient(circle at 50% 40%, #1e1b4b 0%, #0f172a 100%);
+        box-shadow: inset 0 6px 12px rgba(0, 0, 0, 0.6);
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        contain: layout style paint;
+        will-change: transform;
+        transform: translateZ(0);
+        transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms cubic-bezier(0.18, 0.9, 0.3, 1.4), background 200ms ease;
+      }
+
+      .slot-badge {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-family: var(--font-cartoon);
+        font-size: 26px;
+        color: rgba(255, 255, 255, 0.28);
+        letter-spacing: 0.02em;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+        pointer-events: none;
+      }
+
+      .slot-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transform: scale(0.55);
+        transition: opacity 140ms ease, transform 240ms cubic-bezier(0.18, 0.9, 0.3, 1.4);
+      }
+
+      .slot-card.filled {
+        border-style: solid;
+        border-color: #fde047;
+        background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--slot-color) 45%, #1e1b4b), #0f172a);
+        box-shadow:
+          0 0 0 2px var(--c-dark-outline),
+          0 0 20px color-mix(in srgb, var(--slot-color) 60%, transparent),
+          inset 0 2px 0 rgba(255, 255, 255, 0.5);
+      }
+
+      .slot-card.filled .slot-badge {
+        display: none;
+      }
+
+      .slot-card.filled .slot-canvas {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .slot-card.pop {
+        animation: cartoon-pop 320ms cubic-bezier(0.18, 0.9, 0.3, 1.4);
+      }
+
+      @keyframes cartoon-pop {
+        0% { transform: scale(0.7) rotate(-8deg); }
+        50% { transform: scale(1.18) rotate(4deg); }
+        100% { transform: scale(1) rotate(0deg); }
+      }
+
+      .cartoon-pill.bump {
+        animation: pill-bump 320ms cubic-bezier(0.18, 0.9, 0.3, 1.4);
+      }
+
+      @keyframes pill-bump {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.16); }
+        100% { transform: scale(1); }
+      }
+
+      /* 3. Hero Reel Stage (Cel-Shaded Arcade Screen) */
+      .reel-section {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-height: 0;
+        justify-content: center;
+      }
+
+      .reel-marquee {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: -16px;
+        margin-bottom: 16px;
+        color: #fde047;
+        font-family: var(--font-cartoon);
+        font-size: 13.5px;
+        letter-spacing: 0.14em;
+        text-shadow: 0 2px 0 var(--c-dark-outline);
+        text-transform: uppercase;
+      }
+
+      .reel-marquee::before,
+      .reel-marquee::after {
+        content: "";
+        flex: 1;
+        max-width: 60px;
+        height: 3px;
+        border-radius: 999px;
+        background: #fde047;
+        box-shadow: 0 2px 0 var(--c-dark-outline);
+      }
+
+      .reel-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      .reel-frame {
+        position: relative;
+        height: clamp(138px, 20vh, 172px);
+        border-radius: 28px;
+        border: 4px solid var(--c-dark-outline);
+        background: #0f172a;
+        box-shadow:
+          0 8px 0 var(--c-dark-outline),
+          0 16px 36px rgba(0, 0, 0, 0.6),
+          inset 0 16px 28px rgba(0, 0, 0, 0.8),
+          inset 0 -16px 28px rgba(0, 0, 0, 0.8),
+          inset 0 3px 0 rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+      }
+
+      .reel-frame::before,
+      .reel-frame::after {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        z-index: 3;
+        width: 16%;
+        content: "";
+        pointer-events: none;
+      }
+
+      .reel-frame::before {
+        left: 0;
+        background: linear-gradient(90deg, #0f172a 30%, transparent 100%);
+      }
+
+      .reel-frame::after {
+        right: 0;
+        background: linear-gradient(-90deg, #0f172a 30%, transparent 100%);
+      }
+
+      #reelCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Cel-Shaded Cartoon Stop Gate */
+      .stop-gate {
+        position: absolute;
+        top: -8px;
+        bottom: -8px;
+        left: 50%;
+        z-index: 10;
+        width: clamp(96px, 28%, 116px);
+        transform: translateX(-50%) translateZ(0);
+        will-change: transform;
+        border: 4px solid #fde047;
+        border-radius: 22px;
+        background: linear-gradient(90deg, rgba(253, 224, 71, 0.05), rgba(253, 224, 71, 0.22), rgba(253, 224, 71, 0.05));
+        box-shadow:
+          0 0 0 3px var(--c-dark-outline),
+          0 0 24px rgba(253, 224, 71, 0.6),
+          inset 0 0 18px rgba(253, 224, 71, 0.3);
+        pointer-events: none;
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+      }
+
+      .stop-gate::before,
+      .stop-gate::after {
+        position: absolute;
+        left: 50%;
+        width: 18px;
+        height: 12px;
+        content: "";
+        transform: translateX(-50%);
+        background: #fde047;
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        filter: drop-shadow(0 2px 0 var(--c-dark-outline));
+      }
+
+      .stop-gate::before { top: -14px; }
+      .stop-gate::after { bottom: -14px; transform: translateX(-50%) rotate(180deg); }
+
+      .stop-gate.flash {
+        animation: cartoon-gate-flash 320ms cubic-bezier(0.18, 0.9, 0.3, 1.4);
+      }
+
+      .stop-gate.miss {
+        border-color: var(--c-rose);
+        animation: cartoon-gate-miss 360ms ease-out;
+      }
+
+      @keyframes cartoon-gate-flash {
+        0% { transform: translateX(-50%) scale(1); }
+        50% { transform: translateX(-50%) scale(1.12); border-color: #fff; box-shadow: 0 0 0 3px var(--c-dark-outline), 0 0 45px #fde047, inset 0 0 30px #fff; }
+        100% { transform: translateX(-50%) scale(1); }
+      }
+
+      @keyframes cartoon-gate-miss {
+        25%, 75% { transform: translateX(calc(-50% - 8px)); }
+        50% { transform: translateX(calc(-50% + 8px)); box-shadow: 0 0 0 3px var(--c-dark-outline), 0 0 35px var(--c-rose); }
+      }
+
+      .speed-lines {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        opacity: 0;
+        will-change: transform;
+        transform: translateZ(0);
+        background: repeating-linear-gradient(90deg, transparent 0 36px, rgba(255, 255, 255, 0.14) 37px, transparent 40px 72px);
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .spinning .speed-lines {
+        opacity: 1;
+        animation: speed-lines 160ms linear infinite;
+      }
+
+      @keyframes speed-lines {
+        to { transform: translateX(-72px); }
+      }
+
+      /* 4. Chunky Cartoon Bet Stepper & Mission Billboard */
+      .middle-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .bet-stepper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 380px;
+        margin: 0 auto;
+        height: 52px;
+        padding: 4px 6px;
+        border-radius: 999px;
+        border: 3.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #3730a3, #1e1b4b);
+        box-shadow: 0 6px 0 var(--c-dark-outline), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .stepper-btn {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #fde047, #eab308);
+        color: var(--c-dark-outline);
+        font-family: var(--font-cartoon);
+        font-size: 22px;
+        font-weight: 900;
+        cursor: pointer;
+        touch-action: manipulation;
+        box-shadow: 0 3.5px 0 var(--c-yellow-shadow), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+        transition: transform 80ms ease, box-shadow 80ms ease;
+      }
+
+      .stepper-btn:active {
+        transform: translateY(3px);
+        box-shadow: 0 0.5px 0 var(--c-yellow-shadow);
+      }
+
+      .stepper-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+        transform: none;
+        box-shadow: none;
+        background: #94a3b8;
+        border-color: #64748b;
+      }
+
+      .bet-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.1;
+      }
+
+      .bet-label {
+        font-family: var(--font-cartoon);
+        font-size: 9px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #cbd5e1;
+        text-shadow: 0 1px 2px var(--c-dark-outline);
+      }
+
+      .bet-val-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .bet-gem {
+        font-size: 16px;
+        filter: drop-shadow(0 2px 0 var(--c-dark-outline));
+      }
+
+      .bet-num {
+        font-family: var(--font-cartoon);
+        font-size: 22px;
+        color: #fff;
+        text-shadow: 0 2px 0 var(--c-dark-outline);
+      }
+
+      /* Premium 2D Cartoon Mission Billboard Banner */
+      .mission-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 9px 14px;
+        border-radius: 20px;
+        border: 3.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #4f46e5 0%, #3730a3 50%, #312e81 100%);
+        box-shadow: 0 6px 0 var(--c-dark-outline), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .mission-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .mission-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        border: 2.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #fde047, #eab308);
+        box-shadow: 0 3px 0 var(--c-yellow-shadow), inset 0 1.5px 0 rgba(255, 255, 255, 0.7);
+        display: grid;
+        place-items: center;
+      }
+
+      .mission-icon {
+        font-size: 22px;
+        line-height: 1;
+        filter: drop-shadow(0 2px 0 var(--c-dark-outline));
+      }
+
+      .mission-text-group {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+      }
+
+      .mission-title {
+        font-family: var(--font-cartoon);
+        font-size: 14.5px;
+        color: #fff;
+        letter-spacing: 0.03em;
+        text-shadow: 0 2px 0 var(--c-dark-outline);
+      }
+
+      .mission-sub {
+        font-family: var(--font-ui);
+        font-size: 11px;
+        font-weight: 800;
+        color: #fde047;
+        text-shadow: 0 1px 1px var(--c-dark-outline);
+        margin-top: 1px;
+      }
+
+      .best-win-pill {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 11px;
+        border-radius: 14px;
+        border: 2.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #fde047 0%, #eab308 60%, #ca8a04 100%);
+        box-shadow: 0 3.5px 0 var(--c-yellow-shadow), inset 0 1.5px 0 rgba(255, 255, 255, 0.7);
+      }
+
+      .best-win-label {
+        font-family: var(--font-cartoon);
+        font-size: 8.5px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #78350f;
+        font-weight: 900;
+      }
+
+      .best-win-amount {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-family: var(--font-cartoon);
+        font-size: 16px;
+        color: #78350f;
+        font-weight: 900;
+      }
+
+      /* 5. Giant Juicy Radiant 3D Cartoon Slam Button (Elevated) */
+      .action-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding-bottom: clamp(16px, 3.5vh, 28px);
+        padding-top: 0;
+      }
+
+      #stopBtn {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        height: clamp(68px, 10.5vh, 84px);
+        border-radius: 999px;
+        border: 4px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #4ade80 0%, #22c55e 50%, #15803d 100%);
+        color: #ffffff;
+        font-family: var(--font-cartoon);
+        font-size: clamp(24px, 7vw, 32px);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-shadow: 0 3px 0 var(--c-dark-outline);
+        box-shadow:
+          0 8px 0 #166534,
+          0 12px 0 var(--c-dark-outline),
+          0 20px 36px rgba(0, 0, 0, 0.5),
+          inset 0 3px 0 rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+        transition: transform 70ms ease, box-shadow 70ms ease, filter 150ms ease;
+      }
+
+      #stopBtn:active {
+        transform: translateY(8px);
+        box-shadow:
+          0 0 0 #166534,
+          0 4px 0 var(--c-dark-outline),
+          0 8px 18px rgba(0, 0, 0, 0.4),
+          inset 0 2px 0 rgba(255, 255, 255, 0.7);
+      }
+
+      #stopBtn:disabled {
+        opacity: 0.4;
+        cursor: default;
+        transform: translateY(6px);
+        box-shadow: 0 2px 0 var(--c-dark-outline);
+        filter: grayscale(0.7);
+      }
+
+      /* Modal Overlays (Intro, Buy Gems) */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        background: rgba(12, 18, 34, 0.88);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        transition: opacity 220ms ease, visibility 220ms ease;
+      }
+
+      .overlay.hidden {
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .modal-card {
+        position: relative;
+        width: min(390px, 100%);
+        overflow: hidden;
+        border: 4px solid var(--c-dark-outline);
+        border-radius: 32px;
+        background: linear-gradient(180deg, #1e1b4b, #0f172a);
+        box-shadow: 0 10px 0 var(--c-dark-outline), 0 30px 80px rgba(0, 0, 0, 0.8), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+        text-align: center;
+        padding: 26px 20px 22px;
+        animation: cartoon-modal-enter 280ms cubic-bezier(0.18, 0.9, 0.3, 1.3);
+      }
+
+      @keyframes cartoon-modal-enter {
+        from { transform: scale(0.85) translateY(20px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+      }
+
+      .modal-kicker {
+        color: #fde047;
+        font-family: var(--font-cartoon);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-shadow: 0 1.5px 0 var(--c-dark-outline);
+      }
+
+      .modal-icon-wrap {
+        width: 68px;
+        height: 68px;
+        margin: 10px auto 14px;
+        border-radius: 22px;
+        border: 3.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #38bdf8, #0284c7);
+        box-shadow: 0 5px 0 var(--c-dark-outline), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+        display: grid;
+        place-items: center;
+      }
+
+      .modal-icon-wrap svg {
+        width: 38px;
+        height: 38px;
+        filter: drop-shadow(0 2px 0 var(--c-dark-outline));
+      }
+
+      .modal-title {
+        font-family: var(--font-cartoon);
+        font-size: 32px;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        color: #fff;
+        text-shadow: 0 3px 0 var(--c-dark-outline);
+      }
+
+      .modal-sub {
+        margin: 8px auto 16px;
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.45;
+        white-space: pre-line;
+      }
+
+      .payout-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .payout-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 4px 6px;
+        border-radius: 16px;
+        border: 2.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #1e293b, #0f172a);
+        box-shadow: 0 4px 0 var(--c-dark-outline);
+        gap: 2px;
+      }
+
+      .payout-item.danger-item {
+        background: linear-gradient(180deg, #31131f, #18060c);
+        border-color: #9f1239;
+      }
+
+      .payout-canvas {
+        width: 40px;
+        height: 40px;
+        filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
+      }
+
+      .payout-mult {
+        display: block;
+        font-family: var(--font-cartoon);
+        font-size: 13.5px;
+        color: #fde047;
+        text-shadow: 0 1px 0 var(--c-dark-outline);
+        letter-spacing: 0.01em;
+        line-height: 1.1;
+      }
+
+      .payout-name {
+        font-family: var(--font-cartoon);
+        font-size: 9.5px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1;
+      }
+
+      /* Modal Bet Stepper */
+      .modal-bet-selector {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+        width: 100%;
+      }
+
+      .modal-bet-label {
+        font-family: var(--font-cartoon);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #fde047;
+        text-shadow: 0 1px 0 var(--c-dark-outline);
+      }
+
+      .modal-bet-stepper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 250px;
+        height: 48px;
+        padding: 3px 6px;
+        border-radius: 999px;
+        border: 3px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #3730a3, #1e1b4b);
+        box-shadow: 0 4px 0 var(--c-dark-outline), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .modal-stepper-btn {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #fde047, #eab308);
+        color: var(--c-dark-outline);
+        font-family: var(--font-cartoon);
+        font-size: 19px;
+        cursor: pointer;
+        touch-action: manipulation;
+        box-shadow: 0 2.5px 0 var(--c-yellow-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        transition: transform 80ms ease, box-shadow 80ms ease;
+      }
+
+      .modal-stepper-btn:active {
+        transform: scale(0.92);
+      }
+
+      .modal-stepper-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+        transform: none;
+        box-shadow: none;
+        background: #94a3b8;
+      }
+
+      .modal-bet-info {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .modal-bet-gem {
+        font-size: 16px;
+        filter: drop-shadow(0 2px 0 var(--c-dark-outline));
+      }
+
+      .modal-bet-num {
+        font-family: var(--font-cartoon);
+        font-size: 20px;
+        color: #fff;
+        text-shadow: 0 2px 0 var(--c-dark-outline);
+      }
+
+      .modal-bet-unit {
+        font-family: var(--font-cartoon);
+        font-size: 10px;
+        color: #cbd5e1;
+        letter-spacing: 0.08em;
+      }
+
+      .primary-btn {
+        width: 100%;
+        min-height: 54px;
+        border-radius: 18px;
+        border: 3.5px solid var(--c-dark-outline);
+        background: linear-gradient(180deg, #34d399 0%, #10b981 60%, #059669 100%);
+        color: #fff;
+        font-family: var(--font-cartoon);
+        font-size: 18px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-shadow: 0 2.5px 0 var(--c-dark-outline);
+        box-shadow: 0 6px 0 var(--c-emerald-shadow), 0 10px 0 var(--c-dark-outline), 0 16px 24px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        transition: transform 90ms ease, box-shadow 90ms ease;
+      }
+
+      .primary-btn:active {
+        transform: translateY(6px);
+        box-shadow: 0 0 0 var(--c-emerald-shadow), 0 4px 0 var(--c-dark-outline), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .primary-btn:disabled {
+        opacity: 0.45;
+        transform: none;
+        cursor: default;
+      }
+
+      /* Buy Gems Card */
+      .buy-card {
+        width: min(390px, 100%);
+        max-height: min(640px, calc(100vh - 40px));
+        overflow-y: auto;
+        padding: 24px 20px;
+        border-radius: 28px;
+        border: 3.5px solid var(--c-dark-outline);
+        background: #1e1b4b;
+        box-shadow: 0 8px 0 var(--c-dark-outline), 0 28px 80px rgba(0, 0, 0, 0.85);
+      }
+
+      .buy-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+
+      .buy-head h2 { font-family: var(--font-cartoon); font-size: 24px; text-shadow: 0 2px 0 var(--c-dark-outline); }
+      .mana-badge { color: #fde047; font-family: var(--font-cartoon); font-size: 13px; text-shadow: 0 1px 0 var(--c-dark-outline); }
+      .buy-rate { margin-bottom: 16px; color: #cbd5e1; font-size: 12px; font-weight: 600; }
+
+      .packs { display: grid; gap: 8px; }
+
+      .pack-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 2.5px solid var(--c-dark-outline);
+        background: #1e293b;
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 3px 0 var(--c-dark-outline);
+        transition: border-color 150ms, background 150ms, transform 100ms;
+      }
+
+      .pack-btn.selected {
+        border-color: #fde047;
+        background: #312e81;
+        box-shadow: 0 3px 0 var(--c-dark-outline), 0 0 14px rgba(253, 224, 71, 0.4);
+      }
+
+      .pack-btn.disabled { opacity: 0.35; cursor: default; }
+      .pack-title { font-family: var(--font-cartoon); font-size: 16px; text-shadow: 0 1.5px 0 var(--c-dark-outline); }
+      .pack-sub { color: #94a3b8; font-size: 10.5px; font-weight: 600; margin-top: 2px; }
+      .pack-cost { color: #38bdf8; font-family: var(--font-cartoon); font-size: 14px; text-shadow: 0 1.5px 0 var(--c-dark-outline); }
+
+      .buy-actions { display: grid; gap: 8px; margin-top: 18px; }
+
+      .ghost-btn {
+        min-height: 38px;
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        font-family: var(--font-cartoon);
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      #buyError {
+        min-height: 18px;
+        margin-top: 6px;
+        color: var(--c-rose);
+        font-family: var(--font-cartoon);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      /* Screen Shake Trauma */
+      .screen-shake {
+        animation: cartoon-screen-shake 320ms ease-out;
+      }
+
+      @keyframes cartoon-screen-shake {
+        20% { transform: translateX(-8px) rotate(-0.5deg); }
+        40% { transform: translateX(7px) rotate(0.4deg); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(3px); }
+      }
+
+      .screen-shake-hard {
+        animation: cartoon-screen-shake-hard 420ms ease-out;
+      }
+
+      @keyframes cartoon-screen-shake-hard {
+        10% { transform: translateX(-16px) rotate(-1.2deg); }
+        25% { transform: translateX(14px) rotate(1deg); }
+        40% { transform: translateX(-12px) rotate(-0.8deg); }
+        55% { transform: translateX(10px) rotate(0.6deg); }
+        70% { transform: translateX(-6px); }
+        85% { transform: translateX(4px); }
+      }
+
+      /* Big-Win Golden Burst */
+      #vignette.jackpot {
+        opacity: 1;
+        box-shadow: inset 0 0 110px rgba(253, 224, 71, 0.85), inset 0 0 40px #fff7cc;
+        animation: jackpot-flash 260ms ease-out 2;
+      }
+
+      @keyframes jackpot-flash {
+        0% { opacity: 0; }
+        40% { opacity: 1; }
+        100% { opacity: 0.15; }
+      }
+
+      /* Double-or-Nothing Push-Your-Luck Row */
+      .doubleup-row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .doubleup-row.hidden {
+        display: none;
+      }
+
+      .doubleup-pot {
+        font-family: var(--font-cartoon);
+        font-size: 19px;
+        color: #fde047;
+        text-shadow: 0 2.5px 0 var(--c-dark-outline);
+      }
+
+      .doubleup-buttons {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .doubleup-btn {
+        flex: 1;
+        height: clamp(60px, 9.5vh, 78px);
+        border-radius: 999px;
+        border: 4px solid var(--c-dark-outline);
+        color: #ffffff;
+        font-family: var(--font-cartoon);
+        font-size: clamp(14px, 4.2vw, 18px);
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        text-shadow: 0 2px 0 var(--c-dark-outline);
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: transform 70ms ease, box-shadow 70ms ease, filter 150ms ease;
+      }
+
+      .doubleup-btn:active {
+        transform: translateY(6px);
+      }
+
+      .doubleup-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+        transform: none;
+        filter: grayscale(0.6);
+      }
+
+      .collect-btn {
+        background: linear-gradient(180deg, #4ade80 0%, #22c55e 50%, #15803d 100%);
+        box-shadow: 0 6px 0 #166534, 0 10px 0 var(--c-dark-outline), 0 16px 28px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .push-btn {
+        background: linear-gradient(180deg, #fb7185 0%, #e11d48 50%, #9f1239 100%);
+        box-shadow: 0 6px 0 #881337, 0 10px 0 var(--c-dark-outline), 0 16px 28px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .push-odds {
+        display: block;
+        font-size: 0.68em;
+        opacity: 0.9;
+        margin-top: 1px;
+      }
+
+      @media (max-height: 700px) {
+        .layout { padding-top: max(36px, env(safe-area-inset-top) + 26px); gap: 8px; }
+        .game-logo-img { height: 24px; }
+        .slot-card { height: 62px; }
+        .bet-stepper { height: 46px; }
+        .reel-frame { height: 118px; }
+        #stopBtn { height: 62px; }
+        .doubleup-btn { height: 54px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="game">
+      <div id="vignette" aria-hidden="true"></div>
+      <canvas id="fxCanvas" aria-hidden="true"></canvas>
+
+      <!-- Top Bar Companion Mute Button -->
+      <button id="muteBtn" class="mute-top-btn" type="button" aria-label="Toggle sound">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 5 6.5 9H3v6h3.5l4.5 4V5Z"/>
+          <path id="soundWave" d="M15 9.2a4 4 0 0 1 0 5.6M18 6.5a8 8 0 0 1 0 11"/>
+        </svg>
+      </button>
+
+      <!-- Main Screen Layout (Spanning Full Height with Great Proportion) -->
+      <section class="layout">
+        <!-- 1. Top Status Header -->
+        <header class="top-bar">
+          <!-- Streak Pill -->
+          <div class="cartoon-pill streak-card" id="streakCard">
+            <span class="pill-label" id="streakMultiplierLabel">STREAK</span>
+            <div class="pill-val-row">
+              <span class="streak-icon">🔥</span>
+              <strong class="pill-val" id="streakVal">0</strong>
+            </div>
+          </div>
+
+          <!-- Center Logo & Fever Tracker -->
+          <div class="center-brand" id="targetPill">
+            <img class="game-logo-img" src="./assets/lucky-stop-logo.webp" alt="Lucky Stop" draggable="false" />
+            <div class="fever-tracker" title="Match Streak Progress">
+              <span class="fever-dot" id="fdot0"></span>
+              <span class="fever-dot" id="fdot1"></span>
+              <span class="fever-dot" id="fdot2"></span>
+              <span class="fever-dot" id="fdot3"></span>
+              <span class="fever-dot" id="fdot4"></span>
+              <span class="fever-dot" id="fdot5"></span>
+            </div>
+            <span id="targetPillText" style="display:none;">MATCH 3 OF 6</span>
+          </div>
+
+          <!-- Shields Pod -->
+          <div class="cartoon-pill shield-card" id="shieldCard">
+            <span class="pill-label">SHIELDS</span>
+            <div class="pill-val-row">
+              <span class="shield-icon">🛡️</span>
+              <strong class="pill-val" id="shieldVal">2</strong>
+            </div>
+          </div>
+        </header>
+
+        <!-- 2. Catch Vault Windows (3 Locked Slots) -->
+        <section class="slots-bay" aria-label="Locked symbol chambers">
+          <div class="slot-card" id="slot0">
+            <span class="slot-badge">#1</span>
+            <canvas class="slot-canvas" id="slotCanvas0" aria-hidden="true"></canvas>
+          </div>
+          <div class="slot-card" id="slot1">
+            <span class="slot-badge">#2</span>
+            <canvas class="slot-canvas" id="slotCanvas1" aria-hidden="true"></canvas>
+          </div>
+          <div class="slot-card" id="slot2">
+            <span class="slot-badge">#3</span>
+            <canvas class="slot-canvas" id="slotCanvas2" aria-hidden="true"></canvas>
+          </div>
+        </section>
+
+        <!-- 3. Hero Reel Stage (Cel-Shaded Arcade Screen) -->
+        <section class="reel-section" aria-label="Spinning reel">
+          <div class="reel-marquee" id="gateHeader">✦ Stop & Catch ✦</div>
+          <div class="reel-wrapper">
+            <div class="reel-frame" id="reelFrame">
+              <canvas id="reelCanvas"></canvas>
+              <div class="speed-lines"></div>
+            </div>
+            <div class="stop-gate" id="stopGate"></div>
+          </div>
+        </section>
+
+        <!-- 4. Bet Stepper Console -->
+        <section class="middle-controls">
+          <div class="bet-stepper">
+            <button class="stepper-btn" id="betMinusBtn" type="button" aria-label="Decrease bet">－</button>
+            <div class="bet-info" id="betPill" style="cursor:pointer;" title="Tap to cycle bet">
+              <span class="bet-label">BET AMOUNT</span>
+              <div class="bet-val-row">
+                <span class="bet-gem">💎</span>
+                <span class="bet-num" id="betAmount">10</span>
+              </div>
+            </div>
+            <button class="stepper-btn" id="betPlusBtn" type="button" aria-label="Increase bet">＋</button>
+          </div>
+        </section>
+
+        <!-- 5. Giant Juicy 3D Slam Button / Double-or-Nothing Push -->
+        <div class="action-area">
+          <button id="stopBtn" type="button" disabled>★ STOP ★</button>
+          <div class="doubleup-row hidden" id="doubleUpRow">
+            <div class="doubleup-pot" id="doubleUpPot">💎 0</div>
+            <div class="doubleup-buttons">
+              <button class="doubleup-btn collect-btn" id="collectBtn" type="button">Collect</button>
+              <button class="doubleup-btn push-btn" id="pushBtn" type="button">Push 2×<span class="push-odds" id="pushOdds">48% chance</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Overlay: Intro / Ready Modal -->
+    <section class="overlay" id="introOverlay">
+      <div class="modal-card">
+        <div class="modal-kicker">Arcade Timing Game</div>
+        <div class="modal-icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M32 6 39 22l17 2-13 12 4 18-15-9-15 9 4-18L8 24l17-2 7-16Z" fill="#fde047"/>
+            <path d="m32 14 4.5 10.5 11.5 1.5-9 7.7 2.7 11.6L32 39.6l-9.7 5.7L25 33.7 16 26l11.5-1.5L32 14Z" fill="#fff"/>
+          </svg>
+        </div>
+        <h1 class="modal-title" id="overlayTitle">Lucky Stop</h1>
+        <p class="modal-sub" id="overlaySub">Stop the reel to lock 3 matching symbols. The longer your streak, the bigger the danger. Win and you can Push your luck for Double-or-Nothing!</p>
+
+        <div class="payout-grid">
+          <div class="payout-item">
+            <canvas class="payout-canvas" id="payCanvasRuby" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult">4.0×</strong>
+            <span class="payout-name">Ruby</span>
+          </div>
+          <div class="payout-item">
+            <canvas class="payout-canvas" id="payCanvasDiamond" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult">2.6×</strong>
+            <span class="payout-name">Diamond</span>
+          </div>
+          <div class="payout-item">
+            <canvas class="payout-canvas" id="payCanvasCrown" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult">2.2×</strong>
+            <span class="payout-name">Crown</span>
+          </div>
+          <div class="payout-item">
+            <canvas class="payout-canvas" id="payCanvasStar" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult">1.6×</strong>
+            <span class="payout-name">Star</span>
+          </div>
+          <div class="payout-item">
+            <canvas class="payout-canvas" id="payCanvasClover" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult">1.3×</strong>
+            <span class="payout-name">Clover</span>
+          </div>
+          <div class="payout-item">
+            <canvas class="payout-canvas" id="payCanvasBolt" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult">1.1×</strong>
+            <span class="payout-name">Bolt</span>
+          </div>
+          <div class="payout-item">
+            <canvas class="payout-canvas" id="payCanvasCoin" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult">1.0×</strong>
+            <span class="payout-name">Coin</span>
+          </div>
+          <div class="payout-item danger-item">
+            <canvas class="payout-canvas" id="payCanvasBomb" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult" style="color:var(--c-rose)">AVOID</strong>
+            <span class="payout-name" style="color:var(--c-rose)">Bomb</span>
+          </div>
+          <div class="payout-item danger-item">
+            <canvas class="payout-canvas" id="payCanvasSkull" width="80" height="80" aria-hidden="true"></canvas>
+            <strong class="payout-mult" style="color:var(--c-rose)">AVOID</strong>
+            <span class="payout-name" style="color:var(--c-rose)">Skull</span>
+          </div>
+        </div>
+
+        <!-- Interactive Modal Bet Stepper -->
+        <div class="modal-bet-selector">
+          <span class="modal-bet-label">BET AMOUNT</span>
+          <div class="modal-bet-stepper">
+            <button class="modal-stepper-btn" id="modalBetMinusBtn" type="button" aria-label="Decrease bet">－</button>
+            <div class="modal-bet-info" id="modalBetPill" style="cursor:pointer;" title="Tap to cycle bet">
+              <span class="modal-bet-gem">💎</span>
+              <span class="modal-bet-num" id="modalBetAmount">10</span>
+              <span class="modal-bet-unit">GEMS</span>
+            </div>
+            <button class="modal-stepper-btn" id="modalBetPlusBtn" type="button" aria-label="Increase bet">＋</button>
+          </div>
+        </div>
+
+        <button class="primary-btn" id="playBtn" type="button">Loading Gems…</button>
+      </div>
+    </section>
+
+    <!-- Overlay: Buy Gems / Mana Refill Modal -->
+    <section class="overlay hidden" id="buyOverlay">
+      <div class="buy-card">
+        <div class="buy-head">
+          <h2>Get Gems</h2>
+          <div class="mana-badge" id="manaBalanceText">…</div>
+        </div>
+        <p class="buy-rate">Convert your Mana into game gems. 1 Mana = 10 Gems.</p>
+        <div class="packs" id="packs"></div>
+        <div class="buy-actions">
+          <button class="primary-btn" id="confirmBuyBtn" type="button" disabled>Select a Pack</button>
+          <button class="ghost-btn" id="cancelBuyBtn" type="button">Not Now</button>
+        </div>
+        <div id="buyError" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <script>
+      (function () {
+        "use strict";
+
+        // Game Configuration & Stakes
+        var BET_TIERS = [5, 10, 25, 50, 100];
+        var betIndex = 1; // Default to standard 10 gem bet
+        var activeSetBet = 10;
+        var STARTING_SHIELDS = 2;
+        var SYMBOL_GAP = 120;
+        var MIN_SPIN_TIME = 0.28;
+
+        // Balanced Payout Structure — 7 paying tiles + 2 danger tiles
+        // Sprite-backed tiles reuse the existing 6-cell spritesheet; the rest
+        // (coin / ruby / skull) are drawn procedurally so no new art is needed.
+        var SYMBOLS = [
+          { id: "diamond", color: "#38bdf8", shadow: "#0284c7", pay: 2.6, name: "Diamond",      icon: "💎", sprite: 0 },
+          { id: "bolt",    color: "#60a5fa", shadow: "#2563eb", pay: 1.1, name: "Lightning",    icon: "⚡", sprite: 1 },
+          { id: "crown",   color: "#fbbf24", shadow: "#b45309", pay: 2.2, name: "Royal Crown",  icon: "👑", sprite: 2 },
+          { id: "star",    color: "#c084fc", shadow: "#7e22ce", pay: 1.6, name: "Star",         icon: "⭐", sprite: 3 },
+          { id: "clover",  color: "#34d399", shadow: "#059669", pay: 1.3, name: "Lucky Clover", icon: "🍀", sprite: 4 },
+          { id: "coin",    color: "#fcd34d", shadow: "#b45309", pay: 1.0, name: "Coin",         icon: "🪙", vector: true },
+          { id: "ruby",    color: "#fb7185", shadow: "#be123c", pay: 4.0, name: "Ruby",         icon: "♦️", vector: true },
+          { id: "bomb",    color: "#f43f5e", shadow: "#881337", pay: 0, danger: true, name: "Bomb",  icon: "💣", sprite: 5 },
+          { id: "skull",   color: "#94a3b8", shadow: "#334155", pay: 0, danger: true, name: "Skull", icon: "💀", vector: true },
+        ];
+
+        // Round-robin track builder: spreads weighted symbol counts across the
+        // track so the same symbol rarely repeats back-to-back.
+        function buildTrack(counts) {
+          var pool = counts.map(function (c, i) { return { i: i, c: c }; });
+          var total = counts.reduce(function (a, b) { return a + b; }, 0);
+          var result = [];
+          var last = -1;
+          for (var n = 0; n < total; n++) {
+            pool.sort(function (a, b) { return b.c - a.c; });
+            var pick = null;
+            for (var k = 0; k < pool.length; k++) {
+              if (pool[k].c > 0 && pool[k].i !== last) { pick = pool[k]; break; }
+            }
+            if (!pick) {
+              for (var k2 = 0; k2 < pool.length; k2++) {
+                if (pool[k2].c > 0) { pick = pool[k2]; break; }
+              }
+            }
+            pick.c -= 1;
+            result.push(pick.i);
+            last = pick.i;
+          }
+          return result;
+        }
+
+        // Three risk tiers of the same length. Symbol order matches SYMBOLS:
+        // [diamond, bolt, crown, star, clover, coin, ruby, bomb, skull]
+        var TRACK_LEN = 24;
+        var TRACK_TIERS = [
+          buildTrack([2, 5, 2, 3, 4, 6, 1, 1, 0]), // calm — low momentum
+          buildTrack([2, 4, 2, 3, 4, 4, 1, 3, 1]), // risk — mid streak
+          buildTrack([2, 3, 2, 3, 3, 3, 1, 5, 2]), // danger — high streak / frenzy
+        ];
+        var activeTrack = TRACK_TIERS[0];
+        var lastTrackTier = 0;
+
+        // The farther a streak runs, the more bombs & skulls get mixed into
+        // the track — chasing a bigger multiplier gets genuinely riskier.
+        function trackTierForState() {
+          if (isFrenzy) return 2;
+          var momentum = streak + picks.length;
+          if (momentum >= 4) return 2;
+          if (momentum >= 2) return 1;
+          return 0;
+        }
+
+        // Multiplier Tiers (Tightened streak multipliers)
+        var STREAK_TIERS = [
+          { min: 0, mult: 1.0, label: "STREAK", class: "" },
+          { min: 2, mult: 1.2, label: "HOT x1.2", class: "tier-2" },
+          { min: 3, mult: 1.4, label: "FIRE x1.4", class: "tier-3" },
+          { min: 4, mult: 1.7, label: "PLASMA x1.7", class: "tier-4" },
+          { min: 5, mult: 2.0, label: "GOD x2.0 🔥", class: "tier-5" },
+        ];
+
+        // Double-or-Nothing push-your-luck ladder
+        var DOUBLEUP_MAX_CHAIN = 3;
+        var DOUBLEUP_BASE_ODDS = 0.48;
+        var DOUBLEUP_ODDS_STEP = 0.04;
+
+        // DOM Element Cache
+        var gameEl = document.getElementById("game");
+        var vignette = document.getElementById("vignette");
+        var fxCanvas = document.getElementById("fxCanvas");
+        var fxCtx = fxCanvas.getContext("2d");
+        var reelFrame = document.getElementById("reelFrame");
+        var reelCanvas = document.getElementById("reelCanvas");
+        var reelCtx = reelCanvas.getContext("2d", { alpha: false });
+        var reelBackdrop = document.createElement("canvas");
+        var reelBackdropCtx = reelBackdrop.getContext("2d", { alpha: false });
+
+        var muteBtn = document.getElementById("muteBtn");
+        var soundWave = document.getElementById("soundWave");
+        var betPill = document.getElementById("betPill");
+        var betAmount = document.getElementById("betAmount");
+        var betMinusBtn = document.getElementById("betMinusBtn");
+        var betPlusBtn = document.getElementById("betPlusBtn");
+
+        var modalBetPill = document.getElementById("modalBetPill");
+        var modalBetAmount = document.getElementById("modalBetAmount");
+        var modalBetMinusBtn = document.getElementById("modalBetMinusBtn");
+        var modalBetPlusBtn = document.getElementById("modalBetPlusBtn");
+
+        var streakCard = document.getElementById("streakCard");
+        var streakVal = document.getElementById("streakVal");
+        var streakMultiplierLabel = document.getElementById("streakMultiplierLabel");
+        var targetPill = document.getElementById("targetPill");
+        var targetPillText = document.getElementById("targetPillText");
+        var shieldCard = document.getElementById("shieldCard");
+        var shieldVal = document.getElementById("shieldVal");
+
+        var fdots = [
+          document.getElementById("fdot0"),
+          document.getElementById("fdot1"),
+          document.getElementById("fdot2"),
+          document.getElementById("fdot3"),
+          document.getElementById("fdot4"),
+          document.getElementById("fdot5"),
+        ];
+
+        var gateHeader = document.getElementById("gateHeader");
+        var stopGate = document.getElementById("stopGate");
+        var missionIcon = document.getElementById("missionIcon");
+        var missionTitle = document.getElementById("missionTitle");
+        var missionSub = document.getElementById("missionSub");
+        var bestWinAmount = document.getElementById("bestWinAmount");
+        var stopBtn = document.getElementById("stopBtn");
+
+        var doubleUpRow = document.getElementById("doubleUpRow");
+        var doubleUpPot = document.getElementById("doubleUpPot");
+        var collectBtn = document.getElementById("collectBtn");
+        var pushBtn = document.getElementById("pushBtn");
+        var pushOdds = document.getElementById("pushOdds");
+
+        var introOverlay = document.getElementById("introOverlay");
+        var overlayTitle = document.getElementById("overlayTitle");
+        var overlaySub = document.getElementById("overlaySub");
+        var playBtn = document.getElementById("playBtn");
+
+        var buyOverlay = document.getElementById("buyOverlay");
+        var manaBalanceText = document.getElementById("manaBalanceText");
+        var packsEl = document.getElementById("packs");
+        var confirmBuyBtn = document.getElementById("confirmBuyBtn");
+        var cancelBuyBtn = document.getElementById("cancelBuyBtn");
+        var buyError = document.getElementById("buyError");
+
+        var slotEls = [document.getElementById("slot0"), document.getElementById("slot1"), document.getElementById("slot2")];
+        var slotCanvases = [document.getElementById("slotCanvas0"), document.getElementById("slotCanvas1"), document.getElementById("slotCanvas2")];
+
+        // State variables
+        var state = "loading";
+        var bank = 0;
+        var manaBalance = 0;
+        var walletReady = false;
+        var walletSeeded = false;
+        var selectedMana = 0;
+        var buyPending = false;
+
+        var streak = 0;
+        var shields = STARTING_SHIELDS;
+        var picks = [];
+        var feverCount = 0;
+        var isFrenzy = false;
+        var suspenseActive = false;
+
+        var pendingPrize = 0;
+        var doubleChainLevel = 0;
+        var doubleUpCenterX = 0;
+        var doubleUpCenterY = 0;
+
+        var offset = 0;
+        var velocity = 0;
+        var targetVelocity = 0;
+        var spinAge = 0;
+        var startMs = 0;
+        var lastTime = performance.now();
+        var dpr = 1;
+        var reelW = 0;
+        var reelH = 0;
+        var renderedOffset = 0;
+        var reelDirty = true;
+        var lastTickIndex = -1;
+        var lastTickAudioTime = 0;
+
+        var PACKS = [
+          { mana: 10,  gems: 100,  label: "Starter Pack" },
+          { mana: 25,  gems: 260,  label: "Popular · +4% bonus" },
+          { mana: 50,  gems: 550,  label: "Great Value · +10% bonus" },
+          { mana: 100, gems: 1200, label: "Pro Roller · +20% bonus" },
+        ];
+
+        // Particle Pools
+        var MAX_FLYING_GEMS = 25;
+        var MAX_CONFETTI = 40;
+        var MAX_SPARKS = 30;
+        var MAX_POPUPS = 8;
+
+        var flyingGems = [];
+        var confetti = [];
+        var sparks = [];
+        var popups = [];
+
+        for (var i = 0; i < MAX_FLYING_GEMS; i++) {
+          flyingGems.push({ active: false, x: 0, y: 0, startX: 0, startY: 0, targetX: 0, targetY: 0, ctrlX: 0, ctrlY: 0, progress: 0, speed: 1, rot: 0, rotSpeed: 0, size: 12, gemIndex: 0 });
+        }
+        for (var i = 0; i < MAX_CONFETTI; i++) {
+          confetti.push({ active: false, x: 0, y: 0, vx: 0, vy: 0, rotX: 0, rotY: 0, rotZ: 0, vRotX: 0, vRotY: 0, vRotZ: 0, size: 7, color: "#fff", life: 0, maxLife: 1 });
+        }
+        for (var i = 0; i < MAX_SPARKS; i++) {
+          sparks.push({ active: false, x: 0, y: 0, vx: 0, vy: 0, size: 4, color: "#fff", life: 0, maxLife: 1 });
+        }
+        for (var i = 0; i < MAX_POPUPS; i++) {
+          popups.push({ active: false, text: "", x: 0, y: 0, vy: 0, color: "#fff", scale: 1, life: 0, maxLife: 1 });
+        }
+
+        var flyingGemsActive = false;
+        var confettiActive = false;
+        var sparksActive = false;
+        var popupsActive = false;
+        var fxDirty = false;
+
+        // Sound System
+        var Sound = (function () {
+          var ctx = null;
+          var muted = false;
+
+          function getCtx() {
+            if (!ctx) {
+              var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+              if (AudioContextClass) ctx = new AudioContextClass();
+            }
+            if (ctx && ctx.state === "suspended") ctx.resume().catch(function () {});
+            return ctx;
+          }
+
+          function unlock() {
+            getCtx();
+          }
+
+          function toggle() {
+            muted = !muted;
+            return muted;
+          }
+
+          function tone(freq, duration, type, optGain, sweepTo) {
+            if (muted) return;
+            var ac = getCtx();
+            if (!ac) return;
+            try {
+              var osc = ac.createOscillator();
+              var g = ac.createGain();
+              osc.type = type || "sine";
+              osc.frequency.setValueAtTime(freq, ac.currentTime);
+              if (sweepTo) {
+                osc.frequency.exponentialRampToValueAtTime(sweepTo, ac.currentTime + duration);
+              }
+              var baseGain = optGain !== undefined ? optGain : 0.12;
+              g.gain.setValueAtTime(baseGain, ac.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
+              osc.connect(g);
+              g.connect(ac.destination);
+              osc.start();
+              osc.stop(ac.currentTime + duration + 0.05);
+            } catch (_) {}
+          }
+
+          function noise(duration, gain) {
+            if (muted) return;
+            var ac = getCtx();
+            if (!ac) return;
+            try {
+              var bufferSize = Math.floor(ac.sampleRate * duration);
+              var buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+              var output = buffer.getChannelData(0);
+              for (var i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+              }
+              var whiteNoise = ac.createBufferSource();
+              whiteNoise.buffer = buffer;
+              var g = ac.createGain();
+              g.gain.setValueAtTime(gain || 0.15, ac.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
+              whiteNoise.connect(g);
+              g.connect(ac.destination);
+              whiteNoise.start();
+            } catch (_) {}
+          }
+
+          return {
+            unlock: unlock,
+            toggle: toggle,
+            isMuted: function () { return muted; },
+            btnClick: function () {
+              tone(520, 0.04, "sine", 0.1, 780);
+            },
+            spinStart: function () {
+              tone(240, 0.12, "triangle", 0.16, 520);
+            },
+            tick: function (freq) {
+              var now = performance.now();
+              if (now - lastTickAudioTime < 35) return;
+              lastTickAudioTime = now;
+              tone(freq || 440, 0.025, "triangle", 0.05);
+            },
+            lockHit: function () {
+              tone(520, 0.08, "triangle", 0.22, 1040);
+              setTimeout(function () { tone(1040, 0.14, "sine", 0.25, 1560); }, 35);
+            },
+            oneMore: function () {
+              tone(880, 0.12, "sine", 0.2, 1175);
+              setTimeout(function () { tone(1320, 0.18, "triangle", 0.25, 1760); }, 80);
+            },
+            shieldDeflect: function () {
+              // Crisp metallic clang + ricochet
+              tone(920, 0.08, "triangle", 0.25, 460);
+              setTimeout(function () { tone(460, 0.12, "sine", 0.2, 230); }, 40);
+            },
+            nearMiss: function () {
+              // Sharp "so close" buzzer — brighter and tighter than a normal miss
+              tone(1180, 0.05, "sawtooth", 0.2, 1500);
+              setTimeout(function () { tone(680, 0.1, "square", 0.16, 320); }, 45);
+            },
+            jackpot: function () {
+              var notes = [659.25, 880, 1046.5, 1318.5, 1760];
+              notes.forEach(function (n, i) {
+                setTimeout(function () { tone(n, 0.22, "triangle", 0.28); }, i * 55);
+              });
+            },
+            shieldsDepleted: function () {
+              // Harsh electric breakdown shatter
+              tone(380, 0.25, "sawtooth", 0.35, 60);
+              setTimeout(function () { tone(180, 0.35, "sawtooth", 0.3, 40); }, 80);
+              noise(0.25, 0.2);
+            },
+            bombExplosion: function () {
+              // Heavy explosive shockwave boom
+              tone(180, 0.5, "sawtooth", 0.4, 30);
+              setTimeout(function () { tone(110, 0.6, "sine", 0.45, 25); }, 50);
+              noise(0.45, 0.35);
+            },
+            missRestart: function () {
+              // Quick whoosh rebound
+              tone(260, 0.1, "sine", 0.15, 480);
+            },
+            mismatch: function () {
+              // Soft cartoon womp-womp
+              tone(340, 0.14, "sawtooth", 0.18, 220);
+              setTimeout(function () { tone(220, 0.18, "triangle", 0.2, 140); }, 120);
+            },
+            win: function (isMega) {
+              var notes = isMega ? [523.25, 659.25, 783.99, 1046.5, 1318.5] : [523.25, 659.25, 783.99, 1046.5];
+              notes.forEach(function (n, i) {
+                setTimeout(function () {
+                  tone(n, 0.25, "triangle", 0.25);
+                }, i * 65);
+              });
+            },
+            frenzy: function () {
+              var notes = [440, 554, 659, 880, 1108, 1320];
+              notes.forEach(function (n, i) {
+                setTimeout(function () {
+                  tone(n, 0.18, "sawtooth", 0.18);
+                }, i * 45);
+              });
+            },
+            heartbeat: function () {
+              tone(85, 0.08, "sine", 0.25, 65);
+              setTimeout(function () { tone(75, 0.12, "sine", 0.2, 55); }, 120);
+            },
+            gemPop: function (idx) {
+              var f = 720 + ((idx || 0) % 8) * 90;
+              tone(f, 0.06, "sine", 0.09);
+            },
+            pushTick: function (i) {
+              // Accelerating coin-flip tick — pitch climbs with each tick
+              var freq = 280 + Math.min(820, i * 65);
+              tone(freq, 0.032, "square", 0.08);
+            },
+            dangerRise: function (tier) {
+              // Ominous cue when the track escalates into a riskier zone
+              if (tier === 1) {
+                tone(210, 0.2, "sawtooth", 0.14, 150);
+              } else {
+                tone(150, 0.3, "sawtooth", 0.2, 75);
+                setTimeout(function () { tone(95, 0.32, "sawtooth", 0.18, 50); }, 90);
+              }
+            },
+            tierUp: function () {
+              // Bright ascending sting when a streak crosses into a new tier
+              var notes = [784, 988, 1175];
+              notes.forEach(function (n, i) {
+                setTimeout(function () { tone(n, 0.12, "sine", 0.22); }, i * 70);
+              });
+            },
+          };
+        })();
+
+        // Native Bridge Helpers
+        function postRN(msg) {
+          try {
+            if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+              window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+            }
+          } catch (_) {}
+        }
+
+        function haptic(style) {
+          postRN({ type: "haptic", style: style || "selection" });
+        }
+
+        function postStats(type) {
+          postRN({
+            type: type || "stats",
+            score: streak,
+            coins: Math.max(0, Math.floor(bank)),
+            shields: shields,
+            duration_ms: Date.now() - (startMs || Date.now()),
+            frenzy: isFrenzy,
+          });
+        }
+
+        // Animation Helper
+        function animateClass(el, cls, ms) {
+          if (!el) return;
+          el.classList.remove(cls);
+          requestAnimationFrame(function () {
+            el.classList.add(cls);
+            if (ms) {
+              setTimeout(function () { el.classList.remove(cls); }, ms);
+            }
+          });
+        }
+
+        // Spritesheet Asset Loading
+        var symbolSheet = new Image();
+        var symbolSheetReady = false;
+        var symbolCache = [];
+        symbolSheet.decoding = "async";
+        symbolSheet.onload = function () {
+          buildSymbolCache();
+          symbolSheetReady = true;
+          drawReel();
+          for (var s = 0; s < 3; s++) drawSlotModel(s, picks[s]);
+          drawPayoutCanvases();
+        };
+        symbolSheet.src = "./assets/reel-symbols.webp";
+
+        function getStreakTier(s) {
+          for (var i = STREAK_TIERS.length - 1; i >= 0; i--) {
+            if (s >= STREAK_TIERS[i].min) return STREAK_TIERS[i];
+          }
+          return STREAK_TIERS[0];
+        }
+
+        function speedForStreak() {
+          if (isFrenzy) return 480;
+          var baseSpeed = 260;
+          var streakAdd = Math.min(streak * 25, 200);
+          var pickAdd = picks.length * 30;
+          return Math.min(620, baseSpeed + streakAdd + pickAdd);
+        }
+
+        // Particle Spawners
+        function spawnFlyingGems(count, startX, startY) {
+          var targetEl = document.getElementById("betPill");
+          var rect = targetEl ? targetEl.getBoundingClientRect() : { left: innerWidth / 2, top: 40, width: 20, height: 20 };
+          var targetX = rect.left + rect.width / 2;
+          var targetY = rect.top + rect.height / 2;
+
+          for (var i = 0; i < count; i++) {
+            var g = null;
+            for (var k = 0; k < MAX_FLYING_GEMS; k++) {
+              if (!flyingGems[k].active) { g = flyingGems[k]; break; }
+            }
+            if (!g) break;
+
+            var spreadAngle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+            var spreadDist = 45 + Math.random() * 65;
+            var ctrlX = startX + Math.cos(spreadAngle) * spreadDist;
+            var ctrlY = startY + Math.sin(spreadAngle) * spreadDist - 35;
+
+            g.active = true;
+            g.gemIndex = i;
+            g.startX = startX;
+            g.startY = startY;
+            g.targetX = targetX;
+            g.targetY = targetY;
+            g.ctrlX = ctrlX;
+            g.ctrlY = ctrlY;
+            g.progress = 0;
+            g.speed = 1.15 + Math.random() * 0.45;
+            g.rot = Math.random() * Math.PI * 2;
+            g.rotSpeed = (Math.random() - 0.5) * 10;
+            g.size = 13 + Math.random() * 3;
+            g.x = startX;
+            g.y = startY;
+          }
+        }
+
+        function spawnConfetti(count, x, y) {
+          var colors = ["#fde047", "#38bdf8", "#34d399", "#fb7185", "#c084fc", "#ffffff"];
+          for (var i = 0; i < count; i++) {
+            var c = null;
+            for (var k = 0; k < MAX_CONFETTI; k++) {
+              if (!confetti[k].active) { c = confetti[k]; break; }
+            }
+            if (!c) break;
+
+            var angle = Math.random() * Math.PI * 2;
+            var speed = 130 + Math.random() * 280;
+            c.active = true;
+            c.x = x;
+            c.y = y;
+            c.vx = Math.cos(angle) * speed;
+            c.vy = Math.sin(angle) * speed - 130;
+            c.rotX = Math.random() * Math.PI;
+            c.rotY = Math.random() * Math.PI;
+            c.rotZ = Math.random() * Math.PI;
+            c.vRotX = (Math.random() - 0.5) * 14;
+            c.vRotY = (Math.random() - 0.5) * 14;
+            c.vRotZ = (Math.random() - 0.5) * 8;
+            c.size = 6 + Math.random() * 4;
+            c.color = colors[Math.floor(Math.random() * colors.length)];
+            c.life = 0.9 + Math.random() * 0.5;
+            c.maxLife = c.life;
+          }
+        }
+
+        function spawnSparks(count, x, y, color) {
+          for (var i = 0; i < count; i++) {
+            var s = null;
+            for (var k = 0; k < MAX_SPARKS; k++) {
+              if (!sparks[k].active) { s = sparks[k]; break; }
+            }
+            if (!s) break;
+
+            var angle = Math.random() * Math.PI * 2;
+            var speed = 70 + Math.random() * 180;
+            s.active = true;
+            s.x = x;
+            s.y = y;
+            s.vx = Math.cos(angle) * speed;
+            s.vy = Math.sin(angle) * speed;
+            s.size = 3.5 + Math.random() * 2.5;
+            s.color = color || "#fde047";
+            s.life = 0.45 + Math.random() * 0.35;
+            s.maxLife = s.life;
+          }
+        }
+
+        function spawnPopup(text, x, y, color) {
+          var p = null;
+          for (var k = 0; k < MAX_POPUPS; k++) {
+            if (!popups[k].active) { p = popups[k]; break; }
+          }
+          if (!p) return;
+
+          p.active = true;
+          p.text = text;
+          p.x = x;
+          p.y = y;
+          p.vy = -70;
+          p.color = color || "#fde047";
+          p.scale = 1.35;
+          p.life = 0.9;
+          p.maxLife = p.life;
+        }
+
+        function updateFX(dt) {
+          var anyGems = false;
+          var anyConfetti = false;
+          var anySparks = false;
+          var anyPopups = false;
+
+          for (var i = 0; i < MAX_FLYING_GEMS; i++) {
+            var g = flyingGems[i];
+            if (!g.active) continue;
+            g.progress += dt * g.speed;
+            g.rot += g.rotSpeed * dt;
+
+            if (g.progress >= 1) {
+              g.active = false;
+              Sound.gemPop(g.gemIndex);
+              haptic("light");
+              spawnSparks(5, g.targetX, g.targetY, "#38bdf8");
+              continue;
+            }
+
+            var t = g.progress;
+            var invT = 1 - t;
+            g.x = invT * invT * g.startX + 2 * invT * t * g.ctrlX + t * t * g.targetX;
+            g.y = invT * invT * g.startY + 2 * invT * t * g.ctrlY + t * t * g.targetY;
+            anyGems = true;
+          }
+
+          for (var c = 0; c < MAX_CONFETTI; c++) {
+            var cf = confetti[c];
+            if (!cf.active) continue;
+            cf.life -= dt;
+            if (cf.life <= 0) { cf.active = false; continue; }
+            cf.vy += 320 * dt;
+            cf.vx *= 0.985;
+            cf.x += cf.vx * dt;
+            cf.y += cf.vy * dt;
+            cf.rotX += cf.vRotX * dt;
+            cf.rotY += cf.vRotY * dt;
+            cf.rotZ += cf.vRotZ * dt;
+            anyConfetti = true;
+          }
+
+          for (var s = 0; s < MAX_SPARKS; s++) {
+            var sp = sparks[s];
+            if (!sp.active) continue;
+            sp.life -= dt;
+            if (sp.life <= 0) { sp.active = false; continue; }
+            sp.vy += 220 * dt;
+            sp.x += sp.vx * dt;
+            sp.y += sp.vy * dt;
+            anySparks = true;
+          }
+
+          for (var p = 0; p < MAX_POPUPS; p++) {
+            var pop = popups[p];
+            if (!pop.active) continue;
+            pop.life -= dt;
+            if (pop.life <= 0) { pop.active = false; continue; }
+            pop.y += pop.vy * dt;
+            pop.scale = Math.max(1, pop.scale - dt * 1.5);
+            anyPopups = true;
+          }
+
+          flyingGemsActive = anyGems;
+          confettiActive = anyConfetti;
+          sparksActive = anySparks;
+          popupsActive = anyPopups;
+
+          var hasActiveFX = anyGems || anyConfetti || anySparks || anyPopups;
+          if (!hasActiveFX && fxDirty) {
+            fxCtx.clearRect(0, 0, innerWidth, innerHeight);
+            fxDirty = false;
+          } else if (hasActiveFX) {
+            fxDirty = true;
+          }
+        }
+
+        function drawFX() {
+          if (!fxDirty) return;
+          fxCtx.clearRect(0, 0, innerWidth, innerHeight);
+
+          for (var s = 0; s < MAX_SPARKS; s++) {
+            var sp = sparks[s];
+            if (!sp.active) continue;
+            fxCtx.save();
+            fxCtx.globalAlpha = Math.max(0, Math.min(1, sp.life / sp.maxLife));
+            fxCtx.fillStyle = sp.color;
+            fxCtx.beginPath();
+            fxCtx.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2);
+            fxCtx.fill();
+            fxCtx.restore();
+          }
+
+          for (var c = 0; c < MAX_CONFETTI; c++) {
+            var cf = confetti[c];
+            if (!cf.active) continue;
+            fxCtx.save();
+            fxCtx.globalAlpha = Math.max(0, Math.min(1, (cf.life / cf.maxLife) * 1.4));
+            fxCtx.translate(cf.x, cf.y);
+            fxCtx.rotate(cf.rotZ);
+            fxCtx.scale(Math.cos(cf.rotX), Math.sin(cf.rotY));
+            fxCtx.fillStyle = cf.color;
+            fxCtx.fillRect(-cf.size, -cf.size * 0.45, cf.size * 2, cf.size * 0.9);
+            fxCtx.restore();
+          }
+
+          for (var g = 0; g < MAX_FLYING_GEMS; g++) {
+            var gem = flyingGems[g];
+            if (!gem.active) continue;
+            fxCtx.save();
+            fxCtx.translate(gem.x, gem.y);
+            fxCtx.rotate(gem.rot);
+            var sz = gem.size;
+            
+            // Cel-shaded Diamond Outline
+            fxCtx.fillStyle = "#0c1222";
+            fxCtx.beginPath();
+            fxCtx.moveTo(0, -sz * 0.76);
+            fxCtx.lineTo(sz * 0.76, 0);
+            fxCtx.lineTo(0, sz * 0.76);
+            fxCtx.lineTo(-sz * 0.76, 0);
+            fxCtx.closePath();
+            fxCtx.fill();
+
+            // Diamond Body
+            fxCtx.fillStyle = "#38bdf8";
+            fxCtx.beginPath();
+            fxCtx.moveTo(0, -sz * 0.55);
+            fxCtx.lineTo(sz * 0.55, 0);
+            fxCtx.lineTo(0, sz * 0.55);
+            fxCtx.lineTo(-sz * 0.55, 0);
+            fxCtx.closePath();
+            fxCtx.fill();
+
+            // Highlight Dot
+            fxCtx.fillStyle = "#fff";
+            fxCtx.beginPath();
+            fxCtx.arc(-sz * 0.15, -sz * 0.15, sz * 0.2, 0, Math.PI * 2);
+            fxCtx.fill();
+            fxCtx.restore();
+          }
+
+          for (var p = 0; p < MAX_POPUPS; p++) {
+            var pop = popups[p];
+            if (!pop.active) continue;
+            fxCtx.save();
+            var alpha = Math.max(0, Math.min(1, (pop.life / pop.maxLife) * 2));
+            fxCtx.globalAlpha = alpha;
+            fxCtx.font = "900 " + Math.round(18 * pop.scale) + "px 'Lilita One', Fredoka, sans-serif";
+            fxCtx.textAlign = "center";
+            fxCtx.textBaseline = "middle";
+            // 2D Cartoon Outline Stroke
+            fxCtx.strokeStyle = "#0c1222";
+            fxCtx.lineWidth = 5;
+            fxCtx.strokeText(pop.text, pop.x, pop.y);
+            fxCtx.fillStyle = pop.color;
+            fxCtx.fillText(pop.text, pop.x, pop.y);
+            fxCtx.restore();
+          }
+        }
+
+        // Sprite Caching & Rendering
+        function buildSymbolCache() {
+          var cellW = symbolSheet.naturalWidth / 3;
+          var cellH = symbolSheet.naturalHeight / 2;
+          symbolCache = [];
+          SYMBOLS.forEach(function (symbol) {
+            if (symbol.vector || symbol.sprite === undefined) return;
+            var canvas = document.createElement("canvas");
+            canvas.width = 192;
+            canvas.height = 192;
+            var ctx = canvas.getContext("2d");
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            var col = symbol.sprite % 3;
+            var row = Math.floor(symbol.sprite / 3);
+            ctx.drawImage(symbolSheet, col * cellW, row * cellH, cellW, cellH, 0, 0, 192, 192);
+            symbolCache[symbol.sprite] = canvas;
+          });
+        }
+
+        // Procedural cel-shaded disc + emoji glyph — used for tiles that
+        // don't have a spritesheet cell (coin / ruby / skull).
+        function drawVectorSymbol(ctx, symbol, x, y, size, alpha) {
+          ctx.save();
+          var a = Math.max(0, Math.min(1, alpha === undefined ? 1 : alpha));
+          ctx.globalAlpha *= a;
+          var r = size * 0.42;
+
+          ctx.fillStyle = "#0c1222";
+          ctx.beginPath();
+          ctx.arc(x, y, r + 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          var grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.35, r * 0.15, x, y, r);
+          grad.addColorStop(0, "#ffffff");
+          grad.addColorStop(0.18, symbol.color);
+          grad.addColorStop(1, symbol.shadow || symbol.color);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.font = Math.round(size * 0.46) + "px 'Fredoka', 'Lilita One', sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(symbol.icon, x, y + size * 0.02);
+          ctx.restore();
+        }
+
+        function drawGameSymbol(ctx, symbol, x, y, size, alpha) {
+          if (symbol.vector) {
+            drawVectorSymbol(ctx, symbol, x, y, size, alpha);
+            return;
+          }
+          var cached = symbolCache[symbol.sprite];
+          if (!symbolSheetReady || !cached) return;
+          ctx.save();
+          var a = Math.max(0, Math.min(1, alpha === undefined ? 1 : alpha));
+          ctx.globalAlpha *= a;
+          ctx.drawImage(cached, x - size / 2, y - size / 2, size, size);
+          ctx.restore();
+        }
+
+        function drawSlotModel(index, symbol) {
+          var canvas = slotCanvases[index];
+          if (!canvas) return;
+          var ctx = canvas.getContext("2d");
+          var width = canvas.width / dpr;
+          var height = canvas.height / dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.clearRect(0, 0, width, height);
+          if (symbol && symbolSheetReady) {
+            drawGameSymbol(ctx, symbol, width / 2, height / 2, Math.min(width, height) * 0.72, 1);
+          }
+        }
+
+        function drawPayoutCanvases() {
+          if (!symbolSheetReady) return;
+          var map = {
+            diamond: "payCanvasDiamond",
+            crown: "payCanvasCrown",
+            star: "payCanvasStar",
+            clover: "payCanvasClover",
+            bolt: "payCanvasBolt",
+            coin: "payCanvasCoin",
+            ruby: "payCanvasRuby",
+            bomb: "payCanvasBomb",
+            skull: "payCanvasSkull"
+          };
+          var dprLocal = Math.min(window.devicePixelRatio || 1, 2);
+          SYMBOLS.forEach(function (sym) {
+            var id = map[sym.id];
+            if (!id) return;
+            var canvas = document.getElementById(id);
+            if (!canvas) return;
+            var ctx = canvas.getContext("2d");
+            var size = 40;
+            canvas.width = Math.round(size * dprLocal);
+            canvas.height = Math.round(size * dprLocal);
+            canvas.style.width = size + "px";
+            canvas.style.height = size + "px";
+            ctx.setTransform(dprLocal, 0, 0, dprLocal, 0, 0);
+            ctx.clearRect(0, 0, size, size);
+            drawGameSymbol(ctx, sym, size / 2, size / 2, size * 0.88, 1);
+          });
+        }
+
+        function drawReelBackdrop() {
+          reelBackdrop.width = Math.round(reelW * dpr);
+          reelBackdrop.height = Math.round(reelH * dpr);
+          reelBackdropCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+          // Rich Cartoon Striped Reel Canvas Backdrop
+          var gradient = reelBackdropCtx.createLinearGradient(0, 0, 0, reelH);
+          gradient.addColorStop(0, "#1e1b4b");
+          gradient.addColorStop(0.2, "#2e2a72");
+          gradient.addColorStop(0.5, "#4338ca");
+          gradient.addColorStop(0.8, "#2e2a72");
+          gradient.addColorStop(1, "#1e1b4b");
+          reelBackdropCtx.fillStyle = gradient;
+          reelBackdropCtx.fillRect(0, 0, reelW, reelH);
+
+          // Warm Cartoon Guide Lines
+          var railGlow = reelBackdropCtx.createLinearGradient(0, 0, 0, reelH);
+          railGlow.addColorStop(0, "rgba(253, 224, 71, 0.45)");
+          railGlow.addColorStop(0.06, "rgba(253, 224, 71, 0.05)");
+          railGlow.addColorStop(0.94, "rgba(253, 224, 71, 0.05)");
+          railGlow.addColorStop(1, "rgba(253, 224, 71, 0.4)");
+          reelBackdropCtx.fillStyle = railGlow;
+          reelBackdropCtx.fillRect(0, 0, reelW, reelH);
+        }
+
+        function resizeCanvases() {
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          var reelRect = reelFrame.getBoundingClientRect();
+          reelW = Math.max(1, reelRect.width);
+          reelH = Math.max(1, reelRect.height);
+          reelCanvas.width = Math.round(reelW * dpr);
+          reelCanvas.height = Math.round(reelH * dpr);
+          reelCanvas.style.width = reelW + "px";
+          reelCanvas.style.height = reelH + "px";
+          reelCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          drawReelBackdrop();
+
+          for (var i = 0; i < slotCanvases.length; i++) {
+            if (!slotEls[i] || !slotCanvases[i]) continue;
+            var slotRect = slotEls[i].getBoundingClientRect();
+            slotCanvases[i].width = Math.max(1, Math.round(slotRect.width * dpr));
+            slotCanvases[i].height = Math.max(1, Math.round(slotRect.height * dpr));
+            drawSlotModel(i, picks[i]);
+          }
+
+          drawPayoutCanvases();
+
+          fxCanvas.width = Math.round(innerWidth * dpr);
+          fxCanvas.height = Math.round(innerHeight * dpr);
+          fxCanvas.style.width = innerWidth + "px";
+          fxCanvas.style.height = innerHeight + "px";
+          fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          reelDirty = true;
+          fxDirty = true;
+        }
+
+        function drawReel() {
+          reelCtx.drawImage(reelBackdrop, 0, 0, reelW, reelH);
+          renderedOffset = offset;
+
+          var centerIndex = Math.round(offset / SYMBOL_GAP);
+          var local = offset - centerIndex * SYMBOL_GAP;
+          var visible = Math.ceil(reelW / SYMBOL_GAP / 2) + 2;
+
+          for (var i = -visible; i <= visible; i++) {
+            var trackIndex = centerIndex + i;
+            var wrapped = ((trackIndex % TRACK_LEN) + TRACK_LEN) % TRACK_LEN;
+            var symbol = SYMBOLS[activeTrack[wrapped]];
+            var x = reelW / 2 + i * SYMBOL_GAP - local;
+
+            if (x < -90 || x > reelW + 90) continue;
+
+            var dist = Math.abs(x - reelW / 2);
+            var scale = Math.max(0.72, 1 - dist / (reelW * 0.85));
+            var alpha = Math.max(0.3, 1 - dist / (reelW * 0.55));
+            var sz = 94 * scale;
+
+            drawGameSymbol(reelCtx, symbol, x, reelH / 2, sz, alpha);
+          }
+          reelDirty = false;
+        }
+
+        // Bet Stepper Helpers
+        function getHighestAffordableBetIndex() {
+          if (!walletReady || bank <= 0) return 0;
+          for (var i = BET_TIERS.length - 1; i >= 0; i--) {
+            if (bank >= BET_TIERS[i]) return i;
+          }
+          return 0;
+        }
+
+        function setBetIndex(newIndex) {
+          var clamped = Math.max(0, Math.min(BET_TIERS.length - 1, newIndex));
+          betIndex = clamped;
+          updateHud();
+        }
+
+        function stepBet(delta) {
+          var target = betIndex + delta;
+          if (target < 0) {
+            haptic("light");
+            return;
+          }
+          if (target >= BET_TIERS.length) {
+            haptic("light");
+            return;
+          }
+          if (walletReady && bank > 0 && BET_TIERS[target] > bank && delta > 0) {
+            haptic("warning");
+            if (betPill) animateClass(betPill, "screen-shake", 250);
+            if (modalBetPill) animateClass(modalBetPill, "screen-shake", 250);
+            spawnPopup("Need " + BET_TIERS[target] + " 💎", innerWidth / 2, innerHeight * 0.4, "#fb7185");
+            return;
+          }
+          setBetIndex(target);
+          Sound.btnClick();
+          haptic("selection");
+        }
+
+        function updateHud() {
+          if (walletReady && bank > 0 && bank < BET_TIERS[betIndex]) {
+            betIndex = getHighestAffordableBetIndex();
+          }
+
+          var currentBet = BET_TIERS[betIndex];
+          if (betAmount) betAmount.textContent = String(currentBet);
+          if (modalBetAmount) modalBetAmount.textContent = String(currentBet);
+          if (bestWinAmount) bestWinAmount.textContent = String(Math.round(currentBet * 4.0 * 2.0 * 1.5 * Math.pow(2, DOUBLEUP_MAX_CHAIN)));
+
+          var canDecrease = betIndex > 0;
+          var canIncrease = (betIndex < BET_TIERS.length - 1) && (!walletReady || bank <= 0 || bank >= BET_TIERS[betIndex + 1]);
+          if (betMinusBtn) betMinusBtn.disabled = !canDecrease;
+          if (betPlusBtn) betPlusBtn.disabled = !canIncrease;
+          if (modalBetMinusBtn) modalBetMinusBtn.disabled = !canDecrease;
+          if (modalBetPlusBtn) modalBetPlusBtn.disabled = !canIncrease;
+
+          if (streakVal) streakVal.textContent = String(streak);
+          var tier = getStreakTier(streak);
+          if (streakMultiplierLabel) streakMultiplierLabel.textContent = tier.label;
+
+          if (shieldVal) shieldVal.textContent = String(shields);
+          if (targetPillText) targetPillText.textContent = "MATCH 3 OF 6";
+
+          // 6 Progress dots
+          for (var f = 0; f < 6; f++) {
+            if (fdots[f]) {
+              if (f < Math.min(6, streak + picks.length)) fdots[f].classList.add("active");
+              else fdots[f].classList.remove("active");
+            }
+          }
+
+          // Standalone Slot Cards
+          for (var i = 0; i < slotEls.length; i++) {
+            var s = picks[i];
+            var el = slotEls[i];
+            if (!el) continue;
+            if (s) {
+              el.style.setProperty("--slot-color", s.color);
+              el.classList.add("filled");
+              if (el.dataset.symbol !== s.id) {
+                el.dataset.symbol = s.id;
+                animateClass(el, "pop", 320);
+              }
+              drawSlotModel(i, s);
+            } else {
+              el.classList.remove("filled");
+              el.classList.remove("pop");
+              el.removeAttribute("data-symbol");
+              drawSlotModel(i, null);
+            }
+          }
+
+          // Dynamic Gate Marquee Text
+          if (gateHeader) {
+            if (picks.length === 0) {
+              gateHeader.textContent = "✦ Stop & Catch ✦";
+            } else if (picks.length === 1) {
+              gateHeader.textContent = "✦ Catch 2 More " + picks[0].name + "s! ✦";
+            } else if (picks.length === 2) {
+              if (picks[0].id === picks[1].id) {
+                gateHeader.textContent = "🔥 1 MORE TO WIN! Match " + picks[0].name + "! 🔥";
+              } else {
+                gateHeader.textContent = "✦ Final Catch · Aim For A Match! ✦";
+              }
+            }
+          }
+
+          // Update Play Button text if on home or ended screen
+          if (playBtn) {
+            if (!walletReady) {
+              playBtn.textContent = "Loading Gems…";
+              playBtn.disabled = true;
+            } else if (bank >= currentBet) {
+              playBtn.textContent = (state === "ended" ? "Play Again · " : "Play · ") + currentBet + " 💎";
+              playBtn.disabled = false;
+            } else if (bank >= BET_TIERS[0]) {
+              var affordableBet = BET_TIERS[getHighestAffordableBetIndex()];
+              playBtn.textContent = (state === "ended" ? "Play Again · " : "Play · ") + affordableBet + " 💎";
+              playBtn.disabled = false;
+            } else {
+              playBtn.textContent = "Get Gems to Play";
+              playBtn.disabled = false;
+            }
+          }
+
+          // Suspense & Vignette Check
+          if (vignette) {
+            if (picks.length === 2 && picks[0] && picks[1] && picks[0].id === picks[1].id && !picks[0].danger) {
+              suspenseActive = true;
+              vignette.className = "suspense";
+            } else if (isFrenzy) {
+              suspenseActive = false;
+              vignette.className = "fever";
+            } else {
+              suspenseActive = false;
+              vignette.className = "";
+            }
+          }
+        }
+
+        function startSpin(delay) {
+          state = "starting";
+          var nextTier = trackTierForState();
+          activeTrack = TRACK_TIERS[nextTier];
+          if (nextTier > lastTrackTier) Sound.dangerRise(nextTier);
+          lastTrackTier = nextTier;
+          setTimeout(function () {
+            if (state === "ended") return;
+            state = "spinning";
+            spinAge = 0;
+            velocity = Math.min(velocity, 60);
+            targetVelocity = speedForStreak();
+            if (reelFrame) reelFrame.classList.add("spinning");
+            if (stopBtn) {
+              stopBtn.disabled = false;
+              stopBtn.textContent = "★ STOP ★";
+            }
+            Sound.spinStart();
+            haptic("selection");
+
+            if (suspenseActive && picks[0]) {
+              Sound.heartbeat();
+            }
+          }, delay || 0);
+        }
+
+        function finishSet() {
+          var currentBet = activeSetBet;
+          var same = (picks.length === 3 && picks[0] && picks[1] && picks[2] && picks[0].id === picks[1].id && picks[1].id === picks[2].id);
+          var rect = reelFrame ? reelFrame.getBoundingClientRect() : { left: innerWidth / 2 - 100, top: innerHeight / 2 - 50, width: 200, height: 100 };
+          var centerX = rect.left + rect.width / 2;
+          var centerY = rect.top + rect.height / 2;
+
+          state = "resolving";
+          if (stopBtn) stopBtn.disabled = true;
+
+          if (same) {
+            var sym = picks[0];
+            var prevTier = getStreakTier(streak);
+            var tier = getStreakTier(streak + 1);
+            var frenzyMult = isFrenzy ? 1.5 : 1;
+            var prize = Math.max(1, Math.round(currentBet * sym.pay * tier.mult * frenzyMult));
+
+            streak += 1;
+            feverCount = Math.min(6, feverCount + 2);
+
+            var isMega = sym.pay >= 2.0 || streak >= 3;
+            Sound.win(isMega);
+            haptic("success");
+            animateClass(streakCard, "bump", 440);
+
+            if (tier.min !== prevTier.min) {
+              setTimeout(function () { Sound.tierUp(); }, 240);
+            }
+
+            spawnPopup("WIN! " + prize + " 💎", centerX, centerY - 18, sym.color);
+            if (streak > 1) spawnPopup("STREAK x" + tier.mult + " 🔥", centerX, centerY + 22, "#fde047");
+
+            spawnSparks(16, centerX, centerY, sym.color);
+            if (isMega) spawnConfetti(28, centerX, centerY);
+
+            if (feverCount >= 6 && !isFrenzy) {
+              isFrenzy = true;
+              feverCount = 0;
+              setTimeout(function () {
+                Sound.frenzy();
+                haptic("heavy");
+                spawnPopup("⚡ LUCKY FRENZY! ⚡", centerX, centerY - 36, "#34d399");
+                spawnConfetti(25, centerX, centerY);
+              }, 350);
+            }
+
+            postStats();
+
+            setTimeout(function () {
+              if (state === "ended") return;
+              enterDoubleUp(prize, centerX, centerY);
+            }, 650);
+          } else {
+            streak = 0;
+            haptic("selection");
+            if (isFrenzy) isFrenzy = false;
+            Sound.mismatch();
+            spawnPopup("MISMATCH 🎲", centerX, centerY - 18, "#cbd5e1");
+            postStats();
+            setTimeout(proceedNextRound, 380);
+          }
+        }
+
+        function proceedNextRound() {
+          if (state === "ended") return;
+
+          if (bank < BET_TIERS[0]) {
+            endGame("bank");
+            return;
+          }
+
+          if (bank < BET_TIERS[betIndex]) {
+            betIndex = getHighestAffordableBetIndex();
+          }
+
+          var nextBet = BET_TIERS[betIndex];
+          bank -= nextBet;
+          activeSetBet = nextBet;
+          picks = [];
+          updateHud();
+          postStats();
+          startSpin(80);
+        }
+
+        // ==========================================
+        // DOUBLE-OR-NOTHING PUSH-YOUR-LUCK
+        // ==========================================
+        function enterDoubleUp(prize, centerX, centerY) {
+          state = "doubleup";
+          pendingPrize = prize;
+          doubleChainLevel = 0;
+          doubleUpCenterX = centerX;
+          doubleUpCenterY = centerY;
+          if (stopBtn) stopBtn.style.display = "none";
+          if (doubleUpRow) doubleUpRow.classList.remove("hidden");
+          updateDoubleUpUI();
+        }
+
+        function currentPushOdds() {
+          return Math.max(0.3, DOUBLEUP_BASE_ODDS - doubleChainLevel * DOUBLEUP_ODDS_STEP);
+        }
+
+        function updateDoubleUpUI() {
+          if (doubleUpPot) doubleUpPot.textContent = "💎 " + pendingPrize;
+          if (collectBtn) collectBtn.textContent = "Collect " + pendingPrize + " 💎";
+          if (pushOdds) pushOdds.textContent = Math.round(currentPushOdds() * 100) + "% chance";
+          if (pushBtn) pushBtn.disabled = doubleChainLevel >= DOUBLEUP_MAX_CHAIN;
+        }
+
+        function exitDoubleUp() {
+          state = "resolving";
+          if (doubleUpRow) doubleUpRow.classList.add("hidden");
+          if (stopBtn) stopBtn.style.display = "";
+          if (collectBtn) collectBtn.disabled = false;
+          if (pushBtn) pushBtn.disabled = false;
+        }
+
+        // How many multiples of the current bet a prize is worth — drives how
+        // big the celebration gets, so a chunky win on a big bet actually
+        // feels bigger than a small one.
+        function prizeRatio(prize) {
+          return prize / Math.max(1, activeSetBet);
+        }
+
+        function collectPrize() {
+          bank += pendingPrize;
+          var ratio = prizeRatio(pendingPrize);
+          var isBigWin = ratio >= 6;
+
+          spawnFlyingGems(Math.min(18, Math.max(6, Math.round(pendingPrize / (activeSetBet * 0.25)))), doubleUpCenterX, doubleUpCenterY);
+          haptic("success");
+
+          if (!isBigWin) {
+            exitDoubleUp();
+            proceedNextRound();
+            return;
+          }
+
+          // Hold the next round until the flash plays out — updateHud()
+          // inside proceedNextRound() would otherwise stomp the vignette
+          // class mid-animation.
+          Sound.jackpot();
+          spawnPopup("BIG WIN! 💎" + pendingPrize, doubleUpCenterX, doubleUpCenterY - 30, "#fde047");
+          spawnConfetti(Math.min(40, Math.round(ratio * 3)), doubleUpCenterX, doubleUpCenterY);
+          if (vignette) {
+            vignette.classList.remove("jackpot");
+            requestAnimationFrame(function () { vignette.classList.add("jackpot"); });
+          }
+          setTimeout(function () {
+            if (vignette) vignette.classList.remove("jackpot");
+            exitDoubleUp();
+            proceedNextRound();
+          }, 650);
+        }
+
+        // Coin-flip style ticking that accelerates toward the reveal, so the
+        // suspense window isn't dead air.
+        function scheduleFlipTicks(totalMs) {
+          var elapsed = 0;
+          var gap = 95;
+          var i = 0;
+          while (elapsed < totalMs - 55) {
+            (function (tickIndex, when) {
+              setTimeout(function () { Sound.pushTick(tickIndex); }, when);
+            })(i, elapsed);
+            elapsed += gap;
+            gap = Math.max(26, gap * 0.76);
+            i++;
+          }
+        }
+
+        function pushDoubleUp() {
+          if (state !== "doubleup" || doubleChainLevel >= DOUBLEUP_MAX_CHAIN) return;
+          if (collectBtn) collectBtn.disabled = true;
+          if (pushBtn) pushBtn.disabled = true;
+          haptic("warning");
+          scheduleFlipTicks(700);
+
+          var odds = currentPushOdds();
+          var won = Math.random() < odds;
+
+          setTimeout(function () {
+            if (won) {
+              pendingPrize *= 2;
+              doubleChainLevel += 1;
+              var hitMaxChain = doubleChainLevel >= DOUBLEUP_MAX_CHAIN;
+              var sparkCount = Math.min(32, 14 + doubleChainLevel * 8);
+
+              haptic("success");
+              spawnPopup("DOUBLED! 💎" + pendingPrize, doubleUpCenterX, doubleUpCenterY, "#34d399");
+              spawnSparks(sparkCount, doubleUpCenterX, doubleUpCenterY, "#34d399");
+
+              if (hitMaxChain) {
+                Sound.jackpot();
+                spawnConfetti(32, doubleUpCenterX, doubleUpCenterY);
+                spawnPopup("MAX PUSH! ⚡", doubleUpCenterX, doubleUpCenterY - 36, "#fde047");
+                if (vignette) {
+                  vignette.classList.remove("jackpot");
+                  requestAnimationFrame(function () {
+                    vignette.classList.add("jackpot");
+                    setTimeout(function () { vignette.classList.remove("jackpot"); }, 700);
+                  });
+                }
+              } else {
+                Sound.win(false);
+                if (doubleChainLevel >= 2) spawnConfetti(16, doubleUpCenterX, doubleUpCenterY);
+              }
+
+              if (collectBtn) collectBtn.disabled = false;
+              updateDoubleUpUI();
+            } else {
+              pendingPrize = 0;
+              Sound.shieldsDepleted();
+              haptic("heavy");
+              animateClass(gameEl, doubleChainLevel >= 2 ? "screen-shake-hard" : "screen-shake", doubleChainLevel >= 2 ? 420 : 360);
+              spawnPopup("BUSTED! 💔", doubleUpCenterX, doubleUpCenterY, "#fb7185");
+              exitDoubleUp();
+              setTimeout(proceedNextRound, 500);
+            }
+          }, 700);
+        }
+
+        function endGame(reason) {
+          state = "ended";
+          targetVelocity = 0;
+          velocity = 0;
+          if (reelFrame) reelFrame.classList.remove("spinning");
+          if (stopBtn) stopBtn.disabled = true;
+          isFrenzy = false;
+          suspenseActive = false;
+          if (vignette) vignette.className = "";
+          postStats("gameOver");
+
+          if (reason === "bomb") {
+            if (overlayTitle) overlayTitle.textContent = "Boom. Bomb Hit!";
+            if (overlaySub) overlaySub.textContent = "Best Streak: " + streak + "× · Total Bank: " + Math.max(0, Math.floor(bank)) + " 💎\nLonger streaks pack more bombs into the reel!";
+          } else if (reason === "skull") {
+            if (overlayTitle) overlayTitle.textContent = "Skull Strike!";
+            if (overlaySub) overlaySub.textContent = "Best Streak: " + streak + "× · Total Bank: " + Math.max(0, Math.floor(bank)) + " 💎\nSkulls creep into the reel the deeper you push a streak.";
+          } else if (reason === "shields") {
+            if (overlayTitle) overlayTitle.textContent = "Out of Shields";
+            if (overlaySub) overlaySub.textContent = "Best Streak: " + streak + "× · Total Bank: " + Math.max(0, Math.floor(bank)) + " 💎\nTime your stops carefully!";
+          } else if (reason === "bank") {
+            if (overlayTitle) overlayTitle.textContent = "Out of Gems";
+            if (overlaySub) overlaySub.textContent = "Best Streak: " + streak + "× · Total Bank: " + Math.max(0, Math.floor(bank)) + " 💎\nRefill with Mana to keep spinning!";
+          } else {
+            if (overlayTitle) overlayTitle.textContent = "Game Over";
+            if (overlaySub) overlaySub.textContent = "Best Streak: " + streak + "× · Total Bank: " + Math.max(0, Math.floor(bank)) + " 💎";
+          }
+
+          updateHud();
+          
+          setTimeout(function () {
+            if (introOverlay) {
+              introOverlay.classList.remove("hidden");
+              drawPayoutCanvases();
+            }
+          }, 380);
+        }
+
+        function stopReel() {
+          if (state !== "spinning") return;
+          Sound.unlock();
+
+          if (spinAge < MIN_SPIN_TIME) {
+            haptic("selection");
+            return;
+          }
+
+          state = "resolving";
+          if (stopBtn) stopBtn.disabled = true;
+          if (reelFrame) reelFrame.classList.remove("spinning");
+
+          var sampledOffset = renderedOffset;
+          var nearestIndex = Math.round(sampledOffset / SYMBOL_GAP);
+          var targetOffset = nearestIndex * SYMBOL_GAP;
+          var missDistance = Math.abs(sampledOffset - targetOffset);
+          var tolerance = Math.max(22, stopGate.getBoundingClientRect().width / 2 - 6);
+          var sym = SYMBOLS[activeTrack[((nearestIndex % TRACK_LEN) + TRACK_LEN) % TRACK_LEN]];
+
+          targetVelocity = 0;
+          velocity = 0;
+          offset = sampledOffset;
+
+          var gateRect = stopGate ? stopGate.getBoundingClientRect() : { left: innerWidth / 2 - 40, top: innerHeight / 2 - 20, width: 80, height: 40 };
+          var gateX = gateRect.left + gateRect.width / 2;
+          var gateY = gateRect.top + gateRect.height / 2;
+
+          // Missed Stop
+          if (missDistance > tolerance) {
+            var nearMissZone = tolerance * 2.2;
+            var isNearMiss = missDistance <= nearMissZone;
+
+            velocity = 0;
+            reelDirty = true;
+            shields -= 1;
+            animateClass(stopGate, "miss", 380);
+            animateClass(gameEl, isNearMiss ? "screen-shake-hard" : "screen-shake", isNearMiss ? 420 : 360);
+            haptic(isNearMiss ? "heavy" : "warning");
+            spawnSparks(isNearMiss ? 18 : 10, gateX, gateY, "#fb7185");
+
+            if (isNearMiss) {
+              Sound.nearMiss();
+              spawnPopup("SO CLOSE! 😱", gateX, gateY - 40, "#fde047");
+            }
+
+            if (shields <= 0) {
+              Sound.shieldsDepleted();
+              spawnPopup("OUT OF SHIELDS! ⚡", gateX, gateY - 20, "#fb7185");
+              updateHud();
+              postStats();
+              setTimeout(function () { endGame("shields"); }, 380);
+            } else {
+              Sound.shieldDeflect();
+              spawnPopup("SHIELD SAVED! 🛡️", gateX, gateY - 20, "#fb7185");
+              updateHud();
+              postStats();
+              setTimeout(function () {
+                Sound.missRestart();
+                startSpin(80);
+              }, 340);
+            }
+            return;
+          }
+
+          // Clean Gate Hit!
+          offset = targetOffset;
+          velocity = 0;
+          reelDirty = true;
+          animateClass(stopGate, "flash", 340);
+          haptic("medium");
+          spawnSparks(12, gateX, gateY, sym.color);
+
+          // Danger Tile (Bomb or Skull)
+          if (sym.danger) {
+            Sound.bombExplosion();
+            haptic("heavy");
+            animateClass(gameEl, "screen-shake", 480);
+            spawnConfetti(20, gateX, gateY);
+            if (sym.id === "skull") {
+              spawnPopup("SKULL! RUN OVER! 💀", gateX, gateY - 30, "#cbd5e1");
+            } else {
+              spawnPopup("BOOM! BOMB HIT! 💣", gateX, gateY - 30, "#fb923c");
+            }
+            setTimeout(function () { endGame(sym.id); }, 400);
+            return;
+          }
+
+          // Clean Symbol Locked
+          picks.push(sym);
+          feverCount = Math.min(6, feverCount + 1);
+
+          if (picks.length === 2 && picks[0].id === picks[1].id) {
+            Sound.oneMore();
+            spawnPopup("1 MORE TO WIN! 🔥", gateX, gateY - 24, "#fde047");
+          } else {
+            Sound.lockHit();
+            spawnPopup(sym.name + " Locked! ✨", gateX, gateY - 24, sym.color);
+          }
+
+          updateHud();
+
+          if (picks.length === 3) {
+            finishSet();
+          } else {
+            startSpin(340);
+          }
+        }
+
+        function startGame() {
+          Sound.unlock();
+          if (!walletReady) return;
+
+          if (bank < BET_TIERS[0]) {
+            openBuyOverlay(true);
+            return;
+          }
+
+          if (bank < BET_TIERS[betIndex]) {
+            betIndex = getHighestAffordableBetIndex();
+          }
+
+          var currentBet = BET_TIERS[betIndex];
+          state = "starting";
+          bank -= currentBet;
+          activeSetBet = currentBet;
+          streak = 0;
+          shields = STARTING_SHIELDS;
+          picks = [];
+          feverCount = 0;
+          isFrenzy = false;
+          suspenseActive = false;
+          pendingPrize = 0;
+          doubleChainLevel = 0;
+          activeTrack = TRACK_TIERS[0];
+          lastTrackTier = 0;
+          offset = Math.random() * TRACK_LEN * SYMBOL_GAP;
+          velocity = 0;
+          reelDirty = true;
+          startMs = Date.now();
+
+          if (doubleUpRow) doubleUpRow.classList.add("hidden");
+          if (stopBtn) stopBtn.style.display = "";
+          if (introOverlay) introOverlay.classList.add("hidden");
+          updateHud();
+          postStats();
+          startSpin(200);
+        }
+
+        function showHome() {
+          state = "ready";
+          if (overlayTitle) overlayTitle.textContent = "Lucky Stop";
+          if (overlaySub) overlaySub.textContent = "Stop the reel to lock 3 matching symbols. The longer your streak, the bigger the danger. Win and you can Push your luck for Double-or-Nothing!";
+          updateHud();
+        }
+
+        // ==========================================
+        // MANA / GEM STORE MODAL
+        // ==========================================
+        function renderPacks() {
+          if (!packsEl) return;
+          packsEl.textContent = "";
+          PACKS.forEach(function (pack) {
+            var btn = document.createElement("button");
+            var affordable = manaBalance >= pack.mana;
+            btn.type = "button";
+            btn.className = "pack-btn" + (selectedMana === pack.mana ? " selected" : "") + (affordable ? "" : " disabled");
+            btn.innerHTML = '<span><span class="pack-title">💎 ' + pack.gems + ' Gems</span><div class="pack-sub">' + pack.label + '</div></span><span class="pack-cost">' + pack.mana + ' Mana</span>';
+            btn.disabled = !affordable;
+            btn.addEventListener("click", function () {
+              selectedMana = pack.mana;
+              if (confirmBuyBtn) {
+                confirmBuyBtn.disabled = false;
+                confirmBuyBtn.textContent = "Get " + pack.gems + " Gems";
+              }
+              if (buyError) buyError.textContent = "";
+              renderPacks();
+              haptic("selection");
+              Sound.btnClick();
+            });
+            packsEl.appendChild(btn);
+          });
+        }
+
+        function openBuyOverlay(required) {
+          selectedMana = 0;
+          buyPending = false;
+          if (buyError) buyError.textContent = "";
+          if (confirmBuyBtn) {
+            confirmBuyBtn.disabled = true;
+            confirmBuyBtn.textContent = "Select a Pack";
+          }
+          if (cancelBuyBtn) cancelBuyBtn.style.display = (required && bank < BET_TIERS[betIndex]) ? "none" : "block";
+          if (buyOverlay) buyOverlay.classList.remove("hidden");
+          postRN({ type: "getManaBalance" });
+          renderPacks();
+        }
+
+        // Animation & Physics Loop
+        function update(dt) {
+          if (state === "spinning") {
+            spinAge += dt;
+            velocity += (targetVelocity - velocity) * Math.min(1, dt * 5.0);
+            offset += velocity * dt;
+
+            var currentTickIndex = Math.floor(offset / SYMBOL_GAP);
+            if (currentTickIndex !== lastTickIndex) {
+              lastTickIndex = currentTickIndex;
+              var speedRatio = Math.min(1, velocity / 600);
+              Sound.tick(380 + speedRatio * 400);
+            }
+
+            var loopLength = TRACK_LEN * SYMBOL_GAP;
+            if (offset > loopLength * 8) offset %= loopLength;
+            reelDirty = true;
+          }
+
+          if (flyingGemsActive || confettiActive || sparksActive || popupsActive || fxDirty) {
+            updateFX(dt);
+          }
+        }
+
+        function frame(now) {
+          try {
+            var dt = Math.min(0.033, Math.max(0.001, (now - lastTime) / 1000));
+            lastTime = now;
+            update(dt);
+
+            if (reelDirty) drawReel();
+            if (fxDirty) drawFX();
+          } catch (e) {
+            console.error("Frame error:", e);
+          }
+
+          requestAnimationFrame(frame);
+        }
+
+        // Event Listeners
+        if (stopBtn) {
+          stopBtn.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            stopReel();
+          });
+        }
+
+        if (playBtn) {
+          playBtn.addEventListener("click", function () {
+            Sound.btnClick();
+            if (bank >= BET_TIERS[betIndex]) {
+              startGame();
+            } else if (bank >= BET_TIERS[0]) {
+              betIndex = getHighestAffordableBetIndex();
+              startGame();
+            } else {
+              openBuyOverlay(true);
+            }
+          });
+        }
+
+        if (collectBtn) {
+          collectBtn.addEventListener("click", function () {
+            Sound.btnClick();
+            collectPrize();
+          });
+        }
+        if (pushBtn) {
+          pushBtn.addEventListener("click", function () {
+            Sound.btnClick();
+            pushDoubleUp();
+          });
+        }
+
+        // Bet Stepper Listeners
+        if (betMinusBtn) {
+          betMinusBtn.addEventListener("click", function () { stepBet(-1); });
+        }
+        if (betPlusBtn) {
+          betPlusBtn.addEventListener("click", function () { stepBet(1); });
+        }
+        if (betPill) {
+          betPill.addEventListener("click", function () {
+            var next = (betIndex + 1) % BET_TIERS.length;
+            if (walletReady && bank > 0 && BET_TIERS[next] > bank) next = 0;
+            setBetIndex(next);
+            Sound.btnClick();
+            haptic("selection");
+          });
+        }
+
+        if (modalBetMinusBtn) {
+          modalBetMinusBtn.addEventListener("click", function () { stepBet(-1); });
+        }
+        if (modalBetPlusBtn) {
+          modalBetPlusBtn.addEventListener("click", function () { stepBet(1); });
+        }
+        if (modalBetPill) {
+          modalBetPill.addEventListener("click", function () {
+            var next = (betIndex + 1) % BET_TIERS.length;
+            if (walletReady && bank > 0 && BET_TIERS[next] > bank) next = 0;
+            setBetIndex(next);
+            Sound.btnClick();
+            haptic("selection");
+          });
+        }
+
+        if (muteBtn) {
+          muteBtn.addEventListener("click", function () {
+            var isMuted = Sound.toggle();
+            if (soundWave) soundWave.style.display = isMuted ? "none" : "block";
+            muteBtn.setAttribute("aria-label", isMuted ? "Unmute sound" : "Mute sound");
+            haptic("selection");
+          });
+        }
+
+        if (cancelBuyBtn) {
+          cancelBuyBtn.addEventListener("click", function () {
+            Sound.btnClick();
+            if (buyOverlay) buyOverlay.classList.add("hidden");
+          });
+        }
+
+        if (confirmBuyBtn) {
+          confirmBuyBtn.addEventListener("click", function () {
+            if (!selectedMana || buyPending) return;
+            buyPending = true;
+            confirmBuyBtn.disabled = true;
+            confirmBuyBtn.textContent = "Converting Mana…";
+            Sound.btnClick();
+            postRN({ type: "buyGems", mana: selectedMana });
+          });
+        }
+
+        // WebView PostMessage Listener
+        window.addEventListener("message", function (event) {
+          try {
+            var data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+            if (!data || !data.type) return;
+
+            if (data.type === "manaBalance") {
+              manaBalance = Number(data.balance) || 0;
+              if (!walletSeeded) {
+                bank = Math.max(0, Number(data.gemBalance) || 0);
+                walletSeeded = true;
+              }
+              walletReady = true;
+              if (manaBalanceText) manaBalanceText.textContent = manaBalance + " Mana";
+              renderPacks();
+              if (bank > 0 && bank < BET_TIERS[betIndex]) {
+                betIndex = getHighestAffordableBetIndex();
+              }
+              if (state === "loading") showHome();
+              else updateHud();
+            } else if (data.type === "openBuyGems") {
+              openBuyOverlay(false);
+            } else if (data.type === "gemsGranted") {
+              buyPending = false;
+              manaBalance = Number(data.manaBalance) || 0;
+              bank += Number(data.gems) || 0;
+              if (manaBalanceText) manaBalanceText.textContent = manaBalance + " Mana";
+              if (buyOverlay) buyOverlay.classList.add("hidden");
+              if (bank >= BET_TIERS[betIndex]) {
+                // Keep selected bet
+              } else {
+                betIndex = getHighestAffordableBetIndex();
+              }
+              if (state === "ended" || state === "ready") showHome();
+              else updateHud();
+              postStats();
+              spawnConfetti(28, innerWidth / 2, innerHeight / 2);
+              Sound.win(true);
+            } else if (data.type === "gemsDenied") {
+              buyPending = false;
+              if (confirmBuyBtn) {
+                confirmBuyBtn.disabled = false;
+                confirmBuyBtn.textContent = "Try Again";
+              }
+              if (buyError) buyError.textContent = data.error === "insufficient_mana" ? "Not enough Mana balance." : "Purchase could not be completed.";
+            }
+          } catch (_) {}
+        });
+
+        document.addEventListener("visibilitychange", function () {
+          lastTime = performance.now();
+        });
+
+        window.addEventListener("resize", resizeCanvases, { passive: true });
+
+        // Initialize
+        resizeCanvases();
+        updateHud();
+        drawReel();
+        requestAnimationFrame(frame);
+        postRN({ type: "getManaBalance" });
+
+        // Fallback for standalone browser testing
+        if (!window.ReactNativeWebView) {
+          setTimeout(function () {
+            window.dispatchEvent(new MessageEvent("message", { data: JSON.stringify({ type: "manaBalance", balance: 250, gemBalance: 150 }) }));
+            if (new URLSearchParams(window.location.search).has("autoplay")) {
+              setTimeout(startGame, 100);
+            }
+          }, 120);
+        }
+      })();
+    </script>
+  </body>
+</html>

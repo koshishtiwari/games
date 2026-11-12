@@ -1,0 +1,1804 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+    />
+    <title>Ball Drop</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0e1420;
+        color: #fff;
+        font-family: Inter, system-ui, sans-serif;
+        touch-action: none;
+      }
+      canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* Bottom controls */
+      #controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        background: #0e1420;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 10px 14px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .bet-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .bet-display {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.06);
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 0.02em;
+      }
+      .bet-btn {
+        width: 52px;
+        height: 42px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-size: 22px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.1s;
+      }
+      .bet-btn:active {
+        background: rgba(255, 255, 255, 0.16);
+      }
+      #spinBtn {
+        height: 52px;
+        width: 100%;
+        border: 3px solid rgba(0, 0, 0, 0.55);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #f8c825 0%, #e8920a 100%);
+        color: #3d1f00;
+        font-size: 20px;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        box-shadow:
+          0 4px 0 rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        transition:
+          transform 0.08s,
+          box-shadow 0.08s;
+      }
+      #spinBtn:active,
+      #spinBtn.pressed {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+      }
+      #spinBtn:disabled {
+        opacity: 0.4;
+        cursor: default;
+        transform: none;
+      }
+
+      /* Profit flash top-left */
+      #feedFlash {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+        font-size: 15px;
+        font-weight: 900;
+        pointer-events: none;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+        opacity: 0;
+        transform: translateY(0px);
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+      }
+      #muteBtn {
+        position: fixed;
+        top: clamp(54px, 6.5vh, 68px);
+        right: 54px;
+        z-index: 11;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.35);
+        color: #fff;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      #streakBadge {
+        position: fixed;
+        top: 50px;
+        left: 50%;
+        z-index: 11;
+        transform: translateX(-50%) scale(0.7);
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 14px;
+        font-weight: 950;
+        letter-spacing: 0.03em;
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(247, 147, 30, 0.4);
+        opacity: 0;
+        transition:
+          opacity 0.15s,
+          transform 0.15s;
+        pointer-events: none;
+      }
+      #streakBadge.show {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+
+      /* Boost badge */
+      #boostBadge {
+        position: fixed;
+        top: 92px;
+        left: 50%;
+        z-index: 12;
+        transform: translateX(-50%) scale(0.7);
+        background: linear-gradient(135deg, #a855f7, #6366f1);
+        border-radius: 20px;
+        padding: 7px 18px;
+        font-size: 14px;
+        font-weight: 950;
+        letter-spacing: 0.03em;
+        color: #fff;
+        box-shadow: 0 4px 18px rgba(139, 92, 246, 0.55);
+        opacity: 0;
+        transition:
+          opacity 0.18s,
+          transform 0.18s;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      #boostBadge.show {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+
+      /* Challenge banner */
+      #challengeBanner {
+        position: fixed;
+        top: 134px;
+        left: 50%;
+        z-index: 11;
+        transform: translateX(-50%) translateY(-10px);
+        width: min(300px, 86%);
+        background: #151c2c;
+        border: 1px solid rgba(168, 85, 247, 0.4);
+        border-radius: 14px;
+        padding: 10px 14px;
+        opacity: 0;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+        pointer-events: none;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      }
+      #challengeBanner.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0px);
+      }
+      #challengeBanner .ctitle {
+        font-size: 12px;
+        font-weight: 800;
+        color: #c4b5fd;
+        letter-spacing: 0.02em;
+        margin-bottom: 4px;
+      }
+      #challengeBanner .cbarTrack {
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+        margin-bottom: 4px;
+      }
+      #challengeBanner .cbarFill {
+        height: 100%;
+        background: linear-gradient(90deg, #a855f7, #6366f1);
+        border-radius: 4px;
+        width: 0%;
+        transition: width 0.1s linear;
+      }
+      #challengeBanner .cmeta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #8a9bb8;
+        font-weight: 700;
+      }
+      #challengeBanner.success {
+        border-color: rgba(74, 222, 128, 0.5);
+      }
+      #challengeBanner.fail {
+        border-color: rgba(248, 113, 113, 0.4);
+      }
+
+      /* Big win celebration */
+      #bigWinFx {
+        position: fixed;
+        inset: 0;
+        z-index: 25;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      #bigWinFx.show {
+        opacity: 1;
+      }
+      #bigWinFx .bwtext {
+        font-size: 54px;
+        font-weight: 950;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #fff7d6, #ffd84d, #ff9d2e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(255, 200, 60, 0.5);
+        transform: scale(0.6);
+        transition: transform 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+      }
+      #bigWinFx.show .bwtext {
+        transform: scale(1);
+      }
+      .confetti {
+        position: fixed;
+        top: -10px;
+        width: 8px;
+        height: 14px;
+        z-index: 24;
+        pointer-events: none;
+        border-radius: 2px;
+      }
+
+      /* Overlay */
+      #overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        background: rgba(5, 8, 18, 0.93);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ocard {
+        text-align: center;
+        padding: 32px 28px;
+        background: #0e1420;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        width: min(340px, 90%);
+      }
+      .otitle {
+        font-size: 38px;
+        font-weight: 950;
+        letter-spacing: -0.03em;
+        background: linear-gradient(135deg, #ffe566, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .osub {
+        margin: 12px 0 26px;
+        color: #8a9bb8;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+      .oplay {
+        height: 52px;
+        width: 160px;
+        border: 3px solid rgba(0, 0, 0, 0.55);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #f8c825 0%, #e8920a 100%);
+        color: #3d1f00;
+        font-size: 20px;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        box-shadow:
+          0 4px 0 rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      }
+
+      /* Buy gems overlay */
+      #buyOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(5, 8, 18, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .bcard {
+        padding: 28px 24px;
+        background: #0e1420;
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        border-radius: 20px;
+        width: min(340px, 92%);
+      }
+      .btitle {
+        font-size: 24px;
+        font-weight: 950;
+        color: #60a5fa;
+        margin-bottom: 4px;
+      }
+      .brate {
+        font-size: 13px;
+        color: #8a9bb8;
+        margin-bottom: 20px;
+      }
+      .bpacks {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .bpack {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        cursor: pointer;
+        transition:
+          border-color 0.12s,
+          background 0.12s;
+      }
+      .bpack:active,
+      .bpack.selected {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.12);
+      }
+      .bpack-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .bpack-gem {
+        font-size: 22px;
+      }
+      .bpack-gems {
+        font-size: 18px;
+        font-weight: 900;
+        color: #fff;
+      }
+      .bpack-label {
+        font-size: 12px;
+        color: #8a9bb8;
+        margin-top: 1px;
+      }
+      .bpack-cost {
+        font-size: 15px;
+        font-weight: 800;
+        color: #60a5fa;
+      }
+      .bpack-cost span {
+        font-size: 11px;
+        font-weight: 600;
+        color: #8a9bb8;
+      }
+      .bbuy {
+        height: 52px;
+        width: 100%;
+        border: 3px solid rgba(0, 0, 0, 0.55);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+        color: #fff;
+        font-size: 18px;
+        font-weight: 950;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4);
+      }
+      .bbuy:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .bcancel {
+        display: block;
+        margin-top: 12px;
+        width: 100%;
+        background: none;
+        border: none;
+        color: #8a9bb8;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 6px 0;
+      }
+      .bmana {
+        font-size: 13px;
+        color: #8a9bb8;
+        text-align: center;
+        margin-bottom: 16px;
+      }
+      .bmana strong {
+        color: #60a5fa;
+      }
+      .berr {
+        font-size: 13px;
+        color: #f87171;
+        text-align: center;
+        margin-top: 8px;
+        min-height: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="bigWinFx"><span class="bwtext" id="bigWinText"></span></div>
+
+    <span id="feedFlash"></span>
+    <button id="muteBtn" aria-label="Toggle sound">🔊</button>
+    <div id="streakBadge"></div>
+    <div id="boostBadge"></div>
+    <div id="challengeBanner">
+      <div class="ctitle" id="challengeTitle">
+        ⚡ Drop 100 balls in 30s for 2x Boost!
+      </div>
+      <div class="cbarTrack">
+        <div class="cbarFill" id="challengeFill"></div>
+      </div>
+      <div class="cmeta">
+        <span id="challengeCount">0 / 100</span
+        ><span id="challengeTime">30s</span>
+      </div>
+    </div>
+
+    <div id="controls">
+      <div class="bet-row">
+        <button class="bet-btn" id="betMinus">−</button>
+        <div class="bet-display"><span id="betEl">10</span> 💎</div>
+        <button class="bet-btn" id="betPlus">+</button>
+      </div>
+      <button id="spinBtn">DROP</button>
+    </div>
+
+    <div id="overlay">
+      <div class="ocard">
+        <div class="otitle">Ball Drop</div>
+        <div class="osub">
+          Drop the ball through the pegs.<br />Land on a multiplier to win
+          gems.<br /><br />Tap 💎 at the top to buy gems.<br />1 Mana = 10 💎
+          Gems
+        </div>
+        <button class="oplay" id="playBtn">BUY GEMS</button>
+      </div>
+    </div>
+
+    <div id="buyOverlay" style="display: none">
+      <div class="bcard">
+        <div class="btitle">💎 Buy Gems</div>
+        <div class="brate">1 Mana = 10 Gems</div>
+        <div class="bmana">
+          Your Mana: <strong id="manaDisplayEl">…</strong>
+        </div>
+        <div class="bpacks" id="packsEl"></div>
+        <button class="bbuy" id="confirmBuyBtn" disabled>Select a pack</button>
+        <button class="bcancel" id="cancelBuyBtn">Cancel</button>
+        <div class="berr" id="buyErrEl"></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var cv = document.getElementById("c");
+        var cx = cv.getContext("2d");
+        var W = 0,
+          H = 0,
+          DPR = 1;
+
+        var betEl = document.getElementById("betEl");
+        var spinBtn = document.getElementById("spinBtn");
+        var overlay = document.getElementById("overlay");
+        var playBtn = document.getElementById("playBtn");
+        var buyOverlay = document.getElementById("buyOverlay");
+        var manaDisplayEl = document.getElementById("manaDisplayEl");
+        var packsEl = document.getElementById("packsEl");
+        var confirmBuyBtn = document.getElementById("confirmBuyBtn");
+        var cancelBuyBtn = document.getElementById("cancelBuyBtn");
+        var buyErrEl = document.getElementById("buyErrEl");
+        var muteBtn = document.getElementById("muteBtn");
+        var bigWinFx = document.getElementById("bigWinFx");
+        var bigWinText = document.getElementById("bigWinText");
+        var streakBadge = document.getElementById("streakBadge");
+        var streakTimer = null;
+        function showStreak(n) {
+          streakBadge.textContent = "🔥 " + n + "x STREAK";
+          streakBadge.classList.add("show");
+          clearTimeout(streakTimer);
+          streakTimer = setTimeout(function () {
+            streakBadge.classList.remove("show");
+          }, 1200);
+        }
+        function hideStreak() {
+          clearTimeout(streakTimer);
+          streakBadge.classList.remove("show");
+        }
+
+        var boostBadge = document.getElementById("boostBadge");
+        var challengeBanner = document.getElementById("challengeBanner");
+        var challengeFill = document.getElementById("challengeFill");
+        var challengeCount = document.getElementById("challengeCount");
+        var challengeTime = document.getElementById("challengeTime");
+
+        // ─── State ────────────────────────────────────────────────────────
+        var bank = 0,
+          bet = 10,
+          score = 0,
+          drops = 0,
+          wins = 0,
+          maxCombo = 1,
+          combo = 1;
+        var totalProfit = 0,
+          startMs = 0;
+        var running = false,
+          ended = false;
+        var ctrlH = 0;
+        var manaBalance = 0;
+        var selectedMana = 0;
+        var buyPending = false;
+        var isFirstOpen = true;
+
+        // ─── Boost & challenge state ────────────────────────────────────────
+        var BOOST_MULT = 2;
+        // Absolute cap (in gems) on how much extra a boost can add to a
+        // single payout, regardless of bet size. Keeps the boost meaningful
+        // for small bets while preventing it from handing out huge windfalls
+        // once a player has scaled up their bet with a bigger bankroll.
+        var MAX_BOOST_BONUS = 150;
+        var MILESTONE_INTERVAL = 200;
+        var MILESTONE_BOOST_MS = 2000;
+        // First few offers at fixed drop counts, then repeats at the last interval.
+        var CHALLENGE_OFFER_SCHEDULE = [150, 500, 1500];
+        var CHALLENGE_REPEAT_INTERVAL = 1500;
+        var CHALLENGE_TARGET = 100;
+        var CHALLENGE_WINDOW_MS = 30000;
+        var CHALLENGE_REWARD_MS = 8000;
+        var boostUntil = 0;
+        var lastMilestone = 0;
+        var nextChallengeIdx = 0;
+        var nextChallengeAt = CHALLENGE_OFFER_SCHEDULE[0];
+        var challengeActive = false;
+        var challengeStartMs = 0;
+        var challengeStartDrops = 0;
+        var challengeTimer = null;
+
+        var PACKS = [
+          { mana: 10, gems: 100, label: "Starter" },
+          { mana: 50, gems: 500, label: "Popular" },
+          { mana: 100, gems: 1000, label: "Best value" },
+          { mana: 200, gems: 2000, label: "High roller" },
+        ];
+
+        // ─── Haptics ──────────────────────────────────────────────────────
+        function haptic(style) {
+          postRN({ type: "haptic", style: style });
+        }
+
+        // ─── Sound (synthesized, no asset files) ───────────────────────────
+        var SFX = (function () {
+          var ctx = null,
+            muted = false,
+            unlocked = false;
+          function ensure() {
+            if (!ctx) {
+              var AC = window.AudioContext || window.webkitAudioContext;
+              if (!AC) return null;
+              ctx = new AC();
+            }
+            if (ctx.state === "suspended") ctx.resume();
+            return ctx;
+          }
+          function unlock() {
+            if (unlocked) return;
+            unlocked = true;
+            var c = ensure();
+            if (!c) return;
+            var o = c.createOscillator(),
+              g = c.createGain();
+            g.gain.value = 0;
+            o.connect(g);
+            g.connect(c.destination);
+            o.start();
+            o.stop(c.currentTime + 0.01);
+          }
+          function tone(freq, dur, opts) {
+            if (muted) return;
+            var c = ensure();
+            if (!c) return;
+            opts = opts || {};
+            var type = opts.type || "sine";
+            var vol = opts.vol !== undefined ? opts.vol : 0.18;
+            var t0 = c.currentTime;
+            var o = c.createOscillator(),
+              g = c.createGain();
+            o.type = type;
+            o.frequency.setValueAtTime(freq, t0);
+            if (opts.slideTo)
+              o.frequency.exponentialRampToValueAtTime(
+                Math.max(1, opts.slideTo),
+                t0 + dur,
+              );
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.exponentialRampToValueAtTime(
+              vol,
+              t0 + Math.min(0.015, dur * 0.2),
+            );
+            g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+            o.connect(g);
+            g.connect(c.destination);
+            o.start(t0);
+            o.stop(t0 + dur + 0.02);
+          }
+          function noise(dur, opts) {
+            if (muted) return;
+            var c = ensure();
+            if (!c) return;
+            opts = opts || {};
+            var vol = opts.vol !== undefined ? opts.vol : 0.12;
+            var bufSize = Math.floor(c.sampleRate * dur);
+            var buf = c.createBuffer(1, bufSize, c.sampleRate);
+            var d = buf.getChannelData(0);
+            for (var i = 0; i < bufSize; i++)
+              d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 2);
+            var src = c.createBufferSource();
+            src.buffer = buf;
+            var g = c.createGain();
+            g.gain.value = vol;
+            var filt = c.createBiquadFilter();
+            filt.type = "bandpass";
+            filt.frequency.value = opts.freq || 1200;
+            filt.Q.value = opts.q || 1;
+            src.connect(filt);
+            filt.connect(g);
+            g.connect(c.destination);
+            src.start();
+          }
+
+          return {
+            unlock: unlock,
+            setMuted: function (m) {
+              muted = m;
+            },
+            isMuted: function () {
+              return muted;
+            },
+            drop: function () {
+              tone(220, 0.09, { type: "sine", vol: 0.1, slideTo: 160 });
+            },
+            peg: function (strength) {
+              // soft filtered knock instead of a tonal blip -- reads as a
+              // physical tap on plastic/wood rather than a beep
+              noise(0.05, {
+                vol: Math.min(0.16, 0.06 + strength * 0.1),
+                freq: 900 + Math.random() * 500,
+                q: 2.2,
+              });
+            },
+            fallStart: function () {},
+            fallStop: function () {},
+            land: function (mult) {
+              // pitch scales with multiplier so big wins sound brighter
+              var base =
+                mult >= 1 ? 330 + Math.min(540, mult * 40) : 220 - mult * 120;
+              tone(base, 0.16, {
+                type: "square",
+                vol: 0.12,
+                slideTo: base * 1.4,
+              });
+              if (mult >= 1)
+                tone(base * 1.5, 0.18, {
+                  type: "sine",
+                  vol: 0.08,
+                  slideTo: base * 2,
+                });
+            },
+            win: function () {
+              tone(523, 0.1, { type: "sine", vol: 0.15 });
+              setTimeout(function () {
+                tone(659, 0.1, { type: "sine", vol: 0.15 });
+              }, 80);
+              setTimeout(function () {
+                tone(784, 0.16, { type: "sine", vol: 0.16 });
+              }, 160);
+            },
+            bigWin: function () {
+              var notes = [523, 659, 784, 1047, 1319];
+              notes.forEach(function (f, i) {
+                setTimeout(function () {
+                  tone(f, 0.22, { type: "sine", vol: 0.17 });
+                }, i * 90);
+              });
+              setTimeout(function () {
+                noise(0.4, { vol: 0.1, freq: 3000 });
+              }, 120);
+            },
+            lose: function () {
+              tone(180, 0.12, { type: "sawtooth", vol: 0.07, slideTo: 90 });
+            },
+            click: function () {
+              tone(700, 0.04, { type: "square", vol: 0.08 });
+            },
+          };
+        })();
+
+        // ─── Multipliers ──────────────────────────────────────────────────
+        // 16 rows → binomial distribution strongly peaks at center.
+        // Center slots pay near-miss multipliers (0.7x-0.9x) instead of crushing
+        // losses, shoulders pay small frequent wins (1.1x-1.7x), and rare edge
+        // slots pay big (4x-16x). EV ≈ 0.965x per drop (~3.5% house edge).
+        var MULTS = [16, 4, 1.7, 1.1, 0.9, 0.7, 0.9, 1.1, 1.7, 4, 16];
+        var SLOT_COUNT = MULTS.length;
+        var ROWS = 16;
+
+        function slotBg(i) {
+          var mid = Math.floor(SLOT_COUNT / 2);
+          var d = Math.abs(i - mid);
+          if (d >= 5) return "#d12c2c";
+          if (d >= 4) return "#c73a1a";
+          if (d >= 3) return "#e0431e";
+          if (d >= 2) return "#e8711a";
+          if (d >= 1) return "#e8a020";
+          return "#e8c420";
+        }
+
+        var board = {
+          left: 0,
+          right: 0,
+          launchY: 0,
+          top: 0,
+          bottom: 0,
+          pegR: 0,
+          spacing: 0,
+        };
+        var pegs = [];
+        var slots = [];
+
+        function measure() {
+          var el = document.getElementById("controls");
+          ctrlH = el ? el.offsetHeight : 110;
+        }
+
+        function layout() {
+          measure();
+          var pad = Math.max(14, W * 0.05);
+          var usableW = W - pad * 2;
+          board.spacing = usableW / ROWS;
+          var pyramidBaseW = ROWS * board.spacing;
+          board.left = (W - pyramidBaseW) / 2;
+          board.right = board.left + pyramidBaseW;
+          var slotH = Math.max(32, Math.min(42, H * 0.052));
+          // Leave a small visible launch lane below the native top pills.
+          board.launchY = Math.max(96, Math.min(108, H * 0.105));
+          var launchLaneH = Math.max(28, Math.min(34, H * 0.032));
+          board.top = board.launchY + launchLaneH;
+          board.bottom = H - ctrlH - slotH - 24;
+          board.pegR = Math.max(3.5, Math.min(6.5, board.spacing * 0.13));
+
+          pegs = [];
+          var rowGap = (board.bottom - board.top) / (ROWS - 1);
+          for (var r = 0; r < ROWS; r++) {
+            var count = r + 2;
+            var span = (count - 1) * board.spacing;
+            var sx = W / 2 - span / 2;
+            var y = board.top + r * rowGap;
+            for (var c = 0; c < count; c++) {
+              pegs.push({
+                x: sx + c * board.spacing,
+                y: y,
+                r: board.pegR,
+                squeeze: 0,
+                sqVel: 0,
+                flash: 0,
+              });
+            }
+          }
+
+          slots = [];
+          var sw = (board.right - board.left) / SLOT_COUNT;
+          for (var i = 0; i < SLOT_COUNT; i++) {
+            slots.push({
+              x: board.left + i * sw,
+              y: board.bottom + 8,
+              w: sw,
+              h: slotH,
+              mult: MULTS[i],
+              color: slotBg(i),
+              flash: 0,
+            });
+          }
+        }
+
+        function resize() {
+          DPR = Math.min(window.devicePixelRatio || 1, 2);
+          W = window.innerWidth;
+          H = window.innerHeight;
+          cv.width = Math.round(W * DPR);
+          cv.height = Math.round(H * DPR);
+          cv.style.width = W + "px";
+          cv.style.height = H + "px";
+          cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          layout();
+        }
+
+        // ─── Physics ──────────────────────────────────────────────────────
+        var balls = [];
+        var sparks = [];
+        var floaters = [];
+        var BALL_R_RATIO = 0.28,
+          GRAVITY = 0.45,
+          SUBSTEPS = 6,
+          RESTITUTION = 0.38,
+          FRICTION = 0.88;
+        var PEG_SPRING_K = 0.18,
+          PEG_SPRING_DAMP = 0.62;
+
+        // ─── Screen shake & celebration FX ─────────────────────────────────
+        var shakeMag = 0;
+        function addShake(mag) {
+          shakeMag = Math.min(18, shakeMag + mag);
+        }
+
+        function spawnConfetti(n) {
+          var colors = [
+            "#ffd84d",
+            "#ff6b6b",
+            "#4ade80",
+            "#60a5fa",
+            "#f472b6",
+            "#fff",
+          ];
+          for (var i = 0; i < n; i++) {
+            (function () {
+              var el = document.createElement("div");
+              el.className = "confetti";
+              var x = Math.random() * W;
+              var hue = colors[Math.floor(Math.random() * colors.length)];
+              el.style.left = x + "px";
+              el.style.background = hue;
+              el.style.transform =
+                "rotate(" + Math.floor(Math.random() * 360) + "deg)";
+              document.body.appendChild(el);
+              var dur = 900 + Math.random() * 700;
+              var drift = (Math.random() - 0.5) * 120;
+              var rot = (Math.random() - 0.5) * 720;
+              var anim = el.animate(
+                [
+                  {
+                    transform: el.style.transform + " translate(0,0)",
+                    opacity: 1,
+                  },
+                  {
+                    transform:
+                      "translate(" +
+                      drift +
+                      "px," +
+                      (H + 40) +
+                      "px) rotate(" +
+                      rot +
+                      "deg)",
+                    opacity: 0.9,
+                  },
+                ],
+                { duration: dur, easing: "cubic-bezier(.3,.6,.7,1)" },
+              );
+              anim.onfinish = function () {
+                el.remove();
+              };
+            })();
+          }
+        }
+
+        var bigWinTimer = null;
+        function showBigWin(mult, profit) {
+          bigWinText.textContent = "x" + mult + "  +" + Math.round(profit);
+          bigWinFx.classList.add("show");
+          spawnConfetti(mult >= 16 ? 42 : 24);
+          clearTimeout(bigWinTimer);
+          bigWinTimer = setTimeout(function () {
+            bigWinFx.classList.remove("show");
+          }, 1100);
+        }
+
+        // Early-drop hook: only ~1 in 4 sessions are "blessed" with a shot at an
+        // early big win at all (rolled once per game in startGame). In a blessed
+        // session, each of the first EARLY_DROP_WINDOW drops still only has a
+        // chance to get a gentle steer toward an edge (16x) slot, so it still feels
+        // like normal luck rather than a guaranteed early payout. Keeps the board
+        // feeling physical (still bounces off every peg) while making an early big
+        // win meaningfully more likely than the ~0.05%/slot natural odds, without
+        // it being a sure thing.
+        var EARLY_DROP_WINDOW = 8;
+        var SESSION_BLESSED_CHANCE = 0.15;
+        var EARLY_DROP_BIAS_CHANCE = 0.25;
+        var EDGE_BIAS_STRENGTH = 0.035;
+        var sessionBlessed = false;
+
+        // ─── Payout boost (milestones + challenge reward) ───────────────────
+        function isBoostActive() {
+          return Date.now() < boostUntil;
+        }
+        function activateBoost(ms) {
+          boostUntil = Math.max(boostUntil, Date.now() + ms);
+          updateBoostBadge();
+        }
+        function updateBoostBadge() {
+          var remain = boostUntil - Date.now();
+          if (remain <= 0) {
+            boostBadge.classList.remove("show");
+            return;
+          }
+          boostBadge.textContent =
+            "⚡ " + BOOST_MULT + "x BOOST · " + Math.ceil(remain / 1000) + "s";
+          boostBadge.classList.add("show");
+        }
+
+        function checkMilestone() {
+          var step = Math.floor(drops / MILESTONE_INTERVAL);
+          if (step > 0 && step !== lastMilestone) {
+            lastMilestone = step;
+            activateBoost(MILESTONE_BOOST_MS);
+            SFX.bigWin();
+            haptic("success");
+            addFeed("⚡ MILESTONE BOOST!", true);
+          }
+        }
+
+        // ─── Mini challenge: drop CHALLENGE_TARGET balls within CHALLENGE_WINDOW_MS ──
+        // Offered at 150, 500, 1500 drops, then every CHALLENGE_REPEAT_INTERVAL after.
+        function maybeOfferChallenge() {
+          if (challengeActive) return;
+          if (drops >= nextChallengeAt) {
+            nextChallengeIdx++;
+            nextChallengeAt =
+              nextChallengeIdx < CHALLENGE_OFFER_SCHEDULE.length
+                ? CHALLENGE_OFFER_SCHEDULE[nextChallengeIdx]
+                : nextChallengeAt + CHALLENGE_REPEAT_INTERVAL;
+            startChallenge();
+          }
+        }
+        function startChallenge() {
+          challengeActive = true;
+          challengeStartMs = Date.now();
+          challengeStartDrops = drops;
+          challengeBanner.classList.remove("success", "fail");
+          challengeBanner.classList.add("show");
+          SFX.click();
+          haptic("selection");
+          tickChallenge();
+        }
+        function tickChallenge() {
+          clearTimeout(challengeTimer);
+          if (!challengeActive) return;
+          var elapsed = Date.now() - challengeStartMs;
+          var remain = Math.max(0, CHALLENGE_WINDOW_MS - elapsed);
+          var done = drops - challengeStartDrops;
+          challengeFill.style.width =
+            Math.min(100, (done / CHALLENGE_TARGET) * 100) + "%";
+          challengeCount.textContent =
+            Math.min(done, CHALLENGE_TARGET) + " / " + CHALLENGE_TARGET;
+          challengeTime.textContent = Math.ceil(remain / 1000) + "s";
+          if (done >= CHALLENGE_TARGET) {
+            finishChallenge(true);
+            return;
+          }
+          if (remain <= 0) {
+            finishChallenge(false);
+            return;
+          }
+          challengeTimer = setTimeout(tickChallenge, 150);
+        }
+        function finishChallenge(success) {
+          challengeActive = false;
+          clearTimeout(challengeTimer);
+          if (success) {
+            challengeBanner.classList.add("success");
+            activateBoost(CHALLENGE_REWARD_MS);
+            SFX.bigWin();
+            haptic("success");
+            addFeed("🏆 CHALLENGE WON!", true);
+          } else {
+            challengeBanner.classList.add("fail");
+          }
+          setTimeout(function () {
+            challengeBanner.classList.remove("show");
+          }, 1400);
+        }
+
+        var DROP_COOLDOWN_MS = 180;
+        var lastDropMs = 0;
+        function dropBall() {
+          if (!running || ended || bank < bet) return;
+          var now = Date.now();
+          if (now - lastDropMs < DROP_COOLDOWN_MS) return;
+          lastDropMs = now;
+          bank -= bet;
+          drops++;
+          updateHud();
+          var bx = W / 2 + (Math.random() - 0.5) * board.spacing * 0.4;
+          var br = Math.max(6, Math.min(11, board.spacing * BALL_R_RATIO));
+          var bias = 0;
+          if (
+            sessionBlessed &&
+            drops <= EARLY_DROP_WINDOW &&
+            Math.random() < EARLY_DROP_BIAS_CHANCE
+          ) {
+            bias = Math.random() < 0.5 ? -1 : 1;
+          }
+          var boosted = isBoostActive();
+          balls.push({
+            x: bx,
+            y: board.launchY,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: 0,
+            r: br,
+            stake: bet,
+            settled: false,
+            bias: bias,
+            boosted: boosted,
+          });
+          SFX.drop();
+          SFX.fallStart();
+          haptic("light");
+          checkMilestone();
+          maybeOfferChallenge();
+          if (challengeActive) tickChallenge();
+          spinBtn.disabled = true;
+          setTimeout(function () {
+            if (running && !ended && bank >= bet) spinBtn.disabled = false;
+          }, DROP_COOLDOWN_MS);
+        }
+
+        // Collisions can fire many times per rendered frame (SUBSTEPS); collapse
+        // them into at most one sound+haptic per frame so audio doesn't clip/spam.
+        var pendingPegHit = 0;
+        function queuePegHit(strength) {
+          pendingPegHit = Math.max(pendingPegHit, strength);
+        }
+        function flushPegHit() {
+          if (pendingPegHit <= 0) return;
+          SFX.peg(pendingPegHit);
+          if (pendingPegHit > 0.55) haptic("selection");
+          pendingPegHit = 0;
+        }
+
+        function stepPhysics(dtFull) {
+          var dt = dtFull / SUBSTEPS;
+          for (var s = 0; s < SUBSTEPS; s++) {
+            for (var i = balls.length - 1; i >= 0; i--) {
+              var b = balls[i];
+              if (b.settled) continue;
+              b.vy += GRAVITY * dt;
+              b.vx *= Math.pow(FRICTION, dt);
+              if (b.bias) b.vx += b.bias * EDGE_BIAS_STRENGTH * dt;
+              b.x += b.vx * dt;
+              b.y += b.vy * dt;
+              var wallL = board.left - board.pegR * 2,
+                wallR = board.right + board.pegR * 2;
+              if (b.x - b.r < wallL) {
+                b.x = wallL + b.r;
+                b.vx = Math.abs(b.vx) * RESTITUTION;
+              }
+              if (b.x + b.r > wallR) {
+                b.x = wallR - b.r;
+                b.vx = -Math.abs(b.vx) * RESTITUTION;
+              }
+              for (var p = 0; p < pegs.length; p++) {
+                var pg = pegs[p];
+                var dx = b.x - pg.x,
+                  dy = b.y - pg.y;
+                var minD = b.r + pg.r * (1 + pg.squeeze * 0.5);
+                var d2 = dx * dx + dy * dy;
+                if (d2 < minD * minD && d2 > 0.0001) {
+                  var d = Math.sqrt(d2),
+                    nx = dx / d,
+                    ny = dy / d;
+                  var overlap = minD - d;
+                  b.x += nx * overlap;
+                  b.y += ny * overlap;
+                  var dot = b.vx * nx + b.vy * ny;
+                  if (dot < 0) {
+                    var imp = -(1 + RESTITUTION) * dot;
+                    b.vx += imp * nx;
+                    b.vy += imp * ny;
+                    b.vx += (Math.random() - 0.5) * 1.1;
+                    var hs = Math.min(1, Math.abs(dot) * 0.15);
+                    pg.squeeze = Math.max(pg.squeeze, hs * 0.9);
+                    pg.flash = 1;
+                    spawnSparks(pg.x, pg.y, nx, ny, hs);
+                    queuePegHit(hs);
+                  }
+                }
+              }
+              if (b.y > board.bottom + 10) settle(b, i);
+            }
+          }
+          for (var p = 0; p < pegs.length; p++) {
+            var pg = pegs[p];
+            if (pg.squeeze > 0.001 || Math.abs(pg.sqVel) > 0.001) {
+              pg.sqVel += -PEG_SPRING_K * pg.squeeze;
+              pg.sqVel *= PEG_SPRING_DAMP;
+              pg.squeeze += pg.sqVel;
+              if (pg.squeeze < 0) pg.squeeze = 0;
+            }
+            pg.flash = Math.max(0, pg.flash - 0.12);
+          }
+          for (var k = sparks.length - 1; k >= 0; k--) {
+            var sp = sparks[k];
+            sp.x += sp.vx;
+            sp.y += sp.vy;
+            sp.vy += 0.18;
+            sp.life--;
+            if (sp.life <= 0) sparks.splice(k, 1);
+          }
+          for (var f = floaters.length - 1; f >= 0; f--) {
+            var fl = floaters[f];
+            fl.y += fl.vy;
+            fl.vy *= 0.94;
+            fl.life--;
+            if (fl.life <= 0) floaters.splice(f, 1);
+          }
+        }
+
+        function spawnSparks(x, y, nx, ny, strength) {
+          var count = Math.round(4 + strength * 8);
+          for (var i = 0; i < count; i++) {
+            var angle =
+              Math.atan2(ny, nx) + Math.PI + (Math.random() - 0.5) * 1.4;
+            var speed = (1 + Math.random() * 3) * strength * 2.5;
+            sparks.push({
+              x: x,
+              y: y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              life: Math.round(8 + Math.random() * 10),
+              maxLife: 18,
+              col: Math.random() > 0.5 ? "#fff" : "#fde68a",
+            });
+          }
+        }
+
+        function settle(ball, idx) {
+          ball.settled = true;
+          var sw = (board.right - board.left) / SLOT_COUNT;
+          var si = Math.max(
+            0,
+            Math.min(SLOT_COUNT - 1, Math.floor((ball.x - board.left) / sw)),
+          );
+          var slot = slots[si];
+          var basePayout = ball.stake * slot.mult;
+          var payout = basePayout;
+          var effMult = slot.mult;
+          if (ball.boosted) {
+            // Cap the *absolute* bonus a boost can add instead of always
+            // doubling the payout outright. At small bets this still lands
+            // close to a full 2x; at large bets (which is exactly where
+            // bankroll has already grown) the bonus flattens out to
+            // MAX_BOOST_BONUS gems so boosts stop compounding with bet size.
+            var uncappedBonus = basePayout * (BOOST_MULT - 1);
+            var bonus = Math.min(uncappedBonus, MAX_BOOST_BONUS);
+            payout = basePayout + bonus;
+            effMult = slot.mult > 0 ? payout / ball.stake : slot.mult;
+          }
+          var profit = payout - ball.stake;
+          bank += payout;
+          totalProfit += profit;
+          if (profit >= 0) {
+            wins++;
+            combo = Math.min(30, combo + 1);
+            maxCombo = Math.max(maxCombo, combo);
+            if (combo >= 3) showStreak(combo);
+          } else {
+            combo = 1;
+            hideStreak();
+          }
+          score = Math.max(
+            0,
+            Math.min(99999, Math.floor(Math.max(0, totalProfit))),
+          );
+          slot.flash = 1;
+          floaters.push({
+            x: ball.x,
+            y: board.bottom - 10,
+            vy: -2.2,
+            life: 70,
+            text: (profit >= 0 ? "+" : "") + Math.round(profit),
+            good: profit >= 0,
+          });
+          addFeed((profit >= 0 ? "+" : "") + Math.round(profit), profit >= 0);
+
+          SFX.land(effMult);
+          if (effMult >= 4) {
+            SFX.bigWin();
+            haptic("success");
+            addShake(effMult >= 16 ? 16 : 9);
+            showBigWin(effMult, profit);
+          } else if (profit > 0) {
+            SFX.win();
+            haptic("medium");
+            addShake(3);
+          } else {
+            SFX.lose();
+            haptic("light");
+          }
+
+          balls.splice(idx, 1);
+          if (balls.length === 0) SFX.fallStop();
+          updateHud();
+          post("stats");
+          // Auto-reduce bet if bank dropped below current bet, end only if truly broke
+          if (bank < bet && balls.length === 0) {
+            var minBet = BET_STEPS[0];
+            if (bank >= minBet) {
+              setBet(bank); // drop bet to what player can afford
+            } else {
+              endGame();
+            }
+          }
+        }
+
+        // ─── Feed flash ───────────────────────────────────────────────────
+        var feedFlashEl = document.getElementById("feedFlash");
+        var feedFlashTimer = null;
+        function addFeed(text, good) {
+          clearTimeout(feedFlashTimer);
+          feedFlashEl.textContent = text;
+          feedFlashEl.style.color = good ? "#4ade80" : "#f87171";
+          feedFlashEl.style.transition = "none";
+          feedFlashEl.style.opacity = "0";
+          feedFlashEl.style.transform = "translateY(6px)";
+          feedFlashEl.offsetHeight;
+          feedFlashEl.style.transition = "opacity .18s,transform .18s";
+          feedFlashEl.style.opacity = "1";
+          feedFlashEl.style.transform = "translateY(0px)";
+          feedFlashTimer = setTimeout(function () {
+            feedFlashEl.style.opacity = "0";
+            feedFlashEl.style.transform = "translateY(-6px)";
+          }, 900);
+        }
+
+        // ─── HUD ──────────────────────────────────────────────────────────
+        function updateHud() {
+          spinBtn.disabled = !running || ended || bank < bet;
+          // keep the modal header in sync
+          post("stats");
+        }
+
+        // ─── Buy Gems UI ──────────────────────────────────────────────────
+        function renderPacks() {
+          packsEl.innerHTML = "";
+          PACKS.forEach(function (pack) {
+            var canAfford = manaBalance >= pack.mana;
+            var div = document.createElement("div");
+            div.className =
+              "bpack" + (selectedMana === pack.mana ? " selected" : "");
+            div.style.opacity = canAfford ? "1" : "0.45";
+            div.innerHTML =
+              '<div class="bpack-left">' +
+              '<span class="bpack-gem">💎</span>' +
+              '<div><div class="bpack-gems">' +
+              pack.gems +
+              " gems</div>" +
+              '<div class="bpack-label">' +
+              pack.label +
+              "</div></div>" +
+              "</div>" +
+              '<div class="bpack-cost">' +
+              pack.mana +
+              " <span>Mana</span></div>";
+            if (canAfford) {
+              div.addEventListener("click", function () {
+                selectedMana = pack.mana;
+                confirmBuyBtn.disabled = false;
+                confirmBuyBtn.textContent =
+                  "Buy " + pack.gems + " Gems — " + pack.mana + " Mana";
+                buyErrEl.textContent = "";
+                renderPacks();
+              });
+            }
+            packsEl.appendChild(div);
+          });
+        }
+
+        function openBuyOverlay(fromPlay) {
+          buyErrEl.textContent = "";
+          selectedMana = 0;
+          confirmBuyBtn.disabled = true;
+          confirmBuyBtn.textContent = "Select a pack";
+          manaDisplayEl.textContent = "…";
+          buyOverlay.style.display = "flex";
+          cancelBuyBtn.style.display = fromPlay ? "none" : "block";
+          postRN({ type: "getManaBalance" });
+        }
+
+        function closeBuyOverlay() {
+          buyOverlay.style.display = "none";
+        }
+
+        confirmBuyBtn.addEventListener("click", function () {
+          if (!selectedMana || buyPending) return;
+          buyPending = true;
+          confirmBuyBtn.disabled = true;
+          confirmBuyBtn.textContent = "Buying…";
+          buyErrEl.textContent = "";
+          postRN({ type: "buyGems", mana: selectedMana });
+        });
+
+        cancelBuyBtn.addEventListener("click", closeBuyOverlay);
+
+        // ─── WebView bridge ───────────────────────────────────────────────
+        function postRN(obj) {
+          try {
+            if (window.ReactNativeWebView)
+              window.ReactNativeWebView.postMessage(JSON.stringify(obj));
+          } catch (e) {}
+        }
+
+        function post(type) {
+          try {
+            if (!window.ReactNativeWebView) return;
+            var elapsed = running ? Date.now() - startMs : 0;
+            if (type === "gameOver") {
+              postRN({
+                type: "gameOver",
+                score: score,
+                coins: Math.max(0, Math.floor(bank)),
+                combo: maxCombo,
+                duration_ms: elapsed,
+              });
+            } else {
+              postRN({
+                type: "stats",
+                score: score,
+                coins: Math.max(0, Math.floor(bank)),
+                timer: 0,
+                fuel: 100,
+                targets: drops,
+                kills: wins,
+                health: 100,
+              });
+            }
+          } catch (e) {}
+        }
+
+        window.addEventListener("message", function (e) {
+          try {
+            var data = JSON.parse(
+              typeof e.data === "string" ? e.data : JSON.stringify(e.data),
+            );
+            if (data.type === "manaBalance") {
+              manaBalance = data.balance || 0;
+              manaDisplayEl.textContent = manaBalance + " Mana";
+              // Restore persisted gem balance so sessions carry over
+              if (data.gemBalance && data.gemBalance > 0 && isFirstOpen) {
+                bank = data.gemBalance;
+                isFirstOpen = false;
+                overlay.style.display = "none";
+                startGame();
+              }
+              renderPacks();
+            }
+            if (data.type === "openBuyGems") {
+              // tapped gem icon in modal header
+              openBuyOverlay(false);
+            }
+            if (data.type === "gemsGranted") {
+              buyPending = false;
+              manaBalance = data.manaBalance || 0;
+              bank += data.gems || 0;
+              closeBuyOverlay();
+              if (isFirstOpen) {
+                isFirstOpen = false;
+                overlay.style.display = "none";
+                startGame();
+              }
+              updateHud();
+            }
+            if (data.type === "gemsDenied") {
+              buyPending = false;
+              confirmBuyBtn.disabled = false;
+              confirmBuyBtn.textContent = "Try again";
+              buyErrEl.textContent =
+                data.error === "insufficient_mana"
+                  ? "Not enough Mana"
+                  : "Purchase failed. Try again.";
+            }
+          } catch (ex) {}
+        });
+
+        // ─── Game flow ─────────────────────────────────────────────────────
+        function startGame() {
+          bet = Math.min(10, bank);
+          score = 0;
+          drops = 0;
+          wins = 0;
+          combo = 1;
+          maxCombo = 1;
+          totalProfit = 0;
+          balls = [];
+          sparks = [];
+          floaters = [];
+          feedFlashEl.style.opacity = "0";
+          sessionBlessed = Math.random() < SESSION_BLESSED_CHANCE;
+          boostUntil = 0;
+          lastMilestone = 0;
+          nextChallengeIdx = 0;
+          nextChallengeAt = CHALLENGE_OFFER_SCHEDULE[0];
+          challengeActive = false;
+          clearTimeout(challengeTimer);
+          challengeBanner.classList.remove("show", "success", "fail");
+          boostBadge.classList.remove("show");
+          running = true;
+          ended = false;
+          startMs = Date.now();
+          overlay.style.display = "none";
+          spinBtn.disabled = false;
+          betEl.textContent = bet;
+        }
+
+        function endGame() {
+          if (ended) return;
+          ended = true;
+          running = false;
+          post("gameOver");
+          var ocard = overlay.querySelector(".ocard");
+          ocard.querySelector(".otitle").textContent = "Out of Gems";
+          ocard.querySelector(".osub").textContent =
+            "Drops: " +
+            drops +
+            " · Wins: " +
+            wins +
+            " · Best combo: x" +
+            maxCombo +
+            "\n\nTap 💎 in the top bar to buy more gems.";
+          playBtn.textContent = "BUY GEMS";
+          overlay.style.display = "flex";
+          isFirstOpen = true;
+          // Don't zero bank — player may have a small remainder that should carry into next buy.
+        }
+
+        playBtn.addEventListener("click", function () {
+          SFX.unlock();
+          openBuyOverlay(true);
+        });
+
+        // ─── Sound toggle ──────────────────────────────────────────────────
+        muteBtn.addEventListener("click", function () {
+          SFX.unlock();
+          SFX.setMuted(!SFX.isMuted());
+          muteBtn.textContent = SFX.isMuted() ? "🔇" : "🔊";
+          haptic("selection");
+        });
+        document.body.addEventListener(
+          "pointerdown",
+          function () {
+            SFX.unlock();
+          },
+          { once: true },
+        );
+
+        // ─── Bet controls ─────────────────────────────────────────────────
+        var BET_STEPS = [5, 10, 25, 50, 100, 250, 500];
+        function setBet(v) {
+          bet = Math.max(5, Math.min(Math.floor(bank), v));
+          betEl.textContent = bet;
+          spinBtn.disabled = !running || ended || bank < bet;
+        }
+        document
+          .getElementById("betMinus")
+          .addEventListener("click", function () {
+            var i = BET_STEPS.indexOf(bet);
+            setBet(i > 0 ? BET_STEPS[i - 1] : Math.max(5, bet - 5));
+            SFX.click();
+            haptic("selection");
+          });
+        document
+          .getElementById("betPlus")
+          .addEventListener("click", function () {
+            var i = BET_STEPS.indexOf(bet);
+            setBet(
+              i >= 0 && i < BET_STEPS.length - 1 ? BET_STEPS[i + 1] : bet + 5,
+            );
+            SFX.click();
+            haptic("selection");
+          });
+        spinBtn.addEventListener("pointerdown", function () {
+          spinBtn.classList.add("pressed");
+        });
+        spinBtn.addEventListener("pointerup", function () {
+          setTimeout(function () {
+            spinBtn.classList.remove("pressed");
+          }, 80);
+        });
+        spinBtn.addEventListener("pointercancel", function () {
+          spinBtn.classList.remove("pressed");
+        });
+        spinBtn.addEventListener("pointerleave", function () {
+          spinBtn.classList.remove("pressed");
+        });
+        spinBtn.addEventListener("click", dropBall);
+
+        // ─── Drawing ──────────────────────────────────────────────────────
+        function drawBg() {
+          cx.fillStyle = "#0e1420";
+          cx.fillRect(-24, -24, W + 48, H + 48);
+        }
+
+        function drawPegs() {
+          for (var i = 0; i < pegs.length; i++) {
+            var p = pegs[i],
+              r = p.r * (1 + p.squeeze * 2.5);
+            cx.beginPath();
+            cx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            cx.fillStyle = "#ffffff";
+            cx.fill();
+          }
+        }
+
+        function nearestFallingSlotIndex() {
+          var best = -1,
+            bestY = -1;
+          var sw = (board.right - board.left) / SLOT_COUNT;
+          for (var i = 0; i < balls.length; i++) {
+            var b = balls[i];
+            if (b.settled) continue;
+            if (b.y > bestY) {
+              bestY = b.y;
+              best = Math.max(
+                0,
+                Math.min(SLOT_COUNT - 1, Math.floor((b.x - board.left) / sw)),
+              );
+            }
+          }
+          return {
+            idx: best,
+            prox:
+              bestY < 0
+                ? 0
+                : Math.max(
+                    0,
+                    Math.min(
+                      1,
+                      (bestY - board.top) / (board.bottom - board.top),
+                    ),
+                  ),
+          };
+        }
+
+        function drawSlots() {
+          var gap = 3;
+          cx.textAlign = "center";
+          cx.textBaseline = "middle";
+          var falling = nearestFallingSlotIndex();
+          var boosted = isBoostActive();
+          for (var i = 0; i < slots.length; i++) {
+            var s = slots[i],
+              x = s.x + gap,
+              y = s.y,
+              w = s.w - gap * 2,
+              h = s.h,
+              r = 9;
+            if (s.flash > 0.01) s.flash = Math.max(0, s.flash - 0.07);
+            var lit = i === falling.idx ? falling.prox : 0;
+            if (lit > 0.01) {
+              cx.save();
+              cx.globalAlpha = lit * 0.55;
+              cx.shadowColor = s.color;
+              cx.shadowBlur = 14 * lit;
+              cx.fillStyle = s.color;
+              rrect(x - 2, y - 2, w + 4, h + 4, r + 2);
+              cx.fill();
+              cx.restore();
+            }
+            if (boosted) {
+              cx.save();
+              cx.globalAlpha = 0.5 + Math.sin(Date.now() / 180 + i) * 0.15;
+              cx.shadowColor = "#a855f7";
+              cx.shadowBlur = 10;
+              cx.strokeStyle = "#c084fc";
+              cx.lineWidth = 2;
+              rrect(x - 1, y - 1, w + 2, h + 2, r + 1);
+              cx.stroke();
+              cx.restore();
+            }
+            cx.fillStyle = shadeColor(s.color, -70);
+            rrect(x - 1, y - 1, w + 2, h + 2, r + 1);
+            cx.fill();
+            cx.fillStyle = s.color;
+            rrect(x, y, w, h, r);
+            cx.fill();
+            cx.save();
+            cx.globalAlpha = 0.18;
+            cx.fillStyle = "#fff";
+            rrect(x + 3, y + 3, w - 6, h * 0.38, r - 2);
+            cx.fill();
+            cx.restore();
+            if (s.flash > 0.05) {
+              cx.save();
+              cx.globalAlpha = s.flash * 0.4;
+              cx.fillStyle = "#fff";
+              rrect(x, y, w, h, r);
+              cx.fill();
+              cx.restore();
+            }
+            var fs = Math.max(10, Math.min(14, w * 0.36));
+            cx.font = "900 " + fs + "px Inter,Arial";
+            cx.fillStyle = "rgba(0,0,0,0.85)";
+            var label = boosted ? s.mult * BOOST_MULT + "x" : s.mult + "x";
+            cx.fillText(label, s.x + s.w / 2, y + h * 0.5);
+          }
+        }
+
+        function shadeColor(hex, amt) {
+          var n = parseInt(hex.slice(1), 16);
+          var r = Math.max(0, Math.min(255, (n >> 16) + amt));
+          var g = Math.max(0, Math.min(255, ((n >> 8) & 0xff) + amt));
+          var b = Math.max(0, Math.min(255, (n & 0xff) + amt));
+          return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
+        }
+
+        function drawBalls() {
+          for (var i = 0; i < balls.length; i++) {
+            var b = balls[i];
+            if (b.settled) continue;
+            if (b.boosted) {
+              cx.save();
+              cx.shadowColor = "#a855f7";
+              cx.shadowBlur = 10;
+              cx.beginPath();
+              cx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+              cx.fillStyle = "#c084fc";
+              cx.fill();
+              cx.strokeStyle = "rgba(0,0,0,0.8)";
+              cx.lineWidth = b.r * 0.18;
+              cx.stroke();
+              cx.restore();
+            } else {
+              cx.beginPath();
+              cx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+              cx.fillStyle = "#e03030";
+              cx.fill();
+              cx.strokeStyle = "rgba(0,0,0,0.8)";
+              cx.lineWidth = b.r * 0.18;
+              cx.stroke();
+            }
+          }
+        }
+
+        function drawSparks() {
+          for (var i = 0; i < sparks.length; i++) {
+            var sp = sparks[i],
+              a = sp.life / sp.maxLife;
+            cx.globalAlpha = a;
+            cx.beginPath();
+            cx.arc(sp.x, sp.y, 1.5 * a, 0, Math.PI * 2);
+            cx.fillStyle = sp.col;
+            cx.fill();
+          }
+          cx.globalAlpha = 1;
+        }
+
+        function drawFloaters() {
+          cx.textAlign = "center";
+          cx.textBaseline = "middle";
+          for (var i = 0; i < floaters.length; i++) {
+            var fl = floaters[i],
+              a = Math.min(1, fl.life / 20);
+            cx.globalAlpha = a;
+            cx.font = "900 20px Inter,Arial";
+            cx.fillStyle = fl.good ? "#4ade80" : "#f87171";
+            cx.strokeStyle = "rgba(0,0,0,0.6)";
+            cx.lineWidth = 3;
+            cx.strokeText(fl.text, fl.x, fl.y);
+            cx.fillText(fl.text, fl.x, fl.y);
+          }
+          cx.globalAlpha = 1;
+        }
+
+        function rrect(x, y, w, h, r) {
+          cx.beginPath();
+          cx.moveTo(x + r, y);
+          cx.lineTo(x + w - r, y);
+          cx.quadraticCurveTo(x + w, y, x + w, y + r);
+          cx.lineTo(x + w, y + h - r);
+          cx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+          cx.lineTo(x + r, y + h);
+          cx.quadraticCurveTo(x, y + h, x, y + h - r);
+          cx.lineTo(x, y + r);
+          cx.quadraticCurveTo(x, y, x + r, y);
+          cx.closePath();
+        }
+
+        var lastTs = 0;
+        function loop(ts) {
+          requestAnimationFrame(loop);
+          var rawDt = Math.min(50, ts - lastTs || 16.67);
+          lastTs = ts;
+          var dt = rawDt / 16.67;
+          if (running && !ended) stepPhysics(dt);
+          flushPegHit();
+          if (running && !ended) updateBoostBadge();
+          var sx = 0,
+            sy = 0;
+          if (shakeMag > 0.05) {
+            sx = (Math.random() - 0.5) * shakeMag;
+            sy = (Math.random() - 0.5) * shakeMag;
+            shakeMag *= 0.86;
+          } else shakeMag = 0;
+          cx.save();
+          cx.translate(sx, sy);
+          drawBg();
+          drawPegs();
+          drawSlots();
+          drawSparks();
+          drawBalls();
+          drawFloaters();
+          cx.restore();
+          if (running && !ended && bank >= bet) spinBtn.disabled = false;
+        }
+
+        window.addEventListener(
+          "resize",
+          function () {
+            resize();
+          },
+          false,
+        );
+        resize();
+        postRN({ type: "getManaBalance" });
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>

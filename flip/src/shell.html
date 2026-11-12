@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="icon" href="data:,"><meta name="theme-color" content="#073d2b"><title>Flip · High Stakes</title>
+<style>/* FLIP_STYLE */</style>
+</head>
+<body>
+<main id="game">
+  <header class="topbar">
+    <button id="webWallet" class="web-wallet" aria-label="Gem balance. Open gem shop.">💎 <span id="gemBalance">150</span></button>
+    <div class="brand">FLIP</div>
+    <button id="sound" class="round-button" aria-label="Turn sound off" title="Sound">♪</button>
+  </header>
+  <section id="goal" class="goal" aria-label="Bank and table target">
+    <div class="target">
+      <div class="sr-only" id="stageName">OPENING TABLE</div>
+      <div class="bank-heading"><div class="bank-caption">BANK</div><div id="stages" class="stages" aria-label="Table progress"></div></div>
+      <div class="score-row"><strong id="score">0</strong><span>/ <b id="target">2,000</b></span></div>
+      <div id="meter" class="meter" role="progressbar" aria-label="Bank balance" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"><div id="fill"></div></div>
+    </div>
+    <div id="movesPanel" class="moves"><strong id="moves">12</strong><span>MOVES</span></div>
+  </section>
+  <section id="boardWrap" class="board-wrap" aria-label="Chip board">
+    <div id="board">
+      <canvas id="field" aria-hidden="true"></canvas>
+      <canvas id="auras" aria-hidden="true"></canvas>
+      <div id="hitTargets" role="group" aria-label="Loose poker chips"></div>
+      <canvas id="effects" aria-hidden="true"></canvas>
+      <canvas id="focus" aria-hidden="true"></canvas>
+      <aside id="focusCaption" class="focus-caption" hidden aria-live="polite" aria-atomic="true">
+        <canvas id="focusChip" width="224" height="240" aria-hidden="true"></canvas>
+        <div><strong id="focusTitle"></strong><p id="focusText"></p></div>
+      </aside>
+      <div id="callout" aria-hidden="true"></div>
+    </div>
+  </section>
+  <footer class="dock">
+    <div id="actionIcon" class="action-icon" aria-hidden="true">✦</div>
+    <div class="action-copy"><strong id="actionTitle">READY</strong><span id="actionDetail"></span></div>
+    <div id="runScore" class="sr-only"><span>BEST</span><strong id="best">0</strong></div>
+    <button id="join" class="table-button">PLAY · 10 💎</button>
+  </footer>
+</main>
+<dialog id="result" aria-labelledby="resultTitle">
+  <div id="resultArt" class="result-art" aria-hidden="true"></div>
+  <div id="resultTag" class="eyebrow"></div>
+  <h1 id="resultTitle"></h1>
+  <p id="resultDetail"></p>
+  <div id="resultStats" class="result-stats"></div>
+  <section id="rebuyOffer" class="rebuy-offer" hidden aria-label="Buy extra moves">
+    <div class="offer-heading"><b>+2 MOVES</b><span id="offerTerms"></span></div>
+    <dl class="offer-ledger"><div><dt>Cost</dt><dd id="moveCost"></dd></div><div><dt>Bank left</dt><dd id="bankAfter"></dd></div></dl>
+    <button id="buyMoves" class="primary">BUY 2 MOVES</button>
+  </section>
+  <button id="continue" class="primary"></button>
+  <button id="retry" class="secondary">RESTART</button>
+</dialog>
+<dialog id="shop" aria-labelledby="shopTitle">
+  <div class="result-art">💎</div><h1 id="shopTitle">GEMS</h1>
+  <p id="shopText">Gems are shared across Pipal games.</p>
+  <div class="result-stats">10 MANA → 100 GEMS</div>
+  <button id="buy" class="primary">BUY GEMS</button>
+  <button id="closeShop" class="secondary">BACK</button>
+</dialog>
+<div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
+<script>/* FLIP_SCRIPT */</script>
+</body>
+</html>
