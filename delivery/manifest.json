@@ -1,0 +1,14 @@
+{
+ "files": [
+  "data/countries.png",
+  "data/districts.json",
+  "data/districts.png",
+  "data/edge.png",
+  "data/height.png",
+  "data/mask.png",
+  "data/peaks.json",
+  "data/roads.bin",
+  "data/world.png",
+  "index.html"
+ ]
+}
