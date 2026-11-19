@@ -5,6 +5,7 @@ import { clamp, shortAngle } from '../math.js';
 import { capsuleOverlap, groundHeight, HEIGHT, lineBlocked, pushOut, R, separateCapsule } from './collision.js';
 import { createTemplarTactics } from './templar-ai.js';
 import { wind } from './wind.js';
+import { towerSpawns } from './city.js';
 import { createArrows, makeArrowGeometry, arrowMaterial, BAT_CENTER_Y } from './arrows.js';
 import { poseArcher, carryBow, bowMuzzle, drawFrame, holdFrame, releaseFrame, DRAW, HOLD, RELEASE } from './templar-archer.js';
 import { MOVES, frameAt, rootOffset, poseMove, poseStrafe, restoreGear, STRAFE_METRES, poseFallFront, poseRiseFront, FALL_FRONT_DURATION, RISE_FRONT_DURATION } from './templar-moves.js';
@@ -1271,13 +1272,14 @@ export function createTemplars(scene) {
     // archers hold their ground (one on the platform at the top of the stairs, one on open ground)
     { pts: [[10.2, 9.9]], yaw: Math.PI, archer: true },
     { pts: [[-9.5, 11.5]], yaw: Math.PI, archer: true },
+    ...towerSpawns,
   ];
 
   const _bbox = new THREE.Box3(), _bsize = new THREE.Vector3();
   const knights = SPAWNS.map((sp) => {
     const rig = buildTemplarRig(sp.archer ? archerMats : mats, { archer: !!sp.archer });
     const x = sp.pts[0][0], z = sp.pts[0][1];
-    const y = groundHeight(x, z, 6.0, 0.5);
+    const y = sp.y !== undefined ? groundHeight(x, z, sp.y + 1.0, 1.0) : groundHeight(x, z, 6.0, 0.5);
     rig.root.position.set(x, y, z);
     rig.root.rotation.order = 'YXZ';   // yaw first, then the fall backward when knocked down
     rig.root.rotation.y = sp.yaw;
@@ -1296,7 +1298,7 @@ export function createTemplars(scene) {
 
     return {
       rig, shadowMeshes, castingShadows: true,
-      archer: !!sp.archer, shoot: null, cool: 1.0, sightT: 0, t: Math.random() * 10, alertUntil: 0,
+      archer: !!sp.archer, towerArcher: !!sp.towerArcher, shoot: null, cool: 1.0, sightT: 0, t: Math.random() * 10, alertUntil: 0,
       pos: new THREE.Vector3(x, y, z),
       vel: new THREE.Vector3(),
       yaw: sp.yaw,
@@ -1433,7 +1435,7 @@ export function createTemplars(scene) {
   // Being hit: a stagger with knockback; the third punch knocks the knight down for a few seconds,
   // after which he gets back up with full health.
   /* ---------------------------------- archers ---------------------------------- */
-  const ARCHER_RANGE = 28, ARROW_SPEED = 26, GRAV = 9.8;
+  const ARCHER_RANGE = 28, TOWER_ARCHER_RANGE = 62, ARROW_SPEED = 26, TOWER_ARROW_SPEED = 36, GRAV = 9.8;
   let ACC_LEAD = 0.25;                       // weight of the acceleration term (0.5 is the full physical value)
   const arrows = createArrows(scene);
   const _S = new THREE.Vector3(), _T = new THREE.Vector3(), _Pn = new THREE.Vector3();
@@ -1441,15 +1443,19 @@ export function createTemplars(scene) {
 
   // Where to point so that an arrow leaving `S` meets the player: lead on his velocity (a few iterations
   // of "how long will it fly"), and let gravity pull it down on the way.
-  function solveAim(S, char, tg, out) {
+  // Tower archers shoot higher-velocity arrows and use 6-iteration precision lead with higher acceleration weighting.
+  function solveAim(S, char, tg, out, isTower = false) {
+    const arSpeed = isTower ? TOWER_ARROW_SPEED : ARROW_SPEED;
+    const accLead = isTower ? 0.44 : ACC_LEAD;
+    const iters = isTower ? 6 : 4;
     _T.set(char.pos.x, char.pos.y + (char.isBat ? BAT_CENTER_Y : 1.1), char.pos.z);
-    let t = S.distanceTo(_T) / ARROW_SPEED;
+    let t = S.distanceTo(_T) / arSpeed;
     // Lead on velocity AND acceleration (a bat turns hard), iterating because the flight time depends on
-    // where the target will be. The acceleration term is only half trusted: it is a noisy estimate.
-    for (let i = 0; i < 4; i++) {
-      const h = ACC_LEAD * t * t;
+    // where the target will be.
+    for (let i = 0; i < iters; i++) {
+      const h = accLead * t * t;
       _Pn.set(_T.x + tg.vx * t + tg.ax * h, _T.y + tg.vy * t + tg.ay * h, _T.z + tg.vz * t + tg.az * h);
-      t = Math.max(0.05, S.distanceTo(_Pn) / ARROW_SPEED);
+      t = Math.max(0.05, S.distanceTo(_Pn) / arSpeed);
     }
     out.vx = (_Pn.x - S.x) / t; out.vz = (_Pn.z - S.z) / t; out.vy = (_Pn.y - S.y) / t + 0.5 * GRAV * t;
     out.yaw = Math.atan2(out.vx, out.vz);
@@ -1463,7 +1469,7 @@ export function createTemplars(scene) {
     const vy = char.vy || 0;
     if (!t) { k.tgt = { vx: char.vel.x, vy, vz: char.vel.z, ax: 0, ay: 0, az: 0 }; return; }
     if (dt <= 0) return;
-    const kb = 1 - Math.exp(-7 * dt);
+    const kb = 1 - Math.exp(-(k.towerArcher ? 12 : 7) * dt);
     const ax = (char.vel.x - t.vx) / dt, ay = (vy - t.vy) / dt, az = (char.vel.z - t.vz) / dt;
     const am = Math.hypot(ax, ay, az), cap = 40;
     const s = am > cap ? cap / am : 1;                       // ignore collision / morph spikes
@@ -1489,22 +1495,33 @@ export function createTemplars(scene) {
     const dx = char.pos.x - k.pos.x, dz = char.pos.z - k.pos.z, dist = Math.hypot(dx, dz);
     k.sightT -= dt;
     if (k.sightT <= 0) {
-      k.sightT = 0.15;
-      let sees = dist < ARCHER_RANGE && Math.abs(char.pos.y - k.pos.y) < 9;
-      // in front of him, unless he is already alerted (then all round)
-      if (sees && k.t > k.alertUntil && Math.abs(shortAngle(Math.atan2(dx, dz) - k.yaw)) > 1.7) sees = false;
-      if (sees && lineBlocked(k.pos.x, k.pos.y + 1.55, k.pos.z, char.pos.x, char.pos.y + (char.isBat ? BAT_CENTER_Y : 1.2), char.pos.z)) sees = false;
+      k.sightT = k.towerArcher ? 0.08 : 0.15;
+      let sees;
+      if (k.towerArcher) {
+        // Tower sniper archers fire when the bat is spotted by the rooftop spotlights (or flies up near their tower)!
+        const highBat = char.isBat && char.pos.y > 4.5 && dist < 38;
+        sees = (!!char.spottedBySpotlight || highBat || k.t < k.alertUntil) && dist < TOWER_ARCHER_RANGE;
+        if (sees && lineBlocked(k.pos.x, k.pos.y + 1.55, k.pos.z, char.pos.x, char.pos.y + (char.isBat ? BAT_CENTER_Y : 1.2), char.pos.z)) sees = false;
+      } else {
+        sees = dist < ARCHER_RANGE && Math.abs(char.pos.y - k.pos.y) < 9;
+        // in front of him, unless he is already alerted (then all round)
+        if (sees && k.t > k.alertUntil && Math.abs(shortAngle(Math.atan2(dx, dz) - k.yaw)) > 1.7) sees = false;
+        if (sees && lineBlocked(k.pos.x, k.pos.y + 1.55, k.pos.z, char.pos.x, char.pos.y + (char.isBat ? BAT_CENTER_Y : 1.2), char.pos.z)) sees = false;
+      }
       k.sees = sees;
-      if (sees) { k.alertUntil = k.t + 6; k.knownX = char.pos.x; k.knownY = char.pos.y; k.knownZ = char.pos.z; }
+      if (sees) { k.alertUntil = k.t + (k.towerArcher ? 8 : 6); k.knownX = char.pos.x; k.knownY = char.pos.y; k.knownZ = char.pos.z; }
     }
     const alert = k.t < k.alertUntil;
-    if (!k.shoot && k.sees && k.cool <= 0 && dist > 3.2 && k.stun <= 0 && k.down <= 0) {
-      k.shoot = { phase: 0, t: 0, hold: 0.45 + Math.random() * 0.35, loosed: false, aim: { yaw: k.yaw, pitch: 0.1, vx: 0, vy: 0, vz: 1 } };
+    if (!k.shoot && k.sees && k.cool <= 0 && dist > (k.towerArcher ? 2.0 : 3.2) && k.stun <= 0 && k.down <= 0) {
+      const holdTime = k.towerArcher ? (0.22 + Math.random() * 0.16) : (0.45 + Math.random() * 0.35);
+      k.shoot = { phase: 0, t: 0, hold: holdTime, loosed: false, aim: { yaw: k.yaw, pitch: 0.1, vx: 0, vy: 0, vz: 1 } };
     }
     k.speed = 0; k.routeX = k.pos.x; k.routeZ = k.pos.z; k.state = 'patrol'; k.role = 'patrol';
     if (k.shoot) {
-      if (k.shoot.phase < 2 || (char.isBat && !k.shoot.loosed)) k.yaw += shortAngle(Math.atan2(dx, dz) - k.yaw) * (1 - Math.exp(-7 * dt));   // square up to the target
-    } else if (alert && dist < 6.5) {                                    // too close: back away, still facing him
+      if (k.shoot.phase < 2 || ((char.isBat || k.towerArcher) && !k.shoot.loosed)) {
+        k.yaw += shortAngle(Math.atan2(dx, dz) - k.yaw) * (1 - Math.exp(-(k.towerArcher ? 12 : 7) * dt));   // square up to the target
+      }
+    } else if (!k.towerArcher && alert && dist < 6.5) {                   // too close: back away, still facing him (ground archers only)
       k.state = 'chase'; k.role = 'retreat';
       const away = Math.atan2(-dx, -dz);
       k.routeX = k.pos.x + Math.sin(away) * 4; k.routeZ = k.pos.z + Math.cos(away) * 4;
@@ -1517,13 +1534,14 @@ export function createTemplars(scene) {
   function loose(k, s, char) {
     s.loosed = true;
     const r = k.rig, a = s.aim;
-    const speed = Math.hypot(a.vx, a.vy, a.vz) || ARROW_SPEED;
-    // a human shot is never perfect: a little spread, more against something that jinks about
-    const spread = char.isBat ? 0.008 : 0.03;          // a steadier, better-judged shot at a bat
+    const baseSpeed = k.towerArcher ? TOWER_ARROW_SPEED : ARROW_SPEED;
+    const speed = Math.hypot(a.vx, a.vy, a.vz) || baseSpeed;
+    // Tower sniper archers have near-pinpoint accuracy (0.0015 spread vs 0.008/0.03)
+    const spread = k.towerArcher ? 0.0015 : (char.isBat ? 0.008 : 0.03);
     bowMuzzle(r, _muzzle, _mdir);
     // The aim so far assumed a rough shooting point; the arrow actually leaves from the nock, which can be half
     // a metre away. Solve once more from there, so the lead is right for where the arrow really starts.
-    solveAim(_muzzle, char, k.tgt, a);
+    solveAim(_muzzle, char, k.tgt, a, k.towerArcher);
     const sp2 = Math.hypot(a.vx, a.vy, a.vz) || speed;
     arrows.spawn(_muzzle.x, _muzzle.y, _muzzle.z,
       a.vx + (Math.random() - 0.5) * 2 * spread * sp2,
@@ -1546,16 +1564,20 @@ export function createTemplars(scene) {
       frame = releaseFrame(s.t);
     }
     // Keep re-solving while aiming. A man's aim locks when the release starts (a late dodge works); a bat is
-    // too fast for that, so the archer keeps tracking right up to the moment the arrow leaves.
-    if (s.phase < 2 || (char.isBat && !s.loosed)) {
+    // too fast for that (and tower archers track continuously), so the archer keeps tracking right up to release.
+    if (s.phase < 2 || ((char.isBat || k.towerArcher) && !s.loosed)) {
       _S.set(k.pos.x, k.pos.y + 1.5, k.pos.z);
-      solveAim(_S, char, k.tgt, s.aim);
+      solveAim(_S, char, k.tgt, s.aim, k.towerArcher);
     }
     const w = s.phase === 0 ? THREE.MathUtils.smoothstep(s.t, 0, 0.25)
       : s.phase === 1 ? 1 : 1 - THREE.MathUtils.smoothstep(frame, RELEASE.to - 8, RELEASE.to);
-    poseArcher(r, Math.min(frame, RELEASE.to), w, THREE.MathUtils.clamp(shortAngle(s.aim.yaw - k.yaw), -1.2, 1.2), THREE.MathUtils.clamp(s.aim.pitch, -0.7, 0.9), s.loosed);
+    poseArcher(r, Math.min(frame, RELEASE.to), w, THREE.MathUtils.clamp(shortAngle(s.aim.yaw - k.yaw), -1.2, 1.2), THREE.MathUtils.clamp(s.aim.pitch, -1.1, 1.1), s.loosed);
     if (s.phase === 2 && !s.loosed && frame >= RELEASE.loose) loose(k, s, char);
-    if (s.phase === 2 && frame >= RELEASE.to) { k.shoot = null; k.cool = 0.5 + Math.random() * 0.7; carryBowNow(k); }
+    if (s.phase === 2 && frame >= RELEASE.to) {
+      k.shoot = null;
+      k.cool = k.towerArcher ? (0.28 + Math.random() * 0.32) : (0.5 + Math.random() * 0.7);
+      carryBowNow(k);
+    }
   }
 
   // Get-up: the Mixamo stand-up clip, retargeted (templar-getup.js). The fall pivots the whole root about the

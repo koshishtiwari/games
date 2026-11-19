@@ -2,57 +2,140 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Mr Vampire — Model Viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Mr Vampire: Model Viewer</title>
 <style>
-  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #0d1118; color: #e8ecf4; font-family: system-ui, -apple-system, sans-serif; }
-  #gl { display: block; width: 100%; height: 100%; cursor: grab; }
+  :root { color-scheme: dark; --glass: rgba(16,21,32,.72); --line: rgba(255,255,255,.12); --accent: #c4283c; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: radial-gradient(ellipse 90% 80% at 50% 38%, #2c3650 0%, #161c2b 58%, #0c1018 100%); color: #e8ecf4;
+    font: 600 13px/1.3 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: none; overscroll-behavior: none; }
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
   #gl:active { cursor: grabbing; }
-  #bar {
-    position: fixed; top: 14px; left: 14px; right: 14px;
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
-    pointer-events: none;
-  }
-  .group { display: flex; gap: 6px; pointer-events: auto; background: rgba(14,19,28,.75); padding: 6px; border-radius: 999px; border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(8px); }
-  button, a.pill {
-    appearance: none; border: 0; background: transparent; color: rgba(255,255,255,.72);
-    padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .04em;
-    cursor: pointer; text-decoration: none; transition: background .15s, color .15s;
-  }
-  button:hover, a.pill:hover { color: #fff; background: rgba(255,255,255,.08); }
-  button.on { background: #8e1f2b; color: #fff; }
-  #tip {
-    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
-    font-size: 11px; color: rgba(255,255,255,.45); pointer-events: none; letter-spacing: .04em;
+
+  .chip { position: fixed; display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 999px;
+    background: var(--glass); border: 1px solid var(--line); color: rgba(255,255,255,.85); text-decoration: none; cursor: pointer;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font: inherit; }
+  .chip svg { width: 18px; height: 18px; flex: none; }
+  .chip.icon { width: 40px; padding: 0; justify-content: center; }
+  .chip.on { background: var(--accent); border-color: transparent; color: #fff; }
+  #back { top: calc(env(safe-area-inset-top, 0px) + 12px); left: calc(env(safe-area-inset-left, 0px) + 12px); }
+  #wireBtn { top: calc(env(safe-area-inset-top, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 60px); }
+  #resetBtn { top: calc(env(safe-area-inset-top, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 12px); }
+
+  #panel { position: fixed; left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 24px));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 22px;
+    background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .seg { display: flex; gap: 4px; padding: 3px; border-radius: 14px; background: rgba(0,0,0,.28); overflow-x: auto; scrollbar-width: none; }
+  .seg::-webkit-scrollbar { display: none; }
+  .seg button { flex: 1 0 auto; min-height: 40px; padding: 0 14px; border: 0; border-radius: 11px; background: transparent;
+    color: rgba(255,255,255,.62); font: inherit; letter-spacing: .02em; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; }
+  .seg button:active { background: rgba(255,255,255,.08); }
+  .seg button.on { background: rgba(255,255,255,.14); color: #fff; }
+  .lbl { font-size: 10px; letter-spacing: .14em; color: rgba(255,255,255,.38); padding: 0 4px; text-transform: uppercase; }
+
+  #tip { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 232px);
+    padding: 7px 14px; border-radius: 999px; background: var(--glass); border: 1px solid var(--line);
+    font-size: 12px; font-weight: 500; color: rgba(255,255,255,.7); pointer-events: none; white-space: nowrap; transition: opacity .6s; }
+  #tip.gone { opacity: 0; }
+  #tip .mouse { display: none; }
+  @media (hover: hover) and (pointer: fine) { #tip .touch { display: none; } #tip .mouse { display: inline; } }
+  #title { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 20px); left: 50%; transform: translateX(-50%);
+    font-size: 15px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.88); pointer-events: none; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+  #title small { display: block; text-align: center; font-size: 9px; letter-spacing: .2em; font-weight: 600; color: rgba(255,255,255,.35); margin-top: 2px; }
+  #tools { position: fixed; right: calc(env(safe-area-inset-right, 0px) + 12px); top: calc(env(safe-area-inset-top, 0px) + 64px);
+    display: flex; flex-direction: column; gap: 6px; padding: 5px; border-radius: 18px;
+    background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  #tools button { width: 46px; height: 46px; border: 0; border-radius: 13px; background: transparent; color: rgba(255,255,255,.7); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit; font-size: 9px; letter-spacing: .06em; }
+  #tools button svg { width: 20px; height: 20px; }
+  #tools button.on { background: rgba(255,255,255,.14); color: #fff; }
+  #tools hr { width: 70%; border: 0; border-top: 1px solid var(--line); margin: 2px auto; }
+  #frames { display: flex; gap: 4px; }
+  #frames button { flex: 1; min-height: 36px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.04); color: rgba(255,255,255,.7); font: inherit; font-size: 12px; cursor: pointer; }
+  #frames button:active { background: rgba(255,255,255,.12); }
+  #sheetBtn { align-self: center; width: 44px; height: 18px; border: 0; background: transparent; color: rgba(255,255,255,.4); cursor: pointer; padding: 0; margin: -4px 0 -4px; }
+  #sheetBtn svg { width: 18px; height: 18px; transition: transform .2s; }
+  #panel.closed .seg, #panel.closed .lbl, #panel.closed #frames { display: none; }
+  #panel.closed #sheetBtn svg { transform: rotate(180deg); }
+  #panel.closed ~ #tip { display: none; }
+  #ver { position: fixed; left: calc(env(safe-area-inset-left, 0px) + 14px); top: calc(env(safe-area-inset-top, 0px) + 60px); font-size: 10px; letter-spacing: .14em; color: rgba(255,255,255,.28); pointer-events: none; }
+
+  /* wide screens: controls live in a left sidebar so they never cover the model */
+  @media (min-aspect-ratio: 1/1) {
+    #panel { left: calc(env(safe-area-inset-left, 0px) + 12px); transform: none; width: 232px; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+      max-height: calc(100vh - 80px - env(safe-area-inset-bottom, 0px)); overflow-y: auto; scrollbar-width: none; }
+    #panel::-webkit-scrollbar { display: none; }
+    #panel .seg { flex-direction: column; }
+    #panel .seg button { min-height: 34px; text-align: left; }
+    #panel #poseGroup { display: grid; grid-template-columns: 1fr 1fr; }
+    #panel #poseGroup button { text-align: center; padding: 0 8px; }
+    #frames { display: grid; grid-template-columns: 1fr 1fr; }
+    #tip { left: calc(50% + 126px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
+    #ver { top: auto; left: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 14px); }
   }
 </style>
 </head>
 <body>
 <canvas id="gl"></canvas>
-<div id="bar">
-  <div class="group">
-    <button data-model="man" class="on">Mr. Strange</button>
+
+<a id="back" class="chip" href="./index.html">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Game
+</a>
+<button id="wireBtn" class="chip icon" aria-label="Wireframe" title="Wireframe">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+</button>
+<button id="resetBtn" class="chip icon" aria-label="Reset camera" title="Reset camera (R)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/></svg>
+</button>
+
+<div id="title"></div>
+<div id="ver">VIEWER V4</div>
+<div id="tools">
+  <button data-tool="orbit" class="on" aria-label="Orbit">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M20 4v4.5h-4.5"/></svg>Orbit
+  </button>
+  <button data-tool="pan" aria-label="Pan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg>Pan
+  </button>
+  <hr />
+  <button id="spinBtn" aria-label="Auto spin">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18.5 2.5v4.5H14M5.5 21.5V17H10"/></svg>Spin
+  </button>
+</div>
+<div id="tip">
+  <span class="touch">Drag: orbit &nbsp;·&nbsp; Pan tool or two fingers: move &nbsp;·&nbsp; pinch: zoom &nbsp;·&nbsp; Focus: jump to a part</span>
+  <span class="mouse">Drag: orbit &nbsp;·&nbsp; Pan tool, right drag or Shift: move &nbsp;·&nbsp; wheel: zoom &nbsp;·&nbsp; R: reset</span>
+</div>
+
+<div id="panel">
+  <button id="sheetBtn" aria-label="Collapse panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="lbl">Focus</div>
+  <div id="frames">
+    <button data-frame="full">Full</button>
+    <button data-frame="torso">Torso</button>
+    <button data-frame="head">Head</button>
+    <button data-frame="feet">Feet</button>
+  </div>
+  <div class="lbl">Model</div>
+  <div class="seg">
+    <button data-model="man" class="on">Mr Vampire</button>
     <button data-model="templar">Templar</button>
     <button data-model="bat">Bat</button>
   </div>
-  <div class="group" id="poseGroup">
-    <button data-anim="tpose" class="on">Lower T-Pose</button>
+  <div class="lbl">Pose</div>
+  <div class="seg" id="poseGroup">
+    <button data-anim="tpose" class="on">T-Pose</button>
     <button data-anim="idle">Idle</button>
     <button data-anim="walk">Walk</button>
     <button data-anim="run">Run</button>
     <button data-anim="attack">Attack</button>
   </div>
-  <div class="group">
-    <button id="wireBtn">Wireframe</button>
-    <button id="resetBtn">Reset Cam</button>
-    <a class="pill" href="./index.html">Back to Game</a>
-  </div>
 </div>
-<div id="tip">Left-drag: orbit · Right-drag / Shift-drag / WASD: pan · Scroll: zoom</div>
+
 <script type="importmap">
 { "imports": { "three": "./three.module.min.js" } }
 </script>
-<script type="module" src="./src/viewer.js"></script>
+<script type="module" src="./src/viewer.js?v=4"></script>
 </body>
 </html>

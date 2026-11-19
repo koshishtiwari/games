@@ -9,20 +9,20 @@ import { createBat } from './character/bat.js';
 import { buildTemplarRig, poseTemplarAttack, setTemplarLowerTPose, TEMPLAR_ATTACK_DURATION } from './world/templar.js';
 
 const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setClearColor(0x000000, 0);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.15;
+renderer.toneMappingExposure = 1.2;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111622);
-scene.fog = new THREE.Fog(0x111622, 8, 22);
 
 const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.05, 50);
 
-scene.add(new THREE.HemisphereLight(0xaec4e8, 0x221b24, 0.75));
+scene.add(new THREE.HemisphereLight(0xc4d4f0, 0x2a2430, 1.0));
 const key = new THREE.DirectionalLight(0xfff4e6, 2.2);
 key.position.set(2.8, 4.5, 3.2);
 key.castShadow = true;
@@ -33,16 +33,22 @@ const rim = new THREE.DirectionalLight(0x88b4ff, 1.1);
 rim.position.set(-3.0, 2.6, -2.5);
 scene.add(rim);
 
-const floor = new THREE.Mesh(
-  new THREE.CircleGeometry(3.5, 48),
-  new THREE.MeshStandardMaterial({ color: 0x19202e, roughness: 0.85, metalness: 0.05 })
-);
+// stage: a shadow catcher (so the model sits on something) and a soft glow pool under it
+const floor = new THREE.Mesh(new THREE.CircleGeometry(6, 64), new THREE.ShadowMaterial({ opacity: 0.42 }));
 floor.rotation.x = -Math.PI * 0.5;
 floor.receiveShadow = true;
+floor.userData.noWire = true;
 scene.add(floor);
-const grid = new THREE.GridHelper(6, 12, 0x38465e, 0x222b3b);
-grid.position.y = 0.002;
-scene.add(grid);
+{
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gr.addColorStop(0, 'rgba(120,150,210,0.38)'); gr.addColorStop(0.55, 'rgba(70,90,140,0.14)'); gr.addColorStop(1, 'rgba(40,50,80,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  const pool = new THREE.Mesh(new THREE.CircleGeometry(3.4, 64), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+  pool.rotation.x = -Math.PI * 0.5; pool.position.y = 0.002; pool.userData.noWire = true;
+  scene.add(pool);
+}
 
 // Build all 3 models
 scene.add(model);
@@ -78,62 +84,148 @@ function applyWireframe(on) {
   scene.traverse((o) => {
     if (!o.isMesh) return;
     const ms = Array.isArray(o.material) ? o.material : [o.material];
-    for (const m of ms) if (m && m !== floor.material) m.wireframe = on;
+    if (o.userData.noWire) return;
+    for (const m of ms) if (m) m.wireframe = on;
   });
 }
 
-// Smooth 3D orbit + screen-space pan + zoom camera
+// Camera controls: one finger / left mouse = orbit, two fingers / right mouse /
+// Shift = pan, pinch / wheel = zoom, double tap = reset. Everything eases out.
 let yaw = 0.45, pitch = 0.16, dist = 2.65;
 const target = new THREE.Vector3(0, 0.96, 0);
-let dragMode = 0, lx = 0, ly = 0;
 const keys = Object.create(null);
+const vel = { yaw: 0, pitch: 0 };
+const goal = { dist: 2.65 };
+const ptrs = new Map();
+let gesture = null, lastTap = 0;
+let tool = 'orbit', spin = false, goalTarget = null;
+const MODEL_NAMES = { man: 'Mr Vampire', templar: 'Templar', bat: 'Bat' };
+const FRAMES = {                       // [target y, distance] for Full / Torso / Head / Feet
+  man:     { full: [0.96, 2.65], torso: [1.30, 1.55], head: [1.60, 0.95], feet: [0.15, 1.45] },
+  templar: { full: [0.96, 2.96], torso: [1.35, 1.70], head: [1.72, 1.00], feet: [0.15, 1.60] },
+  bat:     { full: [1.15, 1.85], torso: [1.15, 1.25], head: [1.15, 0.95], feet: [1.05, 1.25] },
+};
+const tipEl = document.getElementById('tip');
+const hideTip = () => tipEl && tipEl.classList.add('gone');
 
 function resetCamera() {
   yaw = 0.45;
   pitch = activeModel === 'templar' ? 0.29 : 0.16;
-  dist = activeModel === 'bat' ? 1.85 : (activeModel === 'templar' ? 2.96 : 2.65);
+  goal.dist = dist = activeModel === 'bat' ? 1.85 : (activeModel === 'templar' ? 2.96 : 2.65);
   target.set(0, activeModel === 'bat' ? 1.15 : 0.96, 0);
+  goalTarget = null;
+  vel.yaw = vel.pitch = 0;
+}
+
+const camRight = new THREE.Vector3(), camUp = new THREE.Vector3();
+function panBy(dx, dy) {                     // screen pixels -> world, scaled to what is on screen
+  camera.updateMatrixWorld();
+  camRight.setFromMatrixColumn(camera.matrixWorld, 0);
+  camUp.setFromMatrixColumn(camera.matrixWorld, 1);
+  const k = (2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / window.innerHeight;
+  goalTarget = null;
+  target.addScaledVector(camRight, -dx * k).addScaledVector(camUp, dy * k);
+  target.x = THREE.MathUtils.clamp(target.x, -2, 2);
+  target.z = THREE.MathUtils.clamp(target.z, -2, 2);
+  target.y = THREE.MathUtils.clamp(target.y, 0, 2.4);
+}
+function frameOn(name) {              // glide to Full / Torso / Head / Feet
+  const f = FRAMES[activeModel][name];
+  goalTarget = new THREE.Vector3(0, f[0], 0);
+  goal.dist = f[1];
+}
+function orbitBy(dx, dy) {
+  goalTarget = null;
+  yaw -= dx * 0.0075;
+  pitch = THREE.MathUtils.clamp(pitch + dy * 0.0055, -0.5, 1.3);
+}
+const zoomBy = (f) => { goal.dist = THREE.MathUtils.clamp(goal.dist * f, 0.55, 7.5); };
+
+function startGesture() {
+  const p = [...ptrs.values()];
+  if (p.length >= 2) {
+    gesture = { type: 'two', cx: (p[0].x + p[1].x) / 2, cy: (p[0].y + p[1].y) / 2, d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1 };
+  } else if (p.length === 1) {
+    gesture = { type: p[0].pan ? 'pan' : 'orbit' };
+  } else gesture = null;
 }
 
 canvas.addEventListener('pointerdown', (e) => {
-  dragMode = (e.button === 2 || e.button === 1 || e.shiftKey) ? 2 : 1;
-  lx = e.clientX; ly = e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.button === 1 || e.shiftKey || tool === 'pan', t: performance.now(), x0: e.clientX, y0: e.clientY });
+  vel.yaw = vel.pitch = 0;
+  startGesture();
+  hideTip();
 });
-window.addEventListener('pointermove', (e) => {
-  if (!dragMode) return;
-  const dx = e.clientX - lx, dy = e.clientY - ly;
-  lx = e.clientX; ly = e.clientY;
-  if (dragMode === 1) {
-    yaw -= dx * 0.008;
-    pitch = Math.max(-0.55, Math.min(1.25, pitch + dy * 0.006));
-  } else {
-    // Screen-space pan along camera right and camera up
-    const panScale = dist * 0.0016;
-    const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
-    const up = new THREE.Vector3(
-      -Math.sin(yaw) * Math.sin(pitch),
-      Math.cos(pitch),
-      -Math.cos(yaw) * Math.sin(pitch)
-    );
-    target.addScaledVector(right, -dx * panScale);
-    target.addScaledVector(up, dy * panScale);
+canvas.addEventListener('pointermove', (e) => {
+  const p = ptrs.get(e.pointerId);
+  if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if (!gesture) return;
+  if (gesture.type === 'orbit') { orbitBy(dx, dy); vel.yaw = -dx * 0.0075; vel.pitch = dy * 0.0055; }
+  else if (gesture.type === 'pan') panBy(dx, dy);
+  else if (gesture.type === 'two' && ptrs.size >= 2) {
+    const q = [...ptrs.values()];
+    const cx = (q[0].x + q[1].x) / 2, cy = (q[0].y + q[1].y) / 2, d = Math.hypot(q[0].x - q[1].x, q[0].y - q[1].y) || 1;
+    panBy(cx - gesture.cx, cy - gesture.cy);
+    const f = gesture.d / d;
+    dist = goal.dist = THREE.MathUtils.clamp(dist * f, 0.55, 7.5);
+    gesture.cx = cx; gesture.cy = cy; gesture.d = d;
   }
 });
-window.addEventListener('pointerup', () => { dragMode = 0; });
+function endPointer(e) {
+  const p = ptrs.get(e.pointerId);
+  if (!p) return;
+  const now = performance.now();
+  if (e.type === 'pointerup' && ptrs.size === 1 && Math.hypot(p.x - p.x0, p.y - p.y0) < 8 && now - p.t < 300) {
+    if (now - lastTap < 320) { resetCamera(); lastTap = 0; } else lastTap = now;     // double tap: reset
+  }
+  ptrs.delete(e.pointerId);
+  startGesture();
+  if (gesture && gesture.type === 'orbit') { vel.yaw = vel.pitch = 0; }
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  dist = Math.max(0.55, Math.min(7.5, dist + e.deltaY * 0.0022));
+  if (e.shiftKey) panBy(-e.deltaX - e.deltaY, 0);                       // shift + wheel: pan sideways
+  else if (e.ctrlKey) zoomBy(Math.exp(e.deltaY * 0.01));                // trackpad pinch
+  else zoomBy(Math.exp(e.deltaY * 0.0012));
+  hideTip();
 }, { passive: false });
 
 window.addEventListener('keydown', (e) => { keys[e.code] = true; if (e.code === 'KeyR') resetCamera(); });
 window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+// keep the model centred in the part of the screen the controls do not cover
+const panelEl = document.getElementById('panel');
+function layoutView() {
+  const W = window.innerWidth, H = window.innerHeight;
+  camera.aspect = W / H;
+  const pr = panelEl.getBoundingClientRect();
+  let cx = W / 2, cy = H / 2;
+  if (W >= H) { const left = pr.right + 8, right = W - 72; if (right > left) cx = (left + right) / 2; }
+  else { const bottom = pr.top - 8; if (bottom > 80) cy = (72 + bottom) / 2; }
+  camera.setViewOffset(W, H, W / 2 - cx, H / 2 - cy, W, H);
   camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
+  layoutView();
 });
+if (window.ResizeObserver) new ResizeObserver(layoutView).observe(panelEl);
+
+function stepControls(dt) {
+  if (goalTarget) { target.lerp(goalTarget, Math.min(1, dt * 7)); if (target.distanceToSquared(goalTarget) < 1e-5) goalTarget = null; }
+  if (spin && !ptrs.size) yaw += dt * 0.55;
+  if (!ptrs.size && (Math.abs(vel.yaw) > 1e-4 || Math.abs(vel.pitch) > 1e-4)) {       // coast after a flick
+    yaw += vel.yaw * dt * 60; pitch = THREE.MathUtils.clamp(pitch + vel.pitch * dt * 60, -0.5, 1.3);
+    const decay = Math.exp(-dt * 5); vel.yaw *= decay; vel.pitch *= decay;
+  }
+  dist += (goal.dist - dist) * Math.min(1, dt * 12);
+}
 
 function resetPoses() {
   for (let i = 0; i < bones.length; i++) {
@@ -154,6 +246,7 @@ document.querySelectorAll('[data-model]').forEach((btn) => {
     activeModel = btn.dataset.model;
     resetCamera();
     setVisible();
+    setTitle();
   });
 });
 
@@ -172,9 +265,20 @@ document.getElementById('wireBtn').addEventListener('click', (e) => {
   applyWireframe(wireframe);
 });
 document.getElementById('resetBtn').addEventListener('click', resetCamera);
+document.querySelectorAll('[data-tool]').forEach((btn) => btn.addEventListener('click', () => {
+  document.querySelectorAll('[data-tool]').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on'); tool = btn.dataset.tool;
+}));
+document.querySelectorAll('[data-frame]').forEach((btn) => btn.addEventListener('click', () => frameOn(btn.dataset.frame)));
+document.getElementById('spinBtn').addEventListener('click', (e) => { spin = !spin; e.currentTarget.classList.toggle('on', spin); });
+document.getElementById('sheetBtn').addEventListener('click', () => document.getElementById('panel').classList.toggle('closed'));
+const titleEl = document.getElementById('title');
+const setTitle = () => { titleEl.textContent = MODEL_NAMES[activeModel]; };
 
 resetPoses();
 setVisible();
+setTitle();
+layoutView();
 
 function poseMan(t, anim) {
   for (let i = 0; i < bones.length; i++) {
@@ -266,6 +370,7 @@ function loop(now) {
   last = now;
   const t = now * 0.001;
 
+  stepControls(dt);
   // WASD / Arrow keyboard pan
   const panSpd = dist * 0.9 * dt;
   const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));

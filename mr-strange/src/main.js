@@ -1,15 +1,17 @@
 // Mr. Strange: entry point. Wires the modules together and runs the loop.
 //
-//   world/     renderer, lights, ground, wind field + wind streaks
+//   world/     renderer, lights, ground, course + city skyline, far forest, wind field
 //   character/ rig (skeleton + IK), body (SDF skin), avatar (look), cape (cloth), motion
 //   input.js   joystick / jump / keyboard        camera.js   chase camera
-//   hud.js     fps + wind readout
+//   hud.js     fps readout
 
 import { CFG } from './config.js';
 import { createWorld } from './world/world.js';
 import { wind } from './world/wind.js';
-import { createWindFx } from './world/windfx.js';
 import { model } from './character/rig.js';
+import { buildLevel } from './world/level.js';
+import { buildCity } from './world/city.js';
+import { createGroundFog } from './world/groundfog.js';
 import { buildForest } from './world/forest.js';
 import { createTemplars } from './world/templar.js';
 import { createAvatar } from './character/avatar.js';
@@ -29,13 +31,15 @@ import { updateHud } from './hud.js';
 const { renderer, scene, camera, followLight, trackFrame } = createWorld(document.getElementById('gl'));
 
 scene.add(model);
+buildLevel(scene);
+const city = buildCity(scene);
 const forest = buildForest(scene);
+const groundFog = createGroundFog(scene);
 const avatar = createAvatar(scene);
 const cape = createCape(scene);
 const bat = createBat(scene);
 const templars = createTemplars(scene);
 setBatRoot(bat.root);              // arrows that hit the bat are anchored to its body
-const windFx = createWindFx(scene);
 const shockwave = createShockwave(scene);
 const batBtn = document.getElementById('bat');
 
@@ -143,7 +147,10 @@ function frame(now) {
     if (punch.inHitWindow) {                 // the fist's path this frame against the knights
       fistWorld(fist);
       if (!wasInWindow) prevFist.copy(fist);
-      if (templars.hitByPlayer(prevFist, fist, punch.swing, hero) > 0) sp.squash.kick(-0.9);
+      if (templars.hitByPlayer(prevFist, fist, punch.swing, hero) > 0) {
+        sp.squash.kick(-0.9);
+        groundFog.pulse(fist.x, fist.z, 2.2);
+      }
       prevFist.copy(fist);
     }
     wasInWindow = punch.inHitWindow;
@@ -152,6 +159,7 @@ function frame(now) {
       fistWorld(fist);
       const radius = 3.6;
       shockwave.spawn(fist.x, hero.pos.y, fist.z, radius);
+      groundFog.pulse(fist.x, fist.z, radius);
       templars.blast(fist.x, hero.pos.y, fist.z, radius, hero);
       kickCamera(0.075);
       sp.squash.kick(-1.4);
@@ -162,6 +170,7 @@ function frame(now) {
   camera.updateMatrixWorld();
   viewMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse.copy(camera.matrixWorld).invert());
   viewFrustum.setFromProjectionMatrix(viewMatrix);
+  city.update(dt, char, templars, now / 1000);
   templars.update(dt, char, sp, viewFrustum);
   updateCamera(camera, dt);
   const cu = window.mrStrange.closeup;
@@ -170,8 +179,8 @@ function frame(now) {
     camera.lookAt(char.pos.x, char.pos.y + cu.ty, char.pos.z);
   }
   followLight(char.pos);
-  windFx.update(char.pos);
   forest.update(char.pos, now / 1000);
+  groundFog.update(dt, char.pos, now / 1000, templars.knights, char.vel);
 
   renderer.render(scene, camera);
   updateHud(dt);

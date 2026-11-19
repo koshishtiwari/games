@@ -48,6 +48,8 @@
   "src/world/wind.js",
   "src/world/windfx.js",
   "src/world/world.js",
-  "viewer.html"
+  "viewer.html",
+  "src/world/city.js",
+  "src/world/groundfog.js"
  ]
 }

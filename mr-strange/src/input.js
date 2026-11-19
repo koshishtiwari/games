@@ -111,7 +111,6 @@ window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false
 
 // --- keyboard fallback ---
 const keys = Object.create(null);
-export const keyHandlers = { onWindKey: null };
 window.addEventListener('keydown', (e) => {
   if (e.repeat) return;
   keys[e.code] = true;
@@ -120,7 +119,6 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyJ' || e.code === 'KeyK') { input.punchQueued = true; }
   if (e.code === 'KeyL' || e.code === 'KeyU') { input.slamQueued = true; }
   if (e.code === 'KeyC' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') { input.diveHeld = true; }
-  if (e.code === 'KeyF' && keyHandlers.onWindKey) keyHandlers.onWindKey();
   dismissHint();
 });
 window.addEventListener('keyup', (e) => {

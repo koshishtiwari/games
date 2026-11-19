@@ -22,7 +22,7 @@ let manualOrbitT = 0;
 let orbitDrag = false, lastMX = 0, lastMY = 0;
 if (typeof window !== 'undefined') {
   window.addEventListener('pointerdown', (e) => {
-    if (e.target.closest && e.target.closest('a, button, #wind, #bat, #jump')) return;
+    if (e.target.closest && e.target.closest('a, button, .act')) return;
     if (e.button === 2 || (e.pointerType === 'mouse' && e.clientX >= window.innerWidth * 0.55)) {
       orbitDrag = true; lastMX = e.clientX; lastMY = e.clientY;
     }

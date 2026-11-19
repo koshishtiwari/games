@@ -99,7 +99,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 /* HUD */
 #hud{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top) + 7px);z-index:20;pointer-events:none;transition:opacity .4s}
 .hb{position:absolute;top:0;width:34px;height:34px;border-radius:17px;background:rgba(0,0,0,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;pointer-events:auto;font-size:15px;font-weight:900}
-.hb svg{width:17px;height:17px}
+.hb svg{width:20px;height:20px}
 .hb:active{transform:scale(.92)}
 #sndBtn{left:94px}#helpBtn{left:136px}#chatBtn{right:58px}
 #emojis{position:absolute;top:calc(env(safe-area-inset-top) + 3px);right:46px;width:58px;padding:8px 0;border-radius:29px;background:#2a2d34;display:none;flex-direction:column;align-items:center;gap:6px;z-index:35;box-shadow:0 8px 28px rgba(0,0,0,.6)}
@@ -139,6 +139,12 @@ body.tut #coach{display:none}
 #me .av{width:64px;height:64px;font-size:36px;border-color:var(--yellow-d)}
 #me.active .av{border-color:var(--yellow)}
 #meBub{bottom:calc(100% + 34px)}
+/* the GIF button mirrors the avatar tile on the other side of the panel */
+#gifBtn{flex:none;position:relative;width:64px;height:64px;border-radius:18px;border:3px solid var(--yellow-d);background:linear-gradient(#ffd75e,#f08a1c);color:#241a00;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;font-weight:900;letter-spacing:.04em;box-shadow:0 3px 0 rgba(0,0,0,.35);transition:transform .1s}
+#gifBtn svg{width:26px;height:26px;margin-top:-2px}
+#gifBtn span{font-size:11px;line-height:1;margin-top:-3px}
+#gifBtn:active{transform:translateY(3px) scale(.97)}
+body.tut #gifBtn{display:none}
 #act{position:relative;flex:1;height:60px;border-radius:30px;font-weight:900;font-size:16px;letter-spacing:.03em;overflow:hidden;transition:background .15s,transform .1s}
 #act:active:not(:disabled){transform:translateY(3px)}
 #act.play{background:var(--yellow);color:#241a00;box-shadow:0 4px 0 var(--yellow-d)}
@@ -150,7 +156,6 @@ body.tut #coach{display:none}
   box-shadow:inset 0 0 0 2px var(--yellow),0 4px 0 rgba(0,0,0,.35);font-size:14px;font-weight:900;letter-spacing:.03em;white-space:nowrap;z-index:6}
 #claimPill:active{transform:translateX(-50%) translateY(2px)}
 #claimPill.bluff{box-shadow:inset 0 0 0 2px #ff8a3d,0 4px 0 rgba(0,0,0,.35);color:#ffb27a}
-body.tut #claimPill{pointer-events:none}
 body.myturn #claimPill{display:flex}body.cine #claimPill{display:none}body.myturn #coach{display:none}
 #rankSheet{position:absolute;left:12px;right:12px;bottom:calc(100% + 56px);display:none;grid-template-columns:repeat(7,1fr);gap:6px;padding:10px;border-radius:20px;background:#22252c;box-shadow:0 12px 30px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.1);z-index:30}
 #rankSheet.open{display:grid;animation:sheetin .16s ease-out}
@@ -182,18 +187,48 @@ body.cine #bars i{height:calc(11% + 3px)}
   transform:translateX(-110%);transition:transform .45s cubic-bezier(.2,.9,.3,1);border-left:5px solid var(--lc,var(--yellow));max-width:92%}
 #lt.show{transform:none}
 #lt b{display:block;font-size:28px}#lt span{font-size:14px;color:#d5dae2}
-#hint{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 58px);transform:translate(-50%,14px) scale(.92);z-index:46;display:flex;align-items:center;gap:10px;padding:9px 18px 9px 12px;max-width:94%;
-  background:#22252c;border-radius:20px;box-shadow:0 0 0 2px var(--yellow),0 10px 26px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s,transform .3s cubic-bezier(.3,1.6,.5,1);text-align:left}
-#hint.show{opacity:1;transform:translate(-50%,0) scale(1)}
-body.cine #hint{top:auto;bottom:calc(11% + 20px)}
-#hIc{font-size:30px;line-height:1}#hTx{font-size:18px;font-weight:900;line-height:1.15}
+#hint{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 62px);transform:translate(-50%,10px);z-index:46;display:flex;align-items:center;gap:9px;max-width:94%;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .3s cubic-bezier(.3,1.6,.5,1);text-shadow:0 2px 14px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.7)}
+#hint.show{opacity:1;transform:translate(-50%,0)}
+#hIc{font-size:24px;line-height:1}#hTx{font-size:20px;font-weight:900;line-height:1.15}
 #spot{position:absolute;z-index:44;border-radius:16px;pointer-events:none;opacity:0;box-shadow:0 0 0 100vmax rgba(0,0,0,.6),0 0 26px 4px rgba(252,196,25,.55);transition:all .35s cubic-bezier(.3,1.2,.5,1)}
 #spot.on{opacity:1}
 #finger{position:absolute;z-index:45;font-size:38px;pointer-events:none;opacity:0;transition:left .35s,top .35s,opacity .2s;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
 #finger.on{opacity:1;animation:fing .8s infinite}@keyframes fing{50%{margin-top:-12px}}
-#skip{position:absolute;z-index:48;font-size:13px;font-weight:800;padding:8px 14px;border-radius:16px;background:rgba(0,0,0,.6);box-shadow:0 0 0 1px rgba(255,255,255,.22);display:none;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 8px)}
+/* Skip sits where the reactions button does (the HUD is hidden during the tutorial), as plain text */
+#skip{position:absolute;z-index:48;display:none;right:58px;top:calc(env(safe-area-inset-top) + 7px);height:34px;padding:0 10px;font-size:15px;font-weight:800;color:rgba(255,255,255,.75);letter-spacing:.01em}
+#skip:active{opacity:.6}
 body.tut #skip{display:block}
-body.cine #skip{top:auto;bottom:calc(11% + 12px)}
+body.tut #hud{display:none}
+
+/* GIF reactions (Klipy) */
+#emojis .gifb{width:46px;height:30px;margin-top:2px;border-radius:10px;font-size:12px;font-weight:900;letter-spacing:.04em;background:var(--yellow);color:#241a00}
+#gifSheet{position:absolute;left:0;right:0;bottom:0;height:62%;z-index:60;display:none;flex-direction:column;background:#17191e;border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.6);padding:10px 10px calc(env(safe-area-inset-bottom) + 8px)}
+#gifSheet.open{display:flex;animation:sheetin .18s ease-out}
+#gifSheet .gh{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+#gifSheet input{flex:1;height:38px;border-radius:19px;padding:0 14px;background:#262932;color:#fff;font:700 15px inherit;border:0;outline:0}
+#gifSheet input::placeholder{color:#7d8492}
+#gifSheet .gx{width:38px;height:38px;border-radius:19px;background:#262932;font-size:18px;font-weight:900}
+#gifSheet .chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;scrollbar-width:none}
+#gifSheet .chips::-webkit-scrollbar{display:none}
+#gifSheet .chips button{flex:none;height:30px;padding:0 13px;border-radius:15px;background:#262932;font-size:13px;font-weight:800;color:#cfd4dc}
+#gifSheet .chips button.on{background:var(--yellow);color:#241a00}
+#gifGrid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start}
+#gifGrid button{aspect-ratio:1;border-radius:12px;overflow:hidden;background:#262932;padding:0}
+#gifGrid img{width:100%;height:100%;object-fit:cover;display:block}
+#gifMsg{grid-column:1/4;text-align:center;color:#7d8492;font-weight:700;padding:30px 0}
+#gifSheet .kl{text-align:center;font-size:10px;font-weight:800;letter-spacing:.08em;color:#6a7180;margin-top:6px}
+.gifpop{position:absolute;z-index:58;width:112px;border-radius:14px;overflow:hidden;pointer-events:none;box-shadow:0 8px 26px rgba(0,0,0,.65);background:#222}
+.gifpop img{display:block;width:100%}
+.gifpop .kb{position:absolute;right:4px;bottom:3px;font-size:8px;font-weight:900;color:#fff;opacity:.85;text-shadow:0 1px 3px #000}
+
+
+/* kinetic intro (tutorial): fast type, colour floods, card flicks */
+#kin{position:absolute;inset:0;z-index:47;display:none;overflow:hidden;pointer-events:none;background:#0b0c10}
+#kin.on{display:block}
+#kin .kw{position:absolute;left:0;right:0;text-align:center;font-weight:900;font-size:min(27vw,112px);line-height:.95;letter-spacing:-.025em;white-space:nowrap;will-change:transform,opacity}
+#kin .kc{position:absolute;will-change:transform}
+#kin .kt{position:absolute;display:flex;align-items:center;justify-content:center;width:58px;height:58px;border-radius:18px;font-size:32px;will-change:transform;background:linear-gradient(var(--c1),var(--c2))}
 
 /* menu / end */
 #ov{position:absolute;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(ellipse at 50% 30%,rgba(44,48,58,.97),rgba(16,17,21,.99) 70%)}
@@ -215,7 +250,8 @@ body.cine #skip{top:auto;bottom:calc(11% + 12px)}
 .sheet p{margin:0 0 16px;color:#c3c9d3;font-size:15px;line-height:1.4}
 .go{display:block;width:100%;height:60px;border-radius:30px;background:var(--yellow);color:#241a00;font-weight:900;font-size:19px;box-shadow:0 4px 0 var(--yellow-d);margin-bottom:12px}
 .go:active{transform:translateY(3px);box-shadow:0 1px 0 var(--yellow-d)}
-.go2{display:block;width:100%;height:48px;border-radius:24px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.18);font-weight:800;font-size:15px;color:#e6e9ef;margin-bottom:8px}
+.go2{display:block;width:100%;height:44px;background:none;font-weight:800;font-size:15px;color:#aab1bd;margin-bottom:8px}
+.go2:active{opacity:.6}
 .rh{font-size:30px;margin:0 0 6px;text-align:left}
 .recap{text-align:left;margin-bottom:20px}
 .recap .rw{display:flex;align-items:center;gap:16px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -260,11 +296,12 @@ body.cine #skip{top:auto;bottom:calc(11% + 12px)}
   </div></div></div>
 
   <div id="hud">
-    <button class="hb" id="sndBtn" aria-label="Sound">🔊</button>
-    <button class="hb" id="helpBtn" aria-label="How to play">?</button>
-    <button class="hb" id="chatBtn" aria-label="Reactions"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H11l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg></button>
+    <button class="hb" id="sndBtn" aria-label="Sound"></button>
+    <button class="hb" id="helpBtn" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.2 9.3a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.3-2.8 4"/><circle cx="12" cy="17.4" r=".6" fill="#fff"/></svg></button>
+    <button class="hb" id="chatBtn" aria-label="Reactions"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h14a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-6.5L7.5 20.5V16.5H5A2.5 2.5 0 0 1 2.5 14V7A2.5 2.5 0 0 1 5 4.5z"/><path d="M8 10.5h.01M12 10.5h.01M16 10.5h.01" stroke-width="3.4"/></svg></button>
   </div>
   <div id="emojis"></div>
+  <div id="gifSheet"><div class="gh"><input id="gifQ" type="search" placeholder="Search KLIPY" autocomplete="off"><button class="gx" id="gifX" aria-label="Close">✕</button></div><div class="chips" id="gifChips"></div><div id="gifGrid"></div><div class="kl">POWERED BY KLIPY</div></div>
 
   <div id="bottom">
     <div id="coach"><span id="coachTxt"></span></div>
@@ -274,6 +311,7 @@ body.cine #skip{top:auto;bottom:calc(11% + 12px)}
     <div id="panel">
       <div id="me" class="me"><div class="bub" id="meBub"></div><div class="mood"></div><div class="av"><span class="f">😎</span><span class="nm">You</span></div></div>
       <button id="act" class="wait" disabled><span id="actTxt"></span><i id="bar" style="display:none"></i></button>
+      <button id="gifBtn" aria-label="Send a GIF"><svg viewBox="0 0 24 24" fill="none" stroke="#241a00" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="M10 9.5l5 2.5-5 2.5z" fill="#241a00"/></svg><span>GIF</span></button>
     </div>
   </div>
 
@@ -281,6 +319,7 @@ body.cine #skip{top:auto;bottom:calc(11% + 12px)}
   <div id="flash"></div>
   <div id="spot"></div><div id="finger">👆</div>
   <div id="lt"><b id="ltName"></b><span id="ltSub"></span></div>
+  <div id="kin"></div>
   <div id="hint"><span id="hIc"></span><b id="hTx"></b></div>
   <div id="slam"><span id="slamT"></span></div>
   <button id="skip">Skip</button>
@@ -374,7 +413,7 @@ setInterval(function(){
 
 /* ================= AUDIO (all synthesised, nothing to download) ================= */
 var Snd=(function(){
-  var ctx=null,master,sfx,mus,musF,verb,nbuf,enabled=load('snd',true),musicOn=false,mTimer=null,nextT=0,stepN=0;
+  var ctx=null,master,sfx,mus,musF,verb,nbuf,enabled=load('snd',true),musicOn=false,mTimer=null,nextT=0,stepN=0,ibus=null,introT=null;
   function impulse(sec,decay){var r=ctx.sampleRate,n=r*sec|0,b=ctx.createBuffer(2,n,r);for(var c=0;c<2;c++){var d=b.getChannelData(c);for(var i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay);}return b;}
   function init(){
     if(ctx)return true;
@@ -510,6 +549,51 @@ var Snd=(function(){
       else if(who==='Biralo'){tone({f:700,f2:900,dur:.15,vol:.1,vib:[7,20]});tone({f:900,f2:520,dur:.38,vol:.1,vib:[7,20],t:t+.15});}
       else if(who==='Froggo'){tone({type:'square',f:150,f2:230,dur:.09,vol:.1,lp:650});tone({type:'square',f:170,f2:280,dur:.1,vol:.1,lp:650,t:t+.12});}
     },
+    /* The intro score: 120 BPM, locked to the kinetic intro's beat grid (500 ms a beat, 19 beats). Own bus so a skip can cut it. */
+    intro:function(){
+      if(!ok())return;
+      if(!ibus){ibus=ctx.createGain();ibus.connect(master);var iv=ctx.createGain();iv.gain.value=.22;ibus.connect(iv);iv.connect(verb);}
+      var now=ctx.currentTime;ibus.gain.cancelScheduledValues(now);ibus.gain.setValueAtTime(1,now);
+      mus.gain.cancelScheduledValues(now);mus.gain.setTargetAtTime(.03,now,.1);
+      var t0=now+.06,B=.5,K=function(b){return t0+b*B;};
+      function kick(t,v){tone({f:155,f2:42,dur:.24,vol:.6*v,t:t,bus:ibus});noise({type:'lowpass',f:320,dur:.07,vol:.22*v,t:t,bus:ibus});}
+      function clap(t,v){noise({f:1400,dur:.15,vol:.24*v,q:.6,t:t,a:.002,bus:ibus});noise({f:2700,dur:.09,vol:.13*v,t:t+.012,bus:ibus});}
+      function bass(m,t,d,v){tone({type:'sawtooth',f:mtof(m),dur:d,vol:.15*v,lp:460,t:t,a:.004,bus:ibus});tone({type:'sine',f:mtof(m),dur:d,vol:.22*v,t:t,a:.004,bus:ibus});}
+      function pluck(m,t,v){tone({type:'square',f:mtof(m),dur:.17,vol:.05*v,lp:2800,t:t,a:.002,bus:ibus});tone({type:'triangle',f:mtof(m+12),dur:.13,vol:.04*v,t:t,bus:ibus});}
+      function stabC(t,v){[60,63,67,72].forEach(function(m,i){tone({type:'sawtooth',f:mtof(m),dur:.55,vol:.08*v,lp:2200,t:t,a:.006,det:i*4,bus:ibus});});}
+      var i,m;
+      /* bar 1: just two hits, then a riser into the downbeat of the fan */
+      kick(K(0),1);bass(36,K(0),.45,1.1);clap(K(1),1);bass(36,K(1),.45,1.1);
+      noise({f:300,f2:6000,dur:1,q:2.2,vol:.2,t:K(2),a:.8,bus:ibus});tone({type:'sawtooth',f:180,f2:1500,dur:1,vol:.05,lp:3000,t:K(2),a:.7,bus:ibus});
+      for(i=0;i<4;i++)clap(K(3)+i*B/4,.25+i*.12);
+      /* bar 2 (beats 4-7): four on the floor, offbeat bass, plucked arp */
+      var arp=[60,63,67,72,67,63,67,70],bl=[36,36,39,43];
+      for(i=4;i<8;i++){kick(K(i),1);bass(bl[i-4],K(i)+B/2,.3,.9);if(i%2)clap(K(i),.8);}
+      for(i=0;i<8;i++)pluck(arp[i],K(4)+i*B/2,.9);
+      tone({f:900,f2:2400,dur:.18,vol:.1,t:K(6),bus:ibus});                         /* the flip */
+      /* bar 3 (beats 8-11): one word a beat, bass climbs, ACE gets the stab */
+      var cl=[36,39,41,43];
+      for(i=8;i<12;i++){kick(K(i),1);clap(K(i)+B/2,.5);bass(cl[i-8],K(i),.4,1.15);}
+      for(i=0;i<16;i++)pluck(arp[i%8]+(i>=8?5:0),K(8)+i*B/4,.55);
+      stabC(K(11),1.3);kick(K(11)+B/2,1);
+      /* bar 4 (beats 12-15): the roster arpeggio, a payoff, then drums fall out */
+      for(i=0;i<10;i++)pluck(60+[0,3,7,10,12,15,19,22,24,27][i],K(12)+i*.0625,1);
+      kick(K(12),1);kick(K(13),1);kick(K(14),1);clap(K(14),1);bass(36,K(12),.9,1.1);bass(39,K(14),.9,1.1);
+      for(i=0;i<6;i++)clap(K(14.5)+i*B/6,.2+i*.1);
+      noise({f:500,f2:7000,dur:.8,q:2.5,vol:.22,t:K(14.9),a:.7,bus:ibus});
+      /* silence from 15.5 to 16, then the hit */
+      /* bar 5: LIAR! */
+      stabC(K(16),1.8);stabC(K(16)+.12,1.3);kick(K(16),1.2);bass(36,K(16),1.4,1.3);bass(24,K(16),1.4,1);
+      noise({f:2000,dur:1.3,vol:.22,q:.5,t:K(16),a:.01,bus:ibus});
+      [67,72,75,79].forEach(function(m,i){tone({type:'sawtooth',f:mtof(m),dur:1.2,vol:.06,lp:2400,t:K(16.5)+i*.06,a:.02,bus:ibus});});
+      ibus.gain.setValueAtTime(1,K(18.4));ibus.gain.linearRampToValueAtTime(0,K(19));
+      clearTimeout(introT);introT=setTimeout(api.introStop,B*19*1000+600);
+    },
+    introStop:function(){
+      if(!ctx)return;clearTimeout(introT);var now=ctx.currentTime;
+      if(ibus){ibus.gain.cancelScheduledValues(now);ibus.gain.setValueAtTime(ibus.gain.value,now);ibus.gain.linearRampToValueAtTime(0,now+.12);}
+      mus.gain.cancelScheduledValues(now);mus.gain.setTargetAtTime(.5,now+.1,.6);
+    },
     ping:function(){if(!ok())return;marimba(88,ctx.currentTime,.1);},
     fanOut:function(n){if(!ok())return;for(var i=0;i<n;i++){(function(i){setTimeout(function(){if(!ok())return;noise({f:1800+i*140,f2:3600+i*140,dur:.05,vol:.12,q:.8});tone({type:'triangle',f:620+i*45,dur:.07,vol:.05,lp:3000});},i*48);})(i);}setTimeout(function(){if(ok())marimba(84,ctx.currentTime,.09);},n*48+380);},
     flick:function(){if(!ok())return;noise({f:rnd(1800,2600),f2:rnd(3200,4200),dur:.045,vol:.1,q:.8});}
@@ -568,7 +652,7 @@ function sortHand(h){h.sort(function(a,b){return a.r-b.r||a.s-b.s;});}
 function nextIdx(i){return(i+1)%5;}
 function makePlayers(){S.players=[Object.assign({hand:[],idx:0},ME)];(S.cast||castOf(['Uncle','Goatie','Foxy','Froggo'])).forEach(function(b,i){S.players.push(Object.assign({hand:[],idx:i+1,tilt:0,callStat:{right:0,wrong:0}},b));});}
 function newGame(){
-  S.cast=randomCast();
+  S.cast=randomCast();GIF.close();GIF.newGame();setTimeout(GIF.warm,2500);
   cancelAll(true);S.gid++;S.tut=false;S.tutHold=false;S.tutId=0;S.over=false;
   document.body.classList.remove('tut');setCine(false);hintOff();spotOff();ltHide();camReset(500);
   $('#rv').innerHTML='';$('#rvLbl').style.display='none';hideClaim();
@@ -919,7 +1003,9 @@ function play(p,cards){
   var g=S.gid;
   setTimeout(function(){if(g!==S.gid)return;var st=$('#pileStack');st.classList.remove('press');void st.offsetWidth;st.classList.add('press');Snd.place();shake(3);
     showClaim(p,cards.length,S.rank);
-    if(p.idx!==0){var ly=cards.some(function(c){return c.r!==S.last.rank;}),tl=p.ai.tell;if(Math.random()<(ly?tl.lie:tl.honest))say(p,pick(tl.lines));else if(Math.random()<.18)say(p,pick(p.say.claim));}},Math.max(0,land-60));
+    if(p.idx!==0){var ly=cards.some(function(c){return c.r!==S.last.rank;}),tl=p.ai.tell;
+      if(p._talk){say(p,p._talk.t);if(p._talk.mood)mood(p,p._talk.mood);p._talk=null;}
+      else if(Math.random()<(ly?tl.lie:tl.honest))say(p,pick(tl.lines));else if(Math.random()<.18)say(p,pick(p.say.claim));}},Math.max(0,land-60));
   var dur=fromHand?WINDOW_ME_MS:WINDOW_MS;S.winEnd=clock+dur+land;updateBar();
   if(!S.tut){
     var M=S.mem;S.last.obv=clamp(((M.known[p.idx][S.rank]||0)+(M.soft[p.idx][S.rank]||0))/cards.length,0,1);
@@ -930,7 +1016,7 @@ function play(p,cards){
       var d=Math.max(150,220+(1-clamp(ev.urge*2.2,0,1))*1100+rnd(0,300)+(b.ai.slow||0));
       later(land+d,function(){b._why=ev.why;callLiar(b);});
     });
-    memOnPlay(p,cards,S.rank);if(p.idx!==0)M.calls.opps++;
+    memOnPlay(p,cards,S.rank);if(p.idx!==0){M.calls.opps++;}
   }
   if(!S.tutHold)later(dur+land,windowClose);
 }
@@ -938,8 +1024,10 @@ function windowClose(){
   if(S.phase!=='window')return;
   var L=S.last;
   if(L.by.idx===0&&!L.cards.every(function(c){return c.r===L.rank;}))S.stats.away++;
+  if(S.mem&&L.by.idx!==0)bumpHsz(L.count,false);   /* you let this one go */
+  if(L.by.idx!==0&&!L.cards.every(function(c){return c.r===L.rank;}))L.by.hot=Math.min(3,(L.by.hot||0)+1);   /* got away with it: bolder next time */
   S.winEnd=0;
-  if(!S.tut&&Math.random()<.3){var bots=S.players.filter(function(p){return p.idx!==0&&p!==L.by;});var b=pick(bots);say(b,pick(b.say.safe));}
+  if(!S.tut&&Math.random()<.3){var bots=S.players.filter(function(p){return p.idx!==0&&p!==L.by;});var b=pick(bots);say(b,pick(b.say.safe));GIF.react(b,'smug',null,.35);}
   if(L.by.hand.length===0){win(L.by);return;}
   hideClaim();S.cur=nextIdx(L.by.idx);beginTurn();
 }
@@ -963,8 +1051,11 @@ function comb(n,k){var c=1;for(var i=1;i<=k;i++)c=c*(n-k+i)/i;return c;}
 function binTail(K,r,need){if(need<=0)return 1;if(need>K)return 0;var t=0;for(var k=need;k<=K;k++)t+=comb(K,k)*Math.pow(r,k)*Math.pow(1-r,K-k);return t;}
 
 /* shared table memory: what has been seen, not what is secretly true */
-function memInit(){
-  var m={turn:0,pileClaims:[],calls:{opps:0,calls:0},known:[],soft:[],rep:[]};
+/* What this player does with each claim size, remembered across games (and sessions), so the animals know who they are playing. */
+function loadHsz(){var h=load('hsz',null);if(Array.isArray(h)&&h.length===5&&h[1]&&h[4])return h;return[0,{o:0,c:0},{o:0,c:0},{o:0,c:0},{o:0,c:0}];}
+function bumpHsz(N,called){var z=S.mem.hsz[Math.min(N,4)];z.o++;if(called)z.c++;if(z.o>40){z.o*=.5;z.c*=.5;}save('hsz',S.mem.hsz);}
+function memInit(){S.said={};S.lastTalk=null;
+  var m={turn:0,pileClaims:[],calls:{opps:0,calls:0},hsz:loadHsz(),known:[],soft:[],rep:[]};
   for(var i=0;i<5;i++){m.known.push({});m.soft.push({});m.rep.push({lies:0,truths:0,obv:0});}
   S.mem=m;
 }
@@ -977,9 +1068,13 @@ function recall(b,pid,R,kind){
 function knownTotal(b,pid){var t=0;for(var r=0;r<13;r++)t+=recall(b,pid,r,'known');return t;}
 function unknownFor(b){var u=52-b.hand.length;S.players.forEach(function(z){if(z!==b)u-=knownTotal(b,z.idx);});return Math.max(3,u);}
 function repLie(pid,prior){var r=S.mem.rep[pid];return(r.lies*.55+prior*5)/((r.lies+r.truths)*.75+5);}   /* only suspicious plays get revealed, so the raw rate is biased high */
-function humanAI(){var c=S.mem.calls,rate=(c.calls+2)/(c.opps+6);return{level:1,prior:.3,aggr:clamp((rate-.33)*3,-.8,1.2),noise:.1,math:1};}
+/* How the human is modelled. Blends their overall call rate with their rate for THIS claim size, so a player who calls every
+   triple is seen as someone who calls triples, and the bots stop (or deliberately start) bluffing at that size. */
+function humanAI(N){var c=S.mem.calls,rate=(c.calls+2)/(c.opps+6),z=S.mem.hsz[Math.min(N||1,4)];
+  if(N&&z.o>=3){rate=.4*rate+.6*(z.c+1)/(z.o+3);}
+  return{level:1,prior:.3,aggr:clamp((rate-.33)*3,-.8,1.2),noise:.1,math:1};}
 /* how likely is a claim a lie, given how plausible it is (t), how obvious it is (ob), and how this thinker reasons */
-var LIESIZE=[1,1,.9,.42,.14];
+var LIESIZE=[1,1,1,1.05,1];   /* was [1,1,.9,.42,.14]: it taught every thinker that big claims are honest, which they are not */
 function postLie(par,q,t,ob,xRep,N){
   if(par.level===0)q=par.prior;                      /* naive: ignores reputation */
   else if(par.level===1)q=q*(1-.35*ob);              /* trusts what is publicly obvious */
@@ -1007,7 +1102,7 @@ function memOnReveal(L,honest,loser,caller){
   m.pileClaims=[];
   S.players.forEach(function(b){if(b.idx!==0)b.tilt*=.5;});
   if(caller.idx!==0){if(honest){caller.callStat.wrong++;caller.tilt=-.5;}else caller.callStat.right++;}
-  if(L.by.idx!==0&&!honest)L.by.tilt=.4;
+  if(L.by.idx!==0&&!honest){L.by.tilt=.4;L.by.hot=0;}
 }
 /* does this animal call LIAR on the play that just landed? */
 function evalCall(b){
@@ -1041,7 +1136,7 @@ function estCall(b,cd,pileAfter,handAfter,hum){
   var winP=handAfter===0,lowP=handAfter<=2;
   S.players.forEach(function(o){
     if(o===b)return;
-    var par=o.idx===0?hum:o.ai,kOut=0;
+    var par=o.idx===0?humanAI(N):o.ai,kOut=0;
     S.players.forEach(function(z){if(z!==b&&z!==o)kOut+=recall(b,z.idx,R,'known');});
     var Kav=Math.max(0,Math.round(4-myR-kOut)),ro=clamp(Math.max(0,o.hand.length-knownTotal(b,o.idx))/Ub,0,.95);
     var detect=lie?binTail(Kav,ro,5-N)*(par.math||1):0;      /* they hold too many of it for my claim to be possible */
@@ -1053,9 +1148,31 @@ function estCall(b,cd,pileAfter,handAfter,hum){
   });
   return 1-keep;
 }
+/* Table talk: the animals say out loud what they have worked out about you, and narrate their own runs. This is what makes the
+   adaptation readable, so it feels like a character noticing you rather than the game quietly changing the rules. */
+function tableTalk(b,pk,allIn){
+  if(S.tut||S.over)return;
+  var M=S.mem,N=Math.min(pk.cards.length,4),z=M.hsz[N],rk=RECK[b.name]!=null?RECK[b.name]:.4,SZ=['','single','pair','triple','four'][N],said=S.said=S.said||{};
+  var lie=!pk.honest,line=null,md=null;
+  if(allIn){line=pick(['Watch this.','Everyone look away.','Too bold? Good.','Trust me. Or do not.']);md='😈';}
+  else if(M.turn-(S.lastTalk==null?-9:S.lastTalk)<3)return;                         /* never a running commentary */
+  else if(z.o>=5&&z.c/z.o>=.65&&!said['c'+N]&&(!lie||rk>.5)&&Math.random()<.75){
+    said['c'+N]=1;
+    line=lie?pick(['You call every '+SZ+'. Call this one too.','Go on. You always call these.']):pick(['You always call '+SZ+'s. So here is a real one.','Call it. I dare you.']);md=lie?'😏':'😇';
+    if(b.name==='Goatie'&&!lie)line='Um... this one is real. Really. Baa.';else if(b.name==='Robo')line='Data says you call '+SZ+'s. Proceeding anyway.';
+  }
+  else if(z.o>=5&&z.c/z.o<=.2&&lie&&!said['n'+N]&&Math.random()<.7){said['n'+N]=1;line=b.name==='Goatie'?'Um... you never call a '+SZ+'. Right? Baa.':pick(['You never call a '+SZ+'. So.','Easy. You do not call these.']);md='😏';}
+  else if((b.hot||0)>=2&&lie&&!said['h'+b.idx+b.hot]&&Math.random()<.8){said['h'+b.idx+b.hot]=1;line=rk>.5?pick(['That is '+(b.hot+1)+' in a row. Nobody sees me.','I cannot lose today.']):pick(['Do not look at me like that.','Still unbeaten.']);md='😎';}
+  else if(b.tilt>0&&lie&&N>=2&&rk>.5&&!said['t'+b.idx]&&Math.random()<.6){said['t'+b.idx]=1;line=pick(['Fine. Bigger this time.','You got me once. Never again.']);md='😤';}
+  if(line){S.lastTalk=M.turn;b._talk={t:line,mood:md};}
+}
+var SIZETELL=[0,0,.95,1.25,2.5];
+/* How much each animal gambles. Reckless ones ignore the cost of being caught, love a big bluff, and sometimes just go for it;
+   careful ones bluff small and only when it is cheap. 0..1 */
+var RECK={Bandar:1,Froggo:.75,Panda:.6,Foxy:.5,Biralo:.4,Slinky:.35,Maya:.3,Uncle:.25,Robo:.1,Goatie:.05};
 function botPlay(b){
   if(S.phase!=='turn'||S.cur!==b.idx)return;
-  var par=b.ai,hs=b.hand.length,cnt={},pile=S.pile.length,hum=humanAI(),M=S.mem;
+  var par=b.ai,hs=b.hand.length,cnt={},pile=S.pile.length,hum=humanAI(),M=S.mem,rk=RECK[b.name]!=null?RECK[b.name]:.4;
   b.hand.forEach(function(c){cnt[c.r]=(cnt[c.r]||0)+1;});
   var held=Object.keys(cnt).map(Number),cands=[];
   function ofRank(r){return b.hand.filter(function(c){return c.r===r;});}
@@ -1076,11 +1193,15 @@ function botPlay(b){
   cands.forEach(function(cd){
     var N=cd.cards.length,win=(hs-N===0),pc=estCall(b,cd,pile+N,hs-N,hum),V;
     if(cd.honest)V=N*1.6+.44*pc*pile+(win?14:0);                 /* an honest play only gets better if someone wrongly calls it */
-    else V=(1-pc)*N*1.6-pc*(pile+N)*.8+(win?14*(1-pc):0)+par.greed+(hs>=8?.4:0);
+    else V=(1-pc)*N*1.6-pc*(pile+N)*.8*(1-.55*rk)+(win?14*(1-pc):0)+par.greed+(hs>=8?.4:0)
+      -SIZETELL[Math.min(N,4)]*(1-.85*rk)                /* reckless animals shrug off the tell of a big bluff */
+      +(b.hot||0)*.28*(.5+rk)                            /* a streak makes them bolder */
+      +(pile<5?.35*rk:0);                                /* a small pile is cheap to lose, the reckless know it */
+    /* SIZETELL: honest triples are rare, so a triple that is a bluff is easy to spot. Real players keep claim size uninformative, so big bluffs cost extra. */
     var seen={},cleared=0;cd.cards.forEach(function(c){seen[c.r]=(seen[c.r]||0)+1;});for(var rr in seen)if(seen[rr]===cnt[rr])cleared++;
     cd.V=V+.25*cleared+gauss()*par.noise*1.5;cd.pc=pc;
   });
-  var pickd;
+  var pickd,allIn=false;
   function choose(list){
     var vmax=-1e9;list.forEach(function(c){if(c.V>vmax)vmax=c.V;});
     var tot=0,ws=list.map(function(c){var w=Math.exp((c.V-vmax)/par.temp);tot+=w;return w;}),x=Math.random()*tot;
@@ -1091,11 +1212,13 @@ function botPlay(b){
   if(Math.random()<par.blunder)pickd=pick(cands);                  /* an honest slip */
   else if(!B.length)pickd=choose(H);
   else if(!H.length)pickd=choose(B);
+  else if(rk>.4&&Math.random()<rk*.1&&pile<7){allIn=true;pickd=B.slice().sort(function(x,y){return y.cards.length-x.cards.length||Math.random()-.5;})[0];}   /* "watch this": a deliberate big bluff */
   else{
     var bestH=Math.max.apply(null,H.map(function(c){return c.V;})),bestB=Math.max.apply(null,B.map(function(c){return c.V;}));
     var pBluff=1/(1+Math.exp(-(bestB-bestH)/(par.temp*1.6)));
     pickd=choose(Math.random()<pBluff?B:H);
   }
+  tableTalk(b,pickd,allIn);
   S.rank=pickd.R;play(b,pickd.cards.slice(0,4));
 }
 
@@ -1111,10 +1234,10 @@ async function runReveal(caller){
   var bads=L.cards.map(function(c){return c.r!==L.rank;}),honest=bads.indexOf(true)<0,loser=honest?caller:L.by;
   /* 1. the accusation: a hit, then punch in on the accuser */
   Snd.stab();Snd.duck(true);buzz('heavy');
-  slam('LIAR!','red');mood(caller,'😠');animAv(caller,'nope');
+  slam('LIAR!','red');mood(caller,'😠');animAv(caller,'nope');if(!me&&!S.tut)GIF.react(caller,'accuse',null,.45);
   var why=caller._why;caller._why=null;
   if(me)say(caller,'LIAR!');else{say(caller,why&&REASONS[why]?pick(REASONS[why]):pick(caller.say.call));camTo(seatEl(caller.idx),1.3,380,0,0);}
-  if(me&&S.mem)S.mem.calls.calls++;
+  if(me&&S.mem){S.mem.calls.calls++;bumpHsz(L.count,true);}
   shake(me?8:10);
   await sleep(1050*K);z();
   /* 2. cut to the pile, flip the evidence one card at a time */
@@ -1155,9 +1278,14 @@ async function runReveal(caller){
   if(S.mem)memOnReveal(L,honest,loser,caller);
   loser.hand=loser.hand.concat(S.pile);S.pile=[];sortHand(loser.hand);renderAll();
   shake(8);animAv(loser,'nope');mood(loser,loser.idx===0?'😵':pick(['😵','😭','🤕']));
-  if(loser.idx===0){Snd.sad();buzz('error');}
+  if(loser.idx===0){Snd.sad();buzz('error');
+    if(!S.tut)shuffle(S.players.slice(1)).slice(0,2).forEach(function(o,i){setTimeout(function(){GIF.react(o,'mock',pick(['🤣','😂','🤡']),.9);},500+i*650);});}
   else{say(loser,pick(honest?loser.say.wrongCall:loser.say.caught));
-    if(Math.random()<.5){var oth=S.players.filter(function(p){return p.idx!==0&&p!==loser;}),o=pick(oth);setTimeout(function(){say(o,pick(['🤣','😬','🤡','😂']),true);},600);}}
+    if(!S.tut){
+      var oth=shuffle(S.players.filter(function(p){return p.idx!==0&&p!==loser;}));
+      oth.slice(0,2).forEach(function(o,i){if(Math.random()<(i?.4:.7))setTimeout(function(){GIF.react(o,'mock',pick(['🤣','😬','🤡','😂']),.8);},600+i*500);});
+      GIF.react(loser,honest?'huh':'sulk',null,.5);
+    }}
   setTimeout(function(){seatEl(loser.idx).classList.remove('flash');},900);
   await sleep(1500*K);z();
   camReset(800);
@@ -1173,8 +1301,10 @@ function win(p){
   var wins=load('wins',0),plays=load('plays',0)+1;if(you)wins++;save('wins',wins);save('plays',plays);
   var score=(you?100:10)+S.stats.caught*15;
   Snd.duck(true);
+  if(!you)S.players.filter(function(q){return q.idx!==0&&q!==p;}).slice(0,2).forEach(function(q,i){setTimeout(function(){GIF.react(q,'sulk','😭',.7);},900+i*600);});
+  if(you){shuffle(S.players.slice(1)).slice(0,2).forEach(function(q,i){setTimeout(function(){GIF.react(q,i?'sulk':'mock','😤',.9);},1200+i*600);});}
   if(you){Snd.fanfare();buzz('success');FX.rain(3);var c=ctr($('#me'));FX.burst(c.x,c.y,50);camReset(600);}
-  else{Snd.sad();buzz('warning');slam(p.name.toUpperCase()+' WINS','red');camTo(seatEl(p.idx),1.35,800,0,0);mood(p,'😎');animAv(p,'hop');}
+  else{Snd.sad();buzz('warning');slam(p.name.toUpperCase()+' WINS','red');camTo(seatEl(p.idx),1.35,800,0,0);mood(p,'😎');animAv(p,'hop');GIF.react(p,'win',null,1);}
   setTimeout(function(){
     if(g!==S.gid)return;Snd.duck(false);
     var taunt=you?pick(['Your pants are on fire and you won anyway.','A natural born liar. Respect.','Uncle is not impressed. He is secretly proud.']):pick(['You were out-lied by '+('a '+p.kind)+'.','Better luck next time. Maybe lie more.','The animals laugh quietly.']);
@@ -1222,7 +1352,7 @@ var tutSeq=0;
 function startTutorial(){
   S.cast=castOf(['Uncle','Goatie','Foxy','Froggo']);
   cancelAll(true);S.gid++;S.tutId=++tutSeq;var id=S.tutId;S.tut=true;S.tutHold=false;S.over=false;S.phase='idle';
-  document.body.classList.add('tut');$('#ov').classList.add('hide');
+  killKin();document.body.classList.add('tut');$('#ov').classList.add('hide');
   $('#rv').innerHTML='';$('#rvLbl').style.display='none';hideClaim();hintOff();spotOff();
   makePlayers();buildSeats();handSeen={};handEls={};haloEls={};$('#hand').innerHTML='';lastCounts={};pileClear();deckHide();memInit();
   S.pile=[];S.last=null;S.rank=0;S.cur=0;S.sel={};S.selN=0;S.dealing=false;S.dealShown=[0,0,0,0,0];
@@ -1235,22 +1365,90 @@ function startTutorial(){
   renderAll();setCine(true);camReset(10);Snd.duck(false);
   tutBody(id).catch(function(e){if(e!=='abort')console.error(e);});
 }
-async function tutBody(id){
-  /* ---- meet the table (the zoom intro) ---- */
-  await sleep(700);chk(id);
-  for(var i=1;i<=4;i++){
-    var p=S.players[i];
-    var roll=i%2?-3:3;
-    var av=seatEl(i).querySelector('.av')||seatEl(i);
-    camTo(av,2.1,560,0,roll,'cubic-bezier(.5,0,.2,1)',.46);Snd.whoosh();
-    await sleep(560);chk(id);
-    ltShow(p.name,p.trait,p.c2);Snd.voice(p.name);animAv(p,'hop');say(p,pick(p.say.claim));
-    camTo(av,2.9,2300,0,roll*.3,'cubic-bezier(.2,.55,.3,1)',.44);      /* the slow push-in */
-    await sleep(2250);chk(id);ltHide();await sleep(200);chk(id);
+/* ---- kinetic intro: ~6s of fast type, colour floods and card flicks. Pure WAAPI, cancelled with the tutorial. ---- */
+var SPRING='cubic-bezier(.2,1.4,.4,1)',SNAP='cubic-bezier(.7,0,.9,.3)';
+function kEl(cls,html,css){var e=document.createElement('div');e.className=cls;if(html)e.innerHTML=html;if(css)e.style.cssText=css;$('#kin').appendChild(e);return e;}
+function kA(e,frames,ms,ease,delay){return e.animate(frames,{duration:ms,easing:ease||SPRING,delay:delay||0,fill:'both'});}
+function killKin(){Snd.introStop();var k=$('#kin');k.classList.remove('on');k.innerHTML='';k.style.clipPath='';k.style.background='';}
+async function kinetic(id){
+  var kin=$('#kin'),W=window.innerWidth,H=window.innerHeight,i,T0=performance.now();
+  /* Everything lands on a 500 ms beat grid shared with Snd.intro(). */
+  async function at(ms){var d=ms-(performance.now()-T0);if(d>0)await sleep(d);chk(id);}
+  kin.innerHTML='';kin.style.clipPath='';kin.style.background='#0b0c10';kin.classList.add('on');
+  Snd.intro();
+  /* beat 0-3: two words, from opposite sides */
+  var w1=kEl('kw','Cards.','top:31%;color:#fff'),w2;
+  kA(w1,[{opacity:0,transform:'translateX(-70%) scale(.8)'},{opacity:1,transform:'none'}],380);
+  await at(500);
+  w2=kEl('kw','Lies.','top:47%;color:var(--yellow)');
+  kA(w2,[{opacity:0,transform:'translateX(70%) scale(.8)'},{opacity:1,transform:'none'}],380);
+  await at(1650);
+  kA(w1,[{transform:'none'},{transform:'translateX(-140%)'}],300,SNAP);kA(w2,[{transform:'none'},{transform:'translateX(140%)'}],300,SNAP);
+  await at(1960);kin.innerHTML='';
+  /* beat 4-7: seven cards flick in and fan, the middle one flips: a 9 */
+  var cw=Math.min(86,W*.22),cards=[];
+  for(i=0;i<7;i++){
+    var c=kEl('kc','','left:calc(50% - '+cw/2+'px);top:30%;--cw:'+cw+'px;transform-origin:50% 190%');c.appendChild(backEl());cards.push(c);
+    var side=i%2?1:-1,ang=(i-3)*10;
+    kA(c,[{opacity:0,transform:'translate('+side*W*.9+'px,'+H*.35+'px) rotate('+side*160+'deg)'},{opacity:1,transform:'rotate('+ang+'deg)'}],480,SPRING,i*60);
   }
-  camReset(900);await sleep(1000);chk(id);
+  await at(3000);
+  var mid=cards[3];Snd.flipTick(2);
+  kA(mid,[{transform:'rotate(0deg) scaleX(1)'},{transform:'translateY(-18px) rotate(0deg) scaleX(0)'}],130,'ease-in');
+  await at(3130);
+  mid.innerHTML='';mid.appendChild(cardEl(D(8,1)));mid.style.zIndex=5;
+  kA(mid,[{transform:'translateY(-18px) rotate(0deg) scaleX(0)'},{transform:'translateY(-30px) scale(1.25)'}],260,SPRING);
+  var t=kEl('kw','It\'s a <span style="color:var(--yellow)">9</span>.','top:63%;font-size:min(15vw,62px);color:#fff');
+  kA(t,[{opacity:0,transform:'translateY(30px)'},{opacity:1,transform:'none'}],320);
+  /* beat 8-11: yellow flood, SAY / IT'S / AN / ACE. one word a beat */
+  await at(3640);
+  var fl=kEl('kc','','left:50%;top:50%;width:20px;height:20px;margin:-10px;border-radius:50%;background:var(--yellow);z-index:6');
+  kA(fl,[{transform:'scale(1)'},{transform:'scale('+(Math.max(W,H)/8)+')'}],360,'cubic-bezier(.5,0,.2,1)');Snd.whoosh();
+  var words=['SAY','IT\'S','AN'],top=[16,32,48];
+  for(i=0;i<3;i++){
+    await at(4000+i*500);
+    var w=kEl('kw',words[i],'z-index:7;color:#17181c;top:'+top[i]+'%;font-size:min(30vw,128px)');
+    kA(w,[{opacity:0,transform:'scale(2.2)'},{opacity:1,transform:'none'}],230);
+  }
+  await at(5500);
+  var ace=kEl('kw','ACE.','z-index:7;color:#d9232d;top:62%;font-size:min(44vw,190px)');
+  kA(ace,[{opacity:0,transform:'scale(2.8) rotate(-6deg)'},{opacity:1,transform:'rotate(-3deg)'}],280);
+  await at(5900);
+  kA(kin,[{transform:'none'},{transform:'scale(1.5)',opacity:0}],200,SNAP);
+  await at(6100);
+  kin.innerHTML='';kin.getAnimations().forEach(function(a){a.cancel();});kin.style.background='#0b0c10';
+  /* beat 12-15: the whole roster pops in on an arpeggio, then the payoff */
+  var cast=shuffle(ROSTER.slice()),n=Math.min(10,cast.length),cols=4,rows=Math.ceil(n/cols),tw=58,gap=14;
+  var gx=(W-(cols*tw+(cols-1)*gap))/2,gy=H*.26;
+  for(i=0;i<n;i++){
+    var r=cast[i],tx=gx+(i%cols)*(tw+gap),ty=gy+Math.floor(i/cols)*(tw+gap);
+    var tl=kEl('kt',r.em,'left:'+tx+'px;top:'+ty+'px;--c1:'+r.c1+';--c2:'+r.c2);
+    kA(tl,[{opacity:0,transform:'scale(0) rotate(-25deg)'},{opacity:1,transform:'none'}],260,SPRING,i*62.5);
+  }
+  await at(7000);
+  var pay=kEl('kw','One of them<br><span style="color:var(--yellow)">is lying.</span>','top:'+(gy/H*100+rows*(tw+gap)/H*100+4)+'%;font-size:min(13vw,54px);line-height:1.05;color:#fff');
+  kA(pay,[{opacity:0,transform:'translateY(24px)'},{opacity:1,transform:'none'}],320);Snd.pop();
+  await at(7700);
+  kA(kin,[{transform:'none'},{transform:'scale(.92)',opacity:0}],220,SNAP);
+  await at(7940);
+  kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';kin.style.background='#d9232d';
+  /* beat 16: LIAR! on the downbeat, then the iris */
+  await at(8000);
+  var li=kEl('kw','LIAR!','top:38%;font-size:min(38vw,160px);color:#fff');
+  kA(li,[{opacity:0,transform:'scale(3) rotate(5deg)'},{opacity:1,transform:'rotate(-4deg)'}],280);buzz('heavy');
+  var fl2=$('#flash');fl2.style.setProperty('--fc','#fff');fl2.classList.remove('fire');void fl2.offsetWidth;fl2.classList.add('fire');
+  await at(9000);
+  setCine(false);
+  var ir=kin.animate([{clipPath:'circle(150% at 50% 50%)'},{clipPath:'circle(0% at 50% 50%)'}],{duration:500,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'});
+  Snd.whoosh();await at(9520);
+  ir.cancel();killKin();
+}
+async function tutBody(id){
+  /* ---- kinetic intro ---- */
+  await sleep(250);chk(id);
+  await kinetic(id);chk(id);
   /* ---- deal ---- */
-  setCine(false);await sleep(800);chk(id);
+  await sleep(300);chk(id);
   hint('🏁','Empty your hand to win');
   S.players.forEach(function(p){p.hand=p.shown;});S.phase='deal';
   var dealMs=dealAnim();await sleep(dealMs+300);chk(id);await sleep(1800);chk(id);hintOff();
@@ -1263,9 +1461,19 @@ async function tutBody(id){
   while(S.selN===0&&S.phase!=='window'){await sleep(120);chk(id);waited+=120;
     if(waited>3500){var c0=S.players[0].hand.filter(function(c){return c.r===0;})[0];if(c0)toggle(c0);}} /* hesitate and the game shows you */
   if(S.phase!=='window'){
-    hint('🗣️','This is what you say');$('#rankSheet').classList.remove('open');
+    var sheet=$('#rankSheet'),tw=0;
+    hint('🗣️','Tap what you say');sheet.classList.remove('open');
+    await sleep(350);chk(id);
     spotOn($('#claimPill').getBoundingClientRect(),6);
-    var tw=0;while(S.phase!=='window'&&tw<2800){await sleep(120);chk(id);tw+=120;}
+    while(S.phase!=='window'&&!sheet.classList.contains('open')&&tw<6000){await sleep(120);chk(id);tw+=120;}
+    if(S.phase!=='window'&&sheet.classList.contains('open')){
+      hint('🃏','Say it straight, or bluff');
+      await sleep(260);chk(id);
+      spotOn(sheet.getBoundingClientRect(),4);$('#finger').classList.remove('on');
+      tw=0;while(S.phase!=='window'&&sheet.classList.contains('open')&&tw<9000){await sleep(120);chk(id);tw+=120;}
+      sheet.classList.remove('open');
+    }
+    spotOff();
   }
   if(S.phase!=='window'){
     hint('🙈','Play it face down');
@@ -1308,7 +1516,7 @@ async function tutBody(id){
 }
 function endTutorial(id){
   chk(id);S.tutId=0;S.tut=false;S.phase='idle';cancelAll(true);S.gid++;
-  document.body.classList.remove('tut');hintOff();spotOff();save('seen',1);
+  document.body.classList.remove('tut');killKin();hintOff();spotOff();save('seen',1);
   function row(ill,t,sub){return '<div class="rw"><div class="mini">'+ill+'</div><div><b>'+t+'</b><span class="sub">'+sub+'</span></div></div>';}
   $('#sheet').innerHTML='<h1 class="rh">Ready to bluff?</h1><div class="recap">'+
     row('<div class="mc"><div class="card back" style="--cw:38px"></div><div class="card back" style="--cw:38px"></div></div>','Play face down','Say they are anything you like.')+
@@ -1319,8 +1527,140 @@ function endTutorial(id){
   $('#goGame').addEventListener('click',function(){Snd.unlock();newGame();});
   $('#ov').classList.remove('hide');setCine(false);Snd.tada();
 }
-$('#skip').addEventListener('click',function(){Snd.unlock();newGame();});
+$('#skip').addEventListener('click',function(){Snd.unlock();killKin();newGame();});
 $('#helpBtn').addEventListener('click',function(){Snd.unlock();startTutorial();});
+
+/* ================= GIF REACTIONS (Klipy) ================= */
+var GIF=(function(){
+  /* Same public client key the app ships (lib/klipy-service.ts). */
+  var KEY='UT2d9snA1PpTySrsUVC3xxiLyuam0WV7gc1DauOOY9JUV6hATkp8n25ZjQOKvgUt',BASE='https://api.klipy.com/api/v1/'+KEY;
+  var CHIPS=[['Trending',''],['Huh?','huh cat'],['Laugh','cat laughing meme'],['Smug','dog grinning teeth'],['Dance','dog dance husky'],['Sus','suspicious cat'],['Sad','sad cat meme']];
+  var q='',timer=null,seq=0,cache={},last=[];
+  /* What each situation looks like on a bot's face. Warmed once per game; only light, already-downloaded clips are ever shown. */
+  var MOMENTS={
+    mock:['cat laughing meme','orange cat laughing','laughing dog meme'],
+    huh:['huh cat','confused cat meme','cat what happened'],
+    smug:['dog grinning teeth','cat mewing','smug cat meme','grinning dog'],
+    win:['dog dance husky','dancing cat meme','dancing dog meme'],
+    sulk:['sad cat meme','crying cat','sad dog meme'],
+    accuse:['suspicious cat','cat staring judging','cat side eye']
+  };
+  /* Hand-picked favourites. Fetched by slug and mixed in ahead of the search results. */
+  var PINS={mock:['cat-orange-cat-10'],huh:['huh-cat-huh-m4rtin','huh-cat'],smug:['byuntear-cachorro-1','cat-mewing-mew-cat'],win:['dog-dance-husky-dance']};
+  var pool={},pins={},ready={},warmed=false,lastPop=0;
+  /* Variety. A clip is off the table for the next 24 uses, bots never GIF back to back, and there is a breather between bot GIFs.
+     The one exception is deliberate: a bot echoing the exact GIF it was just sent is a joke, so that is allowed (and capped). */
+  var recent=[],lastBot=-1,lastGifTurn=-9,echoes=0;
+  function fresh(it){return recent.indexOf(it.slug)<0;}
+  function used(it){recent.push(it.slug);if(recent.length>24)recent.shift();}
+  function turnNo(){return(S.mem&&S.mem.turn)||0;}
+  /* how much each character leans on GIFs, like they lean on emojis */
+  var GIFNESS={Bandar:.85,Foxy:.6,Goatie:.6,Biralo:.5,Slinky:.4,Uncle:.45,Froggo:.5,Maya:.3,Panda:.3,Robo:.2};
+  function g(){return $('#gifGrid');}
+  function msg(t){g().innerHTML='<div id="gifMsg">'+t+'</div>';}
+  function pick1(x){var f=x.file||{},sm=f.sm||f.md||{};return{size:(sm.webp||sm.gif||{}).size||0,slug:x.slug,prev:(sm.webp||sm.gif||{}).url,still:(sm.jpg||{}).url,url:((f.sm||f.md||{}).webp||(f.sm||f.md||{}).gif||{}).url,ar:(sm.gif&&sm.gif.height)?sm.gif.width/sm.gif.height:1};}
+  function render(list){
+    var grid=g();grid.innerHTML='';last=list;
+    if(!list.length){msg('Nothing found');return;}
+    list.forEach(function(it){
+      var b=document.createElement('button'),im=document.createElement('img');
+      im.loading='lazy';im.decoding='async';im.src=it.prev;if(it.still)im.style.background='#262932 url('+it.still+') center/cover';
+      b.appendChild(im);b.addEventListener('click',function(){choose(it);});grid.appendChild(b);
+    });
+  }
+  function load(term){
+    q=term;var my=++seq,key=term||'__t';
+    if(cache[key]){render(cache[key]);return;}
+    msg('Loading…');
+    var url=BASE+(term?'/gifs/search':'/gifs/trending')+'?page=1&per_page=18&customer_id=bluff'+(term?'&q='+encodeURIComponent(term):'');
+    fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){
+      if(my!==seq)return;var arr=((j.data||{}).data||[]).map(pick1).filter(function(x){return x.prev;});
+      cache[key]=arr;render(arr);
+    }).catch(function(){if(my===seq)msg('No connection. Emojis still work.');});
+  }
+  function open(){
+    $('#emojis').classList.remove('open');$('#gifSheet').classList.add('open');Snd.pop();
+    if(!$('#gifChips').children.length){
+      CHIPS.forEach(function(c,i){var b=document.createElement('button');b.textContent=c[0];if(!i)b.className='on';
+        b.addEventListener('click',function(){[].forEach.call($('#gifChips').children,function(x){x.classList.remove('on');});b.classList.add('on');$('#gifQ').value='';load(c[1]);});
+        $('#gifChips').appendChild(b);});
+      $('#gifQ').addEventListener('input',function(){clearTimeout(timer);var v=this.value.trim();timer=setTimeout(function(){
+        [].forEach.call($('#gifChips').children,function(x){x.classList.remove('on');});load(v);},350);});
+      $('#gifX').addEventListener('click',close);
+    }
+    if(!last.length)load('');
+  }
+  function close(){$('#gifSheet').classList.remove('open');$('#gifQ').blur();}
+  function fetchList(term,n){
+    return fetch(BASE+'/gifs/search?page=1&per_page='+n+'&customer_id=bluff&q='+encodeURIComponent(term)).then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(j){return((j.data||{}).data||[]).map(pick1).filter(function(x){return x.prev&&x.size&&x.size<260000;});});
+  }
+  /* Download one clip into the HTTP cache so the sticker appears the instant it is wanted. */
+  function stock(m){
+    var pl=(pins[m]||[]).filter(fresh),list=pool[m]||[],it=null,k;
+    if(pl.length&&(!list.length||Math.random()<.4)){it=pl[ri(pl.length)];}   /* favourites stay in rotation, but not on repeat */
+    else{for(k=0;k<6&&list.length;k++){var j=ri(list.length);if(fresh(list[j])||k===5){it=list.splice(j,1)[0];break;}}}
+    if(!it)return;
+    var im=new Image();im.onload=function(){var r=ready[m]=ready[m]||[];if(!r.some(function(x){return x.slug===it.slug;}))r.push(it);};im.src=it.url;
+  }
+  function warm(){
+    if(warmed||(typeof navigator!=='undefined'&&navigator.onLine===false))return;warmed=true;
+    var keys=Object.keys(MOMENTS),k=0,slugs=[],where={};
+    keys.forEach(function(m){(PINS[m]||[]).forEach(function(sl){slugs.push(sl);where[sl]=m;});});
+    /* pinned favourites first, all in one call */
+    fetch(BASE+'/gifs/items?slugs='+slugs.join(',')).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){
+      ((j.data||{}).data||[]).map(pick1).forEach(function(it){var m=where[it.slug];if(!m||!it.prev)return;it.pin=true;(pins[m]=pins[m]||[]).push(it);});
+      Object.keys(pins).forEach(function(m){stock(m);});
+    }).catch(function(){});
+    (function next(){
+      if(k>=keys.length)return;var m=keys[k++];
+      var qs=shuffle(MOMENTS[m].slice()).slice(0,2);                    /* two different searches per moment: a wider pool */
+      Promise.all(qs.map(function(q){return fetchList(q,14).catch(function(){return[];});})).then(function(r){
+        var seen={},all=[];r.forEach(function(l){l.forEach(function(x){if(!seen[x.slug]){seen[x.slug]=1;all.push(x);}});});
+        pool[m]=all;stock(m);stock(m);
+      }).catch(function(){}).then(function(){setTimeout(next,350);});
+    })();
+  }
+  /* A character answers a moment with a GIF, the way they would with an emoji. Falls back to the emoji if none is ready. */
+  function react(p,m,emoji,chance){
+    if(!p||p.idx===0)return false;
+    var r=(ready[m]||[]).filter(fresh),now=Date.now();
+    var c=(chance==null?1:chance)*((GIFNESS[p.name]!=null?GIFNESS[p.name]:.45)/.5);
+    var pacing=now-lastPop>1400&&turnNo()-lastGifTurn>=2&&p.idx!==lastBot;    /* a breather, and never the same animal twice running */
+    if(r.length&&pacing&&Math.random()<c){
+      var it=r[ri(r.length)];ready[m].splice(ready[m].indexOf(it),1);
+      lastPop=now;lastGifTurn=turnNo();lastBot=p.idx;pop(p.idx,it);stock(m);return true;
+    }
+    if(emoji&&Math.random()<(chance==null?1:Math.max(.4,chance)))say(p,emoji,true);
+    return false;
+  }
+  /* A sticker above a player's avatar for a couple of seconds. */
+  function pop(idx,it){
+    used(it);
+    var av=idx===0?$('#me .av'):seatEl(idx).querySelector('.av');if(!av)return;
+    var r=av.getBoundingClientRect(),W=window.innerWidth,w=112,h=w/Math.max(.5,Math.min(2,it.ar));
+    var e=document.createElement('div');e.className='gifpop';
+    e.innerHTML='<img src="'+it.url+'" alt=""><span class="kb">KLIPY</span>';
+    var x=Math.max(6,Math.min(W-w-6,r.left+r.width/2-w/2)),y=Math.max(6,r.top-h-6);
+    e.style.left=x+'px';e.style.top=y+'px';
+    $('#fx').parentNode.appendChild(e);
+    e.animate([{opacity:0,transform:'scale(.4) translateY(20px)'},{opacity:1,transform:'none'}],{duration:260,easing:'cubic-bezier(.2,1.4,.4,1)',fill:'both'});
+    setTimeout(function(){var o=e.animate([{opacity:1},{opacity:0,transform:'scale(.85)'}],{duration:240,fill:'forwards'});o.onfinish=function(){e.remove();};},2600);
+  }
+  function choose(it){
+    close();Snd.pop();buzz('light');pop(0,it);
+    try{fetch(BASE+'/gifs/share/'+it.slug,{method:'POST'}).catch(function(){});}catch(e){}   /* attribution ping the Klipy terms ask for */
+    if(S.players.length>1&&!S.tut){
+      var bots=shuffle(S.players.slice(1)),n=1+(Math.random()<.5?1:0);
+      bots.slice(0,n).forEach(function(o,i){setTimeout(function(){
+        /* the joke: sometimes the animal answers with your own GIF, back at you */
+        if(i===0&&echoes<2&&Math.random()<.35){echoes++;lastPop=Date.now();lastGifTurn=turnNo();lastBot=o.idx;pop(o.idx,it);return;}
+        if(!react(o,pick(['mock','smug','sulk','huh']),pick(['😂','🤡','😠','😬']),1.4))say(o,pick(['😂','🤡']),true);
+      },900+ri(700)+i*900);});
+    }
+  }
+  return{open:open,close:close,warm:warm,react:react,newGame:function(){echoes=0;lastGifTurn=-9;lastBot=-1;}};
+})();
 
 /* ================= REACTIONS + WIRING ================= */
 function buildEmojis(){
@@ -1336,16 +1676,20 @@ function buildEmojis(){
     box.appendChild(b);
   });
   box.querySelector('.x').addEventListener('click',function(){box.classList.remove('open');});
+  var gb=document.createElement('button');gb.className='gifb';gb.textContent='GIF';gb.addEventListener('click',function(){GIF.open();});box.appendChild(gb);
 }
 $('#act').addEventListener('click',function(){
   Snd.unlock();
   if(S.phase==='turn'&&S.cur===0&&S.selN){var me=S.players[0],cards=me.hand.filter(function(c){return S.sel[c.id];});buzz('medium');play(me,cards);}
   else if(S.phase==='window'&&S.last&&S.last.by.idx!==0){callLiar(S.players[0]);}
 });
+$('#gifBtn').addEventListener('click',function(){Snd.unlock();$('#emojis').classList.remove('open');GIF.open();});
 $('#claimPill').addEventListener('click',function(){Snd.unlock();$('#rankSheet').classList.toggle('open');Snd.pop();});
 document.addEventListener('pointerdown',function(ev){var sh=$('#rankSheet');if(sh.classList.contains('open')&&ev.target&&ev.target.closest&&!ev.target.closest('#rankSheet')&&!ev.target.closest('#claimPill'))sh.classList.remove('open');},true);
 $('#chatBtn').addEventListener('click',function(){Snd.unlock();$('#emojis').classList.toggle('open');Snd.pop();});
-function sndIcon(){$('#sndBtn').textContent=Snd.isOn()?'🔊':'🔇';}
+var SND_ON='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#fff"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>',
+    SND_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#fff"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+function sndIcon(){$('#sndBtn').innerHTML=Snd.isOn()?SND_ON:SND_OFF;}
 $('#sndBtn').addEventListener('click',function(){Snd.unlock();Snd.set(!Snd.isOn());sndIcon();});
 document.addEventListener('pointerdown',function(){Snd.unlock();},{passive:true});
 window.addEventListener('resize',function(){if(S.players.length&&S.players[0].hand)renderHand();});
