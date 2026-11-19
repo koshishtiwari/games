@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0e141d" />
+<title>Mr Vampire</title>
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="ui">
+  <div id="hud">—</div>
+  <div id="hint">Run at ledges &amp; ropes · J to punch · L to slam · B to morph Bat · Space/Shift to fly up/down</div>
+  <div id="wind">
+    <svg id="windArrow" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12V2M3 6l4-4 4 4"/></svg>
+    <span id="windLabel">Wind</span>
+  </div>
+  <a id="viewerLink" href="./viewer.html">Models</a>
+  <div id="stick"><div id="stickBase"></div><div id="stickKnob"></div></div>
+  <div id="bat">BAT</div>
+  <div id="slam">SLAM</div>
+  <div id="punch">HIT</div>
+  <div id="jump">JUMP</div>
+</div>
+<div id="fatal"></div>
+
+<script>
+  // Surface load/runtime failures instead of showing a black screen.
+  window.addEventListener('error', (e) => {
+    const f = document.getElementById('fatal');
+    f.style.display = 'flex';
+    f.textContent = 'Could not start: ' + (e.message || e.error || 'unknown error');
+  });
+</script>
+
+<script type="importmap">
+{ "imports": { "three": "./three.module.min.js" } }
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

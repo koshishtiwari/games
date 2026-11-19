@@ -113,10 +113,73 @@
         transform: none;
       }
 
+      #bal {
+        position: fixed;
+        top: var(--ptop);
+        left: 12px;
+        z-index: 11;
+        height: 32px;
+        padding: 0 12px 0 8px;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        pointer-events: none;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      }
+      #bal .coin, .coinI {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #fff3a8, #ffc61a 55%, #d98a00);
+        border: 2px solid #b36b00;
+        box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+      }
+      .coinI {
+        width: 14px;
+        height: 14px;
+        border-width: 1.5px;
+        vertical-align: -2px;
+        margin-left: 3px;
+      }
+      #ballRow {
+        display: flex;
+        gap: 8px;
+      }
+      .bv {
+        flex: 1;
+        height: 36px;
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        font-size: 16px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform 0.08s, background 0.12s;
+      }
+      .bv.on {
+        background: #fff;
+        color: #0f34a0;
+        border-color: #fff;
+        transform: translateY(-1px);
+      }
+      .bv:disabled {
+        opacity: 0.3;
+      }
+      .bv[data-v="2"].on { background: #2fd0ff; color: #02304a; border-color: #2fd0ff; }
+      .bv[data-v="5"].on { background: #b05cff; color: #fff; border-color: #b05cff; }
+      .bv[data-v="9"].on { background: #ff2d8a; color: #fff; border-color: #ff2d8a; }
+
       /* Profit flash top-left */
       #feedFlash {
         position: fixed;
-        top: 10px;
+        top: 52px;
         left: 10px;
         z-index: 10;
         font-size: 15px;
@@ -647,6 +710,7 @@
   </head>
   <body>
     <canvas id="c"></canvas>
+    <div id="bal"><i class="coin"></i><span id="balEl">1,000</span></div>
     <div id="bigWinFx"><span class="bwtext" id="bigWinText"></span></div>
 
     <span id="feedFlash"></span>
@@ -672,8 +736,14 @@
       <div id="frenzy"><div id="frenzyFill"></div><span id="frenzyTxt">FRENZY 0%</span></div>
       <div class="bet-row">
         <button class="bet-btn" id="betMinus">−</button>
-        <div class="bet-display"><span id="betEl">10</span> 💎</div>
+        <div class="bet-display"><span id="betEl">10</span><i class="coinI"></i></div>
         <button class="bet-btn" id="betPlus">+</button>
+      </div>
+      <div id="ballRow">
+        <button class="bv on" data-v="1">x1</button>
+        <button class="bv" data-v="2">x2</button>
+        <button class="bv" data-v="5">x5</button>
+        <button class="bv" data-v="9">x9</button>
       </div>
       <button id="spinBtn">DROP</button>
     </div>
@@ -682,11 +752,10 @@
       <div class="ocard">
         <div class="otitle">Ball Drop</div>
         <div class="osub">
-          Drop the ball through the pegs.<br />Land on a multiplier to win
-          gems.<br /><br />Tap 💎 at the top to buy gems.<br />1 Mana = 10 💎
-          Gems
+          Drop balls through the pegs.<br />Land on a multiplier to win
+          coins.<br /><br />Heavier balls (x2, x5, x9) cost and pay more.<br />Play coins are just for fun.
         </div>
-        <button class="oplay" id="playBtn">BUY GEMS</button>
+        <button class="oplay" id="playBtn">PLAY</button>
       </div>
     </div>
 
@@ -753,8 +822,29 @@
         var challengeTime = document.getElementById("challengeTime");
 
         // ─── State ────────────────────────────────────────────────────────
+        var START_COINS = 1000;
+        var COIN_KEY = "bd_coins_v2";
+        var balEl = document.getElementById("balEl");
+        var ballV = 1;
+        var BALL_VALUES = [1, 2, 5, 9];
+        var BV_COL = { 1: null, 2: "#2fd0ff", 5: "#b05cff", 9: "#ff2d8a" };
+        var BV_SIZE = { 1: 1, 2: 1.08, 5: 1.16, 9: 1.26 };
+        function fmt(n) {
+          n = Math.floor(n);
+          return n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + "M" : n.toLocaleString("en-US");
+        }
+        function loadCoins() {
+          try {
+            var v = parseInt(localStorage.getItem(COIN_KEY), 10);
+            if (isFinite(v) && v >= 5) return v;
+          } catch (e) {}
+          return START_COINS;
+        }
+        function saveCoins() {
+          try { localStorage.setItem(COIN_KEY, String(Math.floor(bank))); } catch (e) {}
+        }
         var bank = 0,
-          bet = 10,
+          bet = 5,
           score = 0,
           drops = 0,
           wins = 0,
@@ -1514,7 +1604,10 @@
           var spread = o.spread || 0.4;
           var bx = W / 2 + (Math.random() - 0.5) * board.spacing * spread;
           var br = Math.max(6, Math.min(12, board.spacing * BALL_R_RATIO));
+          var bvv = o.v || 1;
           balls.push({
+            v: bvv,
+            vr: br * BV_SIZE[bvv],
             x: bx,
             y: board.launchY,
             vx: (Math.random() - 0.5) * 0.4,
@@ -1527,7 +1620,7 @@
             bias: 0,
             boosted: false,
             bonus: 0,
-            col: BALL_COLS[ballSeq++ % BALL_COLS.length],
+            col: BV_COL[bvv] || BALL_COLS[ballSeq++ % BALL_COLS.length],
             voice: {
               gain: 0.28 + Math.random() * 0.3,
               det: (Math.random() - 0.5) * 0.16,
@@ -1541,18 +1634,20 @@
         var DROP_COOLDOWN_MS = 180;
         var lastDropMs = 0;
         function dropBall() {
-          if (!running || ended || bank < bet) return;
+          if (!running || ended || bank < cost()) return;
           var now = Date.now();
           if (now - lastDropMs < DROP_COOLDOWN_MS) return;
           if (syncTier()) return;
           lastDropMs = now;
-          bank -= bet;
+          var stakeNow = cost();
+          bank -= stakeNow;
           drops++;
-          frenzyBetSum += bet;
+          frenzyBetSum += stakeNow;
           frenzyBetCnt++;
           updateHud();
           var golden = drops % GOLDEN_EVERY === 0;
-          spawnBall({ stake: bet, golden: golden });
+          spawnBall({ stake: stakeNow, golden: golden, v: ballV });
+          fixBet();
           if (golden) {
             toast("⭐ GOLDEN BALL: PAYS x2 (UP TO 10x)", "gold");
             SFX.golden();
@@ -1568,7 +1663,7 @@
           }
           spinBtn.disabled = true;
           setTimeout(function () {
-            if (running && !ended && bank >= bet) spinBtn.disabled = false;
+            if (running && !ended && bank >= cost()) spinBtn.disabled = false;
           }, DROP_COOLDOWN_MS);
         }
 
@@ -1843,14 +1938,10 @@
           }
           updateHud();
           post("stats");
-          // Auto-reduce bet if bank dropped below current bet, end only if truly broke
-          if (bank < bet && balls.length === 0) {
-            var minBet = BET_STEPS[0];
-            if (bank >= minBet) {
-              setBet(bank); // drop bet to what player can afford
-            } else {
-              endGame();
-            }
+          saveCoins();
+          if (balls.length === 0) {
+            if (bank < 5) endGame();
+            else fixBet();
           }
         }
 
@@ -1876,72 +1967,11 @@
 
         // ─── HUD ──────────────────────────────────────────────────────────
         function updateHud() {
-          spinBtn.disabled = !running || ended || bank < bet;
+          spinBtn.disabled = !running || ended || bank < cost();
+          balEl.textContent = fmt(bank);
           // keep the modal header in sync
           post("stats");
         }
-
-        // ─── Buy Gems UI ──────────────────────────────────────────────────
-        function renderPacks() {
-          packsEl.innerHTML = "";
-          PACKS.forEach(function (pack) {
-            var canAfford = manaBalance >= pack.mana;
-            var div = document.createElement("div");
-            div.className =
-              "bpack" + (selectedMana === pack.mana ? " selected" : "");
-            div.style.opacity = canAfford ? "1" : "0.45";
-            div.innerHTML =
-              '<div class="bpack-left">' +
-              '<span class="bpack-gem">💎</span>' +
-              '<div><div class="bpack-gems">' +
-              pack.gems +
-              " gems</div>" +
-              '<div class="bpack-label">' +
-              pack.label +
-              "</div></div>" +
-              "</div>" +
-              '<div class="bpack-cost">' +
-              pack.mana +
-              " <span>Mana</span></div>";
-            if (canAfford) {
-              div.addEventListener("click", function () {
-                selectedMana = pack.mana;
-                confirmBuyBtn.disabled = false;
-                confirmBuyBtn.textContent =
-                  "Buy " + pack.gems + " Gems — " + pack.mana + " Mana";
-                buyErrEl.textContent = "";
-                renderPacks();
-              });
-            }
-            packsEl.appendChild(div);
-          });
-        }
-
-        function openBuyOverlay(fromPlay) {
-          buyErrEl.textContent = "";
-          selectedMana = 0;
-          confirmBuyBtn.disabled = true;
-          confirmBuyBtn.textContent = "Select a pack";
-          manaDisplayEl.textContent = "…";
-          buyOverlay.style.display = "flex";
-          cancelBuyBtn.style.display = fromPlay ? "none" : "block";
-          postRN({ type: "getManaBalance" });
-        }
-
-        function closeBuyOverlay() {
-          buyOverlay.style.display = "none";
-        }
-
-        confirmBuyBtn.addEventListener("click", function () {
-          if (!selectedMana || buyPending) return;
-          buyPending = true;
-          confirmBuyBtn.disabled = true;
-          confirmBuyBtn.textContent = "Buying…";
-          buyErrEl.textContent = "";
-          postRN({ type: "buyGems", mana: selectedMana });
-        });
-
-        cancelBuyBtn.addEventListener("click", closeBuyOverlay);
 
         // ─── WebView bridge ───────────────────────────────────────────────
         function postRN(obj) {
@@ -1986,49 +2016,14 @@
             if (data.type === "layout" && isFinite(data.top)) {
               document.documentElement.style.setProperty("--ptop", data.top + "px");
             }
-            if (data.type === "manaBalance") {
-              manaBalance = data.balance || 0;
-              manaDisplayEl.textContent = manaBalance + " Mana";
-              // Restore persisted gem balance so sessions carry over
-              if (data.gemBalance && data.gemBalance > 0 && isFirstOpen) {
-                bank = data.gemBalance;
-                isFirstOpen = false;
-                overlay.style.display = "none";
-                startGame();
-              }
-              renderPacks();
-            }
-            if (data.type === "openBuyGems") {
-              // tapped gem icon in modal header
-              openBuyOverlay(false);
-            }
-            if (data.type === "gemsGranted") {
-              buyPending = false;
-              manaBalance = data.manaBalance || 0;
-              bank += data.gems || 0;
-              closeBuyOverlay();
-              if (isFirstOpen) {
-                isFirstOpen = false;
-                overlay.style.display = "none";
-                startGame();
-              }
-              updateHud();
-            }
-            if (data.type === "gemsDenied") {
-              buyPending = false;
-              confirmBuyBtn.disabled = false;
-              confirmBuyBtn.textContent = "Try again";
-              buyErrEl.textContent =
-                data.error === "insufficient_mana"
-                  ? "Not enough Mana"
-                  : "Purchase failed. Try again.";
-            }
           } catch (ex) {}
         });
 
         // ─── Game flow ─────────────────────────────────────────────────────
         function startGame() {
-          bet = Math.min(10, bank);
+          lastMin = minBet();
+          bet = lastMin;
+          ballV = 1;
           score = 0;
           drops = 0;
           wins = 0;
@@ -2064,7 +2059,8 @@
           }
           overlay.style.display = "none";
           spinBtn.disabled = false;
-          betEl.textContent = bet;
+          fixBet();
+          updateHud();
         }
 
         function endGame() {
@@ -2073,7 +2069,7 @@
           running = false;
           post("gameOver");
           var ocard = overlay.querySelector(".ocard");
-          ocard.querySelector(".otitle").textContent = "Out of Gems";
+          ocard.querySelector(".otitle").textContent = "Out of coins";
           ocard.querySelector(".osub").textContent =
             "Drops: " +
             drops +
@@ -2081,16 +2077,16 @@
             wins +
             " · Best combo: x" +
             maxCombo +
-            "\n\nTap 💎 in the top bar to buy more gems.";
-          playBtn.textContent = "BUY GEMS";
+            "\n\nPlay coins are free. Start a fresh stack.";
+          playBtn.textContent = "NEW STACK";
           overlay.style.display = "flex";
-          isFirstOpen = true;
-          // Don't zero bank — player may have a small remainder that should carry into next buy.
         }
 
         playBtn.addEventListener("click", function () {
           SFX.unlock();
-          openBuyOverlay(true);
+          if (bank < 5) bank = START_COINS;
+          saveCoins();
+          startGame();
         });
 
         // ─── Sound toggle ──────────────────────────────────────────────────
@@ -2110,30 +2106,86 @@
         );
 
         // ─── Bet controls ─────────────────────────────────────────────────
-        var BET_STEPS = [5, 10, 25, 50, 100, 250, 500];
-        function setBet(v) {
-          bet = Math.max(5, Math.min(Math.floor(bank), v));
-          betEl.textContent = bet;
-          spinBtn.disabled = !running || ended || bank < bet;
+        // Minimum bet scales with bankroll: roughly 10% of your coins, rounded
+        // down to its leading digit (10,000 -> 1,000; 50,000 -> 5,000).
+        function minBet() {
+          if (bank < 100) return 5;
+          var t = bank * 0.1;
+          var p = Math.pow(10, Math.floor(Math.log10(t)));
+          return Math.max(5, Math.floor(t / p) * p);
         }
-        document
-          .getElementById("betMinus")
-          .addEventListener("click", function () {
-            var i = BET_STEPS.indexOf(bet);
-            setBet(i > 0 ? BET_STEPS[i - 1] : Math.max(5, bet - 5));
+        function cost() {
+          return bet * ballV;
+        }
+        function betSteps() {
+          var mb = minBet();
+          var a = [mb];
+          for (var p = 1; p <= 1e9; p *= 10) {
+            var m = [1, 2.5, 5];
+            for (var k = 0; k < 3; k++) {
+              var v = p * m[k];
+              if (v % 1 === 0 && v > a[a.length - 1] && v <= bank) a.push(v);
+            }
+          }
+          return a;
+        }
+        var lastMin = 5;
+        function syncBallRow() {
+          var btns = document.querySelectorAll(".bv");
+          for (var i = 0; i < btns.length; i++) {
+            var v = +btns[i].getAttribute("data-v");
+            btns[i].classList.toggle("on", v === ballV);
+            btns[i].disabled = bet * v > bank;
+          }
+          betEl.textContent = fmt(bet);
+          spinBtn.textContent = "DROP" + (ballV > 1 ? " x" + ballV : "") + "  \u00b7  " + fmt(cost());
+        }
+        // Keep bet legal: at least the scaled minimum, and affordable.
+        function fixBet() {
+          var mb = minBet();
+          if (bet < mb) bet = mb;
+          while (ballV > 1 && bet * ballV > bank) {
+            ballV = BALL_VALUES[Math.max(0, BALL_VALUES.indexOf(ballV) - 1)];
+          }
+          if (bet > bank) bet = Math.max(5, Math.floor(bank));
+          if (mb > lastMin && running) {
+            toast("MINIMUM BET RAISED TO " + fmt(mb), "gold");
+          }
+          lastMin = mb;
+          syncBallRow();
+          spinBtn.disabled = !running || ended || bank < cost();
+        }
+        function stepBet(dir) {
+          var st = betSteps();
+          var i = 0;
+          for (var k = 0; k < st.length; k++) if (st[k] <= bet) i = k;
+          bet = st[Math.max(0, Math.min(st.length - 1, i + dir))];
+          fixBet();
+        }
+        function setBet(v) {
+          bet = Math.floor(v);
+          fixBet();
+        }
+        document.getElementById("betMinus").addEventListener("click", function () {
+          stepBet(-1);
+          SFX.click();
+          haptic("selection");
+        });
+        document.getElementById("betPlus").addEventListener("click", function () {
+          stepBet(1);
+          SFX.click();
+          haptic("selection");
+        });
+        Array.prototype.forEach.call(document.querySelectorAll(".bv"), function (b) {
+          b.addEventListener("click", function () {
+            var v = +b.getAttribute("data-v");
+            if (bet * v > bank) return;
+            ballV = v;
+            fixBet();
             SFX.click();
             haptic("selection");
           });
-        document
-          .getElementById("betPlus")
-          .addEventListener("click", function () {
-            var i = BET_STEPS.indexOf(bet);
-            setBet(
-              i >= 0 && i < BET_STEPS.length - 1 ? BET_STEPS[i + 1] : bet + 5,
-            );
-            SFX.click();
-            haptic("selection");
-          });
+        });
         spinBtn.addEventListener("pointerdown", function () {
           spinBtn.classList.add("pressed");
         });
@@ -2365,25 +2417,36 @@
                     col: "#fff6a8",
                   });
               }
+              var R = b.vr || b.r;
               cx.beginPath();
-              cx.arc(b.x, b.y + b.r * 0.22, b.r, 0, Math.PI * 2);
+              cx.arc(b.x, b.y + R * 0.22, R, 0, Math.PI * 2);
               cx.fillStyle = "rgba(8,30,130,0.35)";
               cx.fill();
               var bg = cx.createRadialGradient(
-                b.x - b.r * 0.35, b.y - b.r * 0.4, b.r * 0.1,
-                b.x, b.y, b.r,
+                b.x - R * 0.35, b.y - R * 0.4, R * 0.1,
+                b.x, b.y, R,
               );
               bg.addColorStop(0, shadeColor(col, 90));
               bg.addColorStop(0.45, col);
               bg.addColorStop(1, shadeColor(col, -55));
               cx.beginPath();
-              cx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+              cx.arc(b.x, b.y, R, 0, Math.PI * 2);
               cx.fillStyle = bg;
               cx.fill();
               cx.beginPath();
-              cx.arc(b.x - b.r * 0.35, b.y - b.r * 0.4, b.r * 0.26, 0, Math.PI * 2);
+              cx.arc(b.x - R * 0.35, b.y - R * 0.4, R * 0.26, 0, Math.PI * 2);
               cx.fillStyle = "rgba(255,255,255,0.8)";
               cx.fill();
+              if (b.v > 1 && !b.free) {
+                cx.fillStyle = "#fff";
+                cx.strokeStyle = "rgba(0,0,0,0.55)";
+                cx.lineWidth = 2.5;
+                cx.font = "900 " + Math.round(R * 1.05) + "px system-ui,sans-serif";
+                cx.textAlign = "center";
+                cx.textBaseline = "middle";
+                cx.strokeText(b.v, b.x, b.y + R * 0.06);
+                cx.fillText(b.v, b.x, b.y + R * 0.06);
+              }
               if (b.free) {
                 cx.beginPath();
                 cx.arc(b.x, b.y, b.r + 1.5, 0, Math.PI * 2);
@@ -2469,7 +2532,7 @@
           drawBalls();
           drawFloaters();
           cx.restore();
-          if (running && !ended && bank >= bet) spinBtn.disabled = false;
+          if (running && !ended && bank >= cost()) spinBtn.disabled = false;
         }
 
         window.addEventListener(
@@ -2480,7 +2543,9 @@
           false,
         );
         resize();
-        postRN({ type: "getManaBalance" });
+        bank = loadCoins();
+        overlay.style.display = "none";
+        startGame();
         requestAnimationFrame(loop);
       })();
     </script>
