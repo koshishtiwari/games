@@ -562,7 +562,7 @@ var Snd=(function(){
       if(!ibus){ibus=ctx.createGain();ibus.connect(master);var iv=ctx.createGain();iv.gain.value=.22;ibus.connect(iv);iv.connect(verb);}
       var now=ctx.currentTime;ibus.gain.cancelScheduledValues(now);ibus.gain.setValueAtTime(1,now);
       mus.gain.cancelScheduledValues(now);mus.gain.setTargetAtTime(.03,now,.1);
-      var t0=now+.06,B=.5,K=function(b){return t0+b*B;};
+      var t0=now+.06,B=.5,HOLD=3,K=function(b){return t0+(b>=8?b+HOLD:b)*B;};   /* beats from 8 on are pushed back by the held beat */
       function kick(t,v){tone({f:155,f2:42,dur:.24,vol:.6*v,t:t,bus:ibus});noise({type:'lowpass',f:320,dur:.07,vol:.22*v,t:t,bus:ibus});}
       function clap(t,v){noise({f:1400,dur:.15,vol:.24*v,q:.6,t:t,a:.002,bus:ibus});noise({f:2700,dur:.09,vol:.13*v,t:t+.012,bus:ibus});}
       function bass(m,t,d,v){tone({type:'sawtooth',f:mtof(m),dur:d,vol:.15*v,lp:460,t:t,a:.004,bus:ibus});tone({type:'sine',f:mtof(m),dur:d,vol:.22*v,t:t,a:.004,bus:ibus});}
@@ -577,7 +577,10 @@ var Snd=(function(){
       var arp=[60,63,67,72,67,63,67,70],bl=[36,36,39,43];
       for(i=4;i<8;i++){kick(K(i),1);bass(bl[i-4],K(i)+B/2,.3,.9);if(i%2)clap(K(i),.8);}
       for(i=0;i<8;i++)pluck(arp[i],K(4)+i*B/2,.9);
-      tone({f:900,f2:2400,dur:.18,vol:.1,t:K(6),bus:ibus});                         /* the flip */
+      tone({f:900,f2:2400,dur:.18,vol:.1,t:K(7.6),bus:ibus});                         /* the flip */
+      /* the held beat (3 beats, 4.0-5.5s): the groove carries on while the arch breathes, then the 9 */
+      for(i=0;i<HOLD;i++){var hb=t0+(8+i)*B;kick(hb,1);bass(bl[i%4],hb+B/2,.3,.9);if(i%2===0)clap(hb,.7);}
+      for(i=0;i<HOLD*2;i++)pluck(arp[(i+2)%8],t0+8*B+i*B/2,.7);
       /* bar 3 (beats 8-11): one word a beat, bass climbs, ACE gets the stab */
       var cl=[36,39,41,43];
       for(i=8;i<12;i++){kick(K(i),1);clap(K(i)+B/2,.5);bass(cl[i-8],K(i),.4,1.15);}
@@ -599,7 +602,7 @@ var Snd=(function(){
       for(i=0;i<4;i++)clap(K(25.5)+i*B/8,.25+i*.12);
       stabC(K(18+X),1.4);kick(K(18+X),1.2);bass(36,K(18+X),.9,1.2);
       ibus.gain.setValueAtTime(1,K(18.4+X));ibus.gain.linearRampToValueAtTime(0,K(19+X));
-      clearTimeout(introT);introT=setTimeout(api.introStop,B*(19+X)*1000+600);
+      clearTimeout(introT);introT=setTimeout(api.introStop,B*(19+X+HOLD)*1000+600);
     },
     introStop:function(){
       if(!ctx)return;clearTimeout(introT);var now=ctx.currentTime;
@@ -1500,39 +1503,39 @@ async function kinetic(id){
       {transform:'translate('+(fx*.7)+'px,'+(dy0*.36+fy*.55)+'px) rotate('+(th*.78)+'deg) scale(1.03)',offset:.68,easing:'cubic-bezier(.2,.7,.3,1)'}, /* slides across */
       {transform:'translate('+fx+'px,'+fy+'px) rotate('+th+'deg)',offset:1}],400,'linear',i*35);
   }
-  kA(c1,[{transform:'none'},{transform:zm(W/2,fanTop+ch/2,1.07)}],1100,'cubic-bezier(.3,.6,.3,1)');   /* gentle push toward the fan */
-  await at(2720);                                                   /* the arch is complete (~2.57s), a short beat, THEN the middle card is pulled and the camera zooms into it */
+  kA(c1,[{transform:'none'},{transform:zm(W/2,fanTop+ch/2,1.07)}],1440,'cubic-bezier(.3,.6,.3,1)');   /* slow push toward the fan, runs through the held beat */
+  await at(3400);                                                   /* the arch is complete (~2.57s). A held beat (the camera keeps drifting), THEN the middle card is pulled and the camera zooms into it */
   var mid=cards[3],pull=H*.48-(fanTop+ch/2);
   mid.style.zIndex=20;
   cards.forEach(function(cc,k){if(k!==3){cc.style.transition='opacity .45s';cc.style.opacity=.3;}});
   kA(mid,[{transform:'translate(0px,0px) scale(1)'},{transform:'translate(0px,'+pull+'px) scale(1.18)'}],280,'cubic-bezier(.3,.7,.35,1)');Snd.flick();
   kA(c1,[{transform:zm(W/2,fanTop+ch/2,1.07)},{transform:zm(W/2,H*.48,2.05)}],650,'cubic-bezier(.5,0,.2,1)');
-  await at(3000);Snd.flipTick(2);                                   /* the flip */
+  await at(3800);Snd.flipTick(2);                                   /* the flip */
   var pm='translate(0px,'+pull+'px) scale(1.18)';
   kA(mid,[{transform:pm},{transform:pm+' scaleX(0)'}],130,'ease-in');
-  await at(3130);
+  await at(3930);
   mid.innerHTML='';mid.appendChild(cardEl(D(8,1)));
   kA(mid,[{transform:pm+' scaleX(0)'},{transform:pm}],260,SPRING);
   var t=kEl('kw','It\'s a <span style="color:var(--yellow)">9</span>.','top:76%;font-size:min(15vw,62px);color:#fff');
   kA(t,[{opacity:0,transform:'translateY(30px)'},{opacity:1,transform:'none'}],320);
   /* beat 8-11: yellow flood, SAY / IT'S / AN / ACE. one word a beat */
-  await at(3640);
+  await at(5140);
   var fl=kEl('kc','','left:50%;top:50%;width:20px;height:20px;margin:-10px;border-radius:50%;background:var(--yellow);z-index:6');
   kA(fl,[{transform:'scale(1)'},{transform:'scale('+(Math.max(W,H)/8)+')'}],360,'cubic-bezier(.5,0,.2,1)');Snd.whoosh();
   var words=['SAY','IT\'S','AN'],top=[16,32,48];
   for(i=0;i<3;i++){
-    await at(4000+i*500);
+    await at(5500+i*500);
     var w=kEl('kw',words[i],'z-index:7;color:#17181c;top:'+top[i]+'%;font-size:min(30vw,128px)');
     kA(w,[{opacity:0,transform:'scale(2.2)'},{opacity:1,transform:'none'}],230);
   }
-  await at(5500);
+  await at(7000);
   var ace=kEl('kw','ACE.','z-index:7;color:#d9232d;top:62%;font-size:min(44vw,190px)');
   kA(ace,[{opacity:0,transform:'scale(2.8) rotate(-6deg)'},{opacity:1,transform:'rotate(-3deg)'}],280);
   var acw=Math.min(84,W*.22),ac=kEl('kc','','left:calc(50% - '+acw/2+'px);bottom:2.5%;--cw:'+acw+'px;z-index:8');ac.appendChild(cardEl(D(0,1)));
   kA(ac,[{opacity:0,transform:'translateY(130%) rotate(-12deg) scale(.8)'},{opacity:1,transform:'rotate(-4deg)'}],380,SPRING);Snd.flipTick(1);
-  await at(5900);
+  await at(7400);
   kA(kin,[{transform:'none'},{transform:'scale(1.5)',opacity:0}],200,SNAP);
-  await at(6100);
+  await at(7600);
   kin.innerHTML='';kin.getAnimations().forEach(function(a){a.cancel();});kin.style.background='#0b0c10';
   /* beat 12-15: the whole roster pops in on an arpeggio, then the payoff */
   var cast=shuffle(ROSTER.slice()),n=Math.min(10,cast.length),cols=4,rows=Math.ceil(n/cols),tw=58,gap=14;
@@ -1542,23 +1545,23 @@ async function kinetic(id){
     var tl=kEl('kt',r.em,'left:'+tx+'px;top:'+ty+'px;--c1:'+r.c1+';--c2:'+r.c2);
     kA(tl,[{opacity:0,transform:'scale(0) rotate(-25deg)'},{opacity:1,transform:'none'}],260,SPRING,i*62.5);
   }
-  await at(7000);
+  await at(8500);
   var pay=kEl('kw','One of them<br><span style="color:var(--yellow)">is lying.</span>','top:'+(gy/H*100+rows*(tw+gap)/H*100+4)+'%;font-size:min(13vw,54px);line-height:1.05;color:#fff');
   kA(pay,[{opacity:0,transform:'translateY(24px)'},{opacity:1,transform:'none'}],320);Snd.pop();
-  await at(7700);
+  await at(9200);
   kA(kin,[{transform:'none'},{transform:'scale(.92)',opacity:0}],220,SNAP);
-  await at(7940);
+  await at(9440);
   kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';kin.style.background='#d9232d';
   /* beat 16: straight to the red LIAR! screen, on the downbeat */
-  await at(8000);
+  await at(9500);
   var li=kEl('kw','LIAR!','top:var(--mid);font-size:min(38vw,160px);color:#fff');
   kA(li,[{opacity:0,transform:'scale(3) rotate(5deg)'},{opacity:1,transform:'rotate(-4deg)'}],280);buzz('heavy');
   var fl2=$('#flash');fl2.style.setProperty('--fc','#fff');fl2.classList.remove('fire');void fl2.offsetWidth;fl2.classList.add('fire');
-  await at(8940);
+  await at(10440);
   kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';kin.style.background='#0b0c10';
   /* beats 18-25 (9.0-13.0s): the game, shot like a film. Letterbox, vignette, slow camera, focus pulls that dim whoever is not speaking.
      The world (seats, pile, cards in flight, bubbles) sits under the camera; the bottom panel and hand only rise in when it is your move. */
-  await at(9000);
+  await at(10500);
   var cam=kE2(kin,'kc','left:0;top:0;width:100%;height:100%;transform-origin:0 0');
   function lc(el){var o=el,x=0,y=0,n=0;while(o&&o!==cam&&n++<6){x+=o.offsetLeft||0;y+=o.offsetTop||0;o=o.offsetParent;}return{x:x+el.offsetWidth/2,y:y+el.offsetHeight/2,w:el.offsetWidth,h:el.offsetHeight};}
   var camS=1,camX=0,camY=0,EASE='cubic-bezier(.5,0,.2,1)';
@@ -1588,13 +1591,13 @@ async function kinetic(id){
   function bub(q,html,emo){var c=avOf(q),o=kE2(cam,'kc','left:'+c.x+'px;top:'+(c.y-c.h/2-6)+'px;transform:translate(-50%,-100%);z-index:7'),i2=document.createElement('div');i2.style.cssText=emo?'font-size:46px;line-height:1':'background:#fff;color:#17181c;padding:6px 11px;border-radius:12px;font-weight:900;font-size:15px;white-space:nowrap;box-shadow:0 6px 14px rgba(0,0,0,.5)';i2.innerHTML=html;o.appendChild(i2);kA(i2,[{opacity:0,transform:'scale(.3) translateY(14px)'},{opacity:1,transform:'none'}],300,SPRING);Snd.pop();return o;}
   function gifAt(q,it){var c=avOf(q),w=128,h=w/Math.max(.5,Math.min(2,it.ar)),e=kE2(cam,'gifpop','left:'+(c.x-w/2)+'px;top:'+(c.y-c.h/2-h-8)+'px;width:'+w+'px;z-index:7');e.innerHTML='<img src="'+it.url+'" alt=""><span class="kb">KLIPY</span>';kA(e,[{opacity:0,transform:'scale(.4) translateY(20px)'},{opacity:1,transform:'none'}],300,SPRING);Snd.pop();return e;}
   var pl,pp,u,g,fx,bq;
-  await at(9500);ring(0);focus([0]);pl=pill('Uncle','One Ace');flyTo(0);                                          /* beat 19: Uncle claims, slow push toward him and the pile */
+  await at(11000);ring(0);focus([0]);pl=pill('Uncle','One Ace');flyTo(0);                                          /* beat 19: Uncle claims, slow push toward him and the pile */
   u=avOf(0);pp=lc(pileM);lookAt((u.x+pp.x)/2,(u.y+pp.y)/2,1.3,700);
-  await at(10000);focus([3]);bq=avOf(3);lookAt(bq.x,bq.y-30,1.5,520);bub(3,'Hmph.');                              /* beat 20: the cat is not convinced */
-  await at(10500);ring(1);focus([1]);kA(pl,[{opacity:1},{opacity:0}],160);pl=pill('Goatie','Two Twos');flyTo(1); /* beat 21: Goatie's claim */
+  await at(11500);focus([3]);bq=avOf(3);lookAt(bq.x,bq.y-30,1.5,520);bub(3,'Hmph.');                              /* beat 20: the cat is not convinced */
+  await at(12000);ring(1);focus([1]);kA(pl,[{opacity:1},{opacity:0}],160);pl=pill('Goatie','Two Twos');flyTo(1); /* beat 21: Goatie's claim */
   g=avOf(1);pp=lc(pileM);lookAt((g.x+pp.x)/2,(g.y+pp.y)/2,1.3,620);
-  await at(11000);ring(2);focus([2]);fx=avOf(2);lookAt(fx.x,fx.y,1.5,480);bub(2,'Tait!');                       /* beat 22: Foxy is suspicious */
-  await at(11500);ring(-1);focus([]);wide(1,600);                                                                 /* beat 23: pull back. Your move: the panel rises, you call it */
+  await at(12500);ring(2);focus([2]);fx=avOf(2);lookAt(fx.x,fx.y,1.5,480);bub(2,'Tait!');                       /* beat 22: Foxy is suspicious */
+  await at(13000);ring(-1);focus([]);wide(1,600);                                                                 /* beat 23: pull back. Your move: the panel rises, you call it */
   var panel=kEl('kc','','left:0;right:0;bottom:0;height:100px;background:var(--panel);border-radius:26px 26px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.4);z-index:21');
   panel.innerHTML='<div class="av" style="position:absolute;left:14px;top:18px;width:64px;height:64px;font-size:36px;--c1:#9ad0ff;--c2:#4a86e0;border-color:var(--yellow-d)"><span class="f">😎</span><span class="nm">You</span></div>'+
     '<div class="mact" style="position:absolute;left:92px;right:92px;top:20px;height:60px;border-radius:30px;background:#ed5b57;color:#fff;font-weight:900;font-size:22px;line-height:60px;text-align:center;letter-spacing:.03em">LIAR!</div>'+
@@ -1603,30 +1606,30 @@ async function kinetic(id){
   [D(0,0),D(3,2),D(5,3),D(6,1),D(8,1),D(10,3),D(12,0)].forEach(function(c,k){var e=cardEl(c);e.style.cssText+=';--cw:58px;position:absolute;bottom:0;left:'+(W/2-29+(k-3)*34)+'px;transform-origin:50% 160%;transform:translateY('+((k-3)*(k-3)*2)+'px) rotate('+((k-3)*3.5)+'deg);z-index:'+k;hw.appendChild(e);});
   kA(panel,[{transform:'translateY(100%)'},{transform:'none'}],380,SPRING);kA(hw,[{opacity:0,transform:'translateY(60%)'},{opacity:1,transform:'none'}],420,SPRING,80);
   kA(panel.querySelector('.mact'),[{transform:'scale(.92)'},{transform:'scale(1)'}],240,SPRING,420);buzz('medium');
-  await at(12000);                                                                                                 /* beat 24: the flip, punched in */
+  await at(13500);                                                                                                 /* beat 24: the flip, punched in */
   pp=lc(pileM);lookAt(pp.x,pp.y,1.8,420);
   var fc=kE2(cam,'kc','left:'+(pp.x-30)+'px;top:'+(pp.y-42)+'px;--cw:60px;z-index:8');fc.appendChild(cardEl(D(8,1)));
   kA(fc,[{transform:'scaleX(0) translateY(-10px)'},{transform:'scale(1.15)'}],380,SPRING);Snd.flipTick(2);
   fl2.style.setProperty('--fc','#fff');fl2.classList.remove('fire');void fl2.offsetWidth;fl2.classList.add('fire');
   var bu=kEl('kw','BUSTED!','top:24%;font-size:min(24vw,104px);color:#ff4d4f;z-index:22;text-shadow:0 6px 0 rgba(0,0,0,.45)');           /* the alert */
   kA(bu,[{opacity:0,transform:'scale(2.6) rotate(-6deg)'},{opacity:1,transform:'rotate(-3deg)'}],300,SPRING);buzz('heavy');
-  await at(12500);kA(bu,[{opacity:1},{opacity:0,transform:'scale(.9)'}],200);wide(1.1,450);                         /* beat 25: after the alert, the table reacts: the GIF finally lands */
+  await at(14000);kA(bu,[{opacity:1},{opacity:0,transform:'scale(.9)'}],200);wide(1.1,450);                         /* beat 25: after the alert, the table reacts: the GIF finally lands */
   bub(1,'Satya nas!');bub(0,'🤣',true);if(catIt)gifAt(3,catIt);else bub(3,'😭',true);                          /* beat 25: pull back to the whole table reacting */
-  await at(13000);
+  await at(14500);
   kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';kin.style.background='#0b0c10';
   /* beats 26+: Now, it's your turn. */
   var n1=kEl('kw','Now,','top:22%;font-size:min(32vw,134px);color:#fff');
   kA(n1,[{opacity:0,transform:'scale(1.7)'},{opacity:1,transform:'none'}],280);Snd.pop();
-  await at(13450);
+  await at(14950);
   var n2=kEl('kw','it\'s your','top:40%;font-size:min(22vw,92px);color:#fff');
   kA(n2,[{opacity:0,transform:'translateY(28px)'},{opacity:1,transform:'none'}],280);Snd.pop();
-  await at(13900);
+  await at(15400);
   var n3=kEl('kw','turn.','top:54%;font-size:min(38vw,160px);color:var(--yellow)');
   kA(n3,[{opacity:0,transform:'scale(2.2) rotate(-5deg)'},{opacity:1,transform:'rotate(-2deg)'}],300);Snd.ping();buzz('medium');
-  await at(15000);
+  await at(16500);
   setCine(false);
   var ir=kin.animate([{clipPath:'circle(150% at 50% 50%)'},{clipPath:'circle(0% at 50% 50%)'}],{duration:500,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'});
-  Snd.whoosh();await at(15520);
+  Snd.whoosh();await at(17020);
   ir.cancel();killKin();
 }
 async function tutBody(id){
