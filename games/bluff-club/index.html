@@ -568,7 +568,7 @@ var Snd=(function(){
       function bass(m,t,d,v){tone({type:'sawtooth',f:mtof(m),dur:d,vol:.15*v,lp:460,t:t,a:.004,bus:ibus});tone({type:'sine',f:mtof(m),dur:d,vol:.22*v,t:t,a:.004,bus:ibus});}
       function pluck(m,t,v){tone({type:'square',f:mtof(m),dur:.17,vol:.05*v,lp:2800,t:t,a:.002,bus:ibus});tone({type:'triangle',f:mtof(m+12),dur:.13,vol:.04*v,t:t,bus:ibus});}
       function stabC(t,v){[60,63,67,72].forEach(function(m,i){tone({type:'sawtooth',f:mtof(m),dur:.55,vol:.08*v,lp:2200,t:t,a:.006,det:i*4,bus:ibus});});}
-      var i,m,X=8;   /* X beats for the cinematic game cut, after the LIAR hit */
+      var i,m,X=11;   /* X beats for the cinematic game cut, after the LIAR hit */
       /* bar 1: just two hits, then a riser into the downbeat of the fan */
       kick(K(0),1);bass(36,K(0),.45,1.1);clap(K(1),1);bass(36,K(1),.45,1.1);
       noise({f:300,f2:6000,dur:1,q:2.2,vol:.2,t:K(2),a:.8,bus:ibus});tone({type:'sawtooth',f:180,f2:1500,dur:1,vol:.05,lp:3000,t:K(2),a:.7,bus:ibus});
@@ -597,9 +597,9 @@ var Snd=(function(){
       [67,72,75,79].forEach(function(m,i){tone({type:'sawtooth',f:mtof(m),dur:1.2,vol:.06,lp:2400,t:K(16.5)+i*.06,a:.02,bus:ibus});});
       /* the cinematic game cut (beats 18-25): four on the floor, plucked arp, a riser, then a closing hit */
       for(i=18;i<18+X;i++){kick(K(i),1);bass(bl[(i-18)%4],K(i)+B/2,.3,.9);if(i%2)clap(K(i),.8);}
-      for(i=0;i<16;i++)pluck(arp[i%8]+(i>=8?5:0),K(18)+i*B/2,.7);
-      noise({f:300,f2:6000,dur:2,q:2.2,vol:.2,t:K(24),a:1.7,bus:ibus});tone({type:'sawtooth',f:180,f2:1500,dur:2,vol:.05,lp:3000,t:K(24),a:1.6,bus:ibus});
-      for(i=0;i<4;i++)clap(K(25.5)+i*B/8,.25+i*.12);
+      for(i=0;i<2*X;i++)pluck(arp[i%8]+(i>=8?5:0),K(18)+i*B/2,.7);
+      noise({f:300,f2:6000,dur:2,q:2.2,vol:.2,t:K(16+X),a:1.7,bus:ibus});tone({type:'sawtooth',f:180,f2:1500,dur:2,vol:.05,lp:3000,t:K(16+X),a:1.6,bus:ibus});
+      for(i=0;i<4;i++)clap(K(17.5+X)+i*B/8,.25+i*.12);
       stabC(K(18+X),1.4);kick(K(18+X),1.2);bass(36,K(18+X),.9,1.2);
       ibus.gain.setValueAtTime(1,K(18.4+X));ibus.gain.linearRampToValueAtTime(0,K(19+X));
       clearTimeout(introT);introT=setTimeout(api.introStop,B*(19+X+HOLD)*1000+600);
@@ -1614,22 +1614,24 @@ async function kinetic(id){
   var bu=kEl('kw','BUSTED!','top:24%;font-size:min(24vw,104px);color:#ff4d4f;z-index:22;text-shadow:0 6px 0 rgba(0,0,0,.45)');           /* the alert */
   kA(bu,[{opacity:0,transform:'scale(2.6) rotate(-6deg)'},{opacity:1,transform:'rotate(-3deg)'}],300,SPRING);buzz('heavy');
   await at(14000);kA(bu,[{opacity:1},{opacity:0,transform:'scale(.9)'}],200);wide(1.1,450);                         /* beat 25: after the alert, the table reacts: the GIF finally lands */
-  bub(1,'Satya nas!');bub(0,'🤣',true);if(catIt)gifAt(3,catIt);else bub(3,'😭',true);                          /* beat 25: pull back to the whole table reacting */
-  await at(14500);
+  var gifEl=null;bub(1,'Satya nas!');bub(0,'🤣',true);if(catIt)gifEl=gifAt(3,catIt);else bub(3,'😭',true);                          /* beat 25: pull back to the whole table reacting */
+  await at(14500);                                                                                                 /* the GIF holds, and the camera zooms in on it (focus pull: everything else falls away) */
+  focus([3]);var gc=gifEl?lc(gifEl):avOf(3);lookAt(gc.x,gc.y,gifEl?2.3:1.9,1100);
+  await at(16000);
   kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';kin.style.background='#0b0c10';
   /* beats 26+: Now, it's your turn. */
   var n1=kEl('kw','Now,','top:22%;font-size:min(32vw,134px);color:#fff');
   kA(n1,[{opacity:0,transform:'scale(1.7)'},{opacity:1,transform:'none'}],280);Snd.pop();
-  await at(14950);
+  await at(16450);
   var n2=kEl('kw','it\'s your','top:40%;font-size:min(22vw,92px);color:#fff');
   kA(n2,[{opacity:0,transform:'translateY(28px)'},{opacity:1,transform:'none'}],280);Snd.pop();
-  await at(15400);
+  await at(16900);
   var n3=kEl('kw','turn.','top:54%;font-size:min(38vw,160px);color:var(--yellow)');
   kA(n3,[{opacity:0,transform:'scale(2.2) rotate(-5deg)'},{opacity:1,transform:'rotate(-2deg)'}],300);Snd.ping();buzz('medium');
-  await at(16500);
+  await at(18000);
   setCine(false);
   var ir=kin.animate([{clipPath:'circle(150% at 50% 50%)'},{clipPath:'circle(0% at 50% 50%)'}],{duration:500,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'});
-  Snd.whoosh();await at(17020);
+  Snd.whoosh();await at(18520);
   ir.cancel();killKin();
 }
 async function tutBody(id){
