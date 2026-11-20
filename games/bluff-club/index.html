@@ -71,7 +71,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #claimTxt.show{opacity:1;transform:translateX(-50%) scale(var(--cz,1))}
 #claimTxt small{font-size:11px;color:var(--muted);font-weight:800;margin-right:5px}
 #rv{position:absolute;left:50%;top:var(--mid);transform:translate(-50%,-50%);display:flex;gap:7px;z-index:8;pointer-events:none}
-#rvLbl{position:absolute;left:50%;top:calc(var(--mid) - 80px);transform:translateX(-50%);font-size:12px;font-weight:900;letter-spacing:.1em;background:var(--yellow);color:#241a00;padding:4px 11px;border-radius:9px;z-index:9;display:none;white-space:nowrap}
+#rvLbl{position:absolute;left:50%;top:calc(var(--mid) - 134px);transform:translateX(-50%);font-size:12px;font-weight:900;letter-spacing:.1em;background:var(--yellow);color:#241a00;padding:4px 11px;border-radius:9px;z-index:9;display:none;white-space:nowrap}
 #rv .fc{--cw:54px;animation:rvin .3s both}
 @keyframes rvin{from{transform:translateY(20px) scale(.6);opacity:0}}
 .fc{position:relative;width:var(--cw);height:calc(var(--cw)*1.4);perspective:700px}
@@ -1390,8 +1390,10 @@ function hint(icon,text){var h=$('#hint');$('#hIc').textContent=icon;$('#hTx').t
 function hintOff(){$('#hint').classList.remove('show');}
 function ltShow(name,sub,col){$('#ltName').textContent=name;$('#ltSub').textContent=sub;$('#lt').style.setProperty('--lc',col);$('#lt').classList.add('show');}
 function ltHide(){$('#lt').classList.remove('show');}
-function spotOn(rect,pad,noFinger){
+function spotOn(rect,pad,noFinger,el){
   var s=$('#spot'),f=$('#finger');pad=pad==null?8:pad;
+  /* same corner radius as what it frames (concentric: target radius + padding) */
+  try{if(el)s.style.borderRadius=(parseFloat(getComputedStyle(el).borderTopLeftRadius)||0)+pad+'px';}catch(e){}
   s.style.left=(rect.left-pad)+'px';s.style.top=(rect.top-pad)+'px';s.style.width=(rect.width+pad*2)+'px';s.style.height=(rect.height+pad*2)+'px';s.classList.add('on');
   f.style.left=(rect.left+rect.width/2-16)+'px';f.style.top=(rect.top+rect.height+pad)+'px';f.classList.toggle('on',!noFinger);
 }
@@ -1509,7 +1511,7 @@ async function tutBody(id){
   S.cur=0;beginTurn();
   hint('👆','Tap an Ace');
   await sleep(120);chk(id);
-  var hc=[].slice.call(document.querySelectorAll('#hand .card'));if(hc.length)spotOn(unionRect(hc),8,true);   /* one box around the whole hand, not individual cards */
+  var hc=[].slice.call(document.querySelectorAll('#hand .card'));if(hc.length)spotOn(unionRect(hc),8,true,hc[0]);   /* one box around the whole hand, not individual cards */
   var waited=0;
   while(S.selN===0&&S.phase!=='window'){await sleep(120);chk(id);waited+=120;
     if(waited>3500){var c0=S.players[0].hand.filter(function(c){return c.r===0;})[0];if(c0)toggle(c0);}} /* hesitate and the game shows you */
@@ -1517,12 +1519,12 @@ async function tutBody(id){
     var sheet=$('#rankSheet'),tw=0;
     hint('🗣️','Tap what you say');sheet.classList.remove('open');
     await sleep(350);chk(id);
-    spotOn($('#claimPill').getBoundingClientRect(),6);
+    spotOn($('#claimPill').getBoundingClientRect(),6,false,$('#claimPill'));
     while(S.phase!=='window'&&!sheet.classList.contains('open')&&tw<6000){await sleep(120);chk(id);tw+=120;}
     if(S.phase!=='window'&&sheet.classList.contains('open')){
       hint('🃏','Say it straight, or bluff');
       await sleep(260);chk(id);
-      spotOn(sheet.getBoundingClientRect(),4);$('#finger').classList.remove('on');
+      spotOn(sheet.getBoundingClientRect(),4,false,sheet);$('#finger').classList.remove('on');
       tw=0;while(S.phase!=='window'&&sheet.classList.contains('open')&&tw<9000){await sleep(120);chk(id);tw+=120;}
       sheet.classList.remove('open');
     }
@@ -1530,7 +1532,7 @@ async function tutBody(id){
   }
   if(S.phase!=='window'){
     hint('🙈','Play it face down');
-    spotOn($('#act').getBoundingClientRect(),6);
+    spotOn($('#act').getBoundingClientRect(),6,false,$('#act'));
     await waitFor(id,function(){return S.phase==='window';});
   }
   spotOff();
@@ -1557,7 +1559,7 @@ async function tutBody(id){
   var lb=$('#rvLbl');lb.textContent='👀 SECRET PEEK';lb.style.display='block';Snd.ping();
   hint('🕵️','He said Three. It is a Nine!');
   await sleep(2600);chk(id);
-  hint('🚨','Tap LIAR!');spotOn($('#act').getBoundingClientRect(),6);
+  hint('🚨','Tap LIAR!');spotOn($('#act').getBoundingClientRect(),6,false,$('#act'));
   await waitFor(id,function(){return S.phase==='reveal';});
   spotOff();S.tutHold=false;lb.style.display='none';hintOff();
   await waitFor(id,function(){return S.phase==='turn';});
