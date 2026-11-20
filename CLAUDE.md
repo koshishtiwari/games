@@ -73,13 +73,14 @@ New games should normally set: `signalsReady: true`, `sendsLayout: true`, `gemPi
 
 
 ## Online mode (Bluff, quick match with gem entry fees)
+**Building online for any game: read `docs/ONLINE_GAMES.md` first (agent playbook: architecture, invariants, procedure, go-live).** This section is the Bluff-specific state.
 Contract: `online/PROTOCOL.md` (rules, money, endpoints, every message). Server: `online/` (Cloudflare Worker + two Durable Objects, plain JS). Client: the ONLINE MODE block in `games/bluff-club/index.html`. Database: `supabase/migrations/20261121_online_escrow.sql` in the pipal repo (escrow/settle/refund RPCs, service_role only, kill switch `online_enabled`, default 0 = OFF).
 - Tests: `cd online && npm test` (engine + 300-game sim), `npm run e2e` (local wrangler, free tier only). Local play: `npm run dev`, then open the game with `?dev=alice&ws=ws://localhost:8787` (DEV_AUTH: no money moves, fee 0).
 - Money: fee tiers 0/10/50. Winner gets pot minus 10% (burned). A bot or forfeited seat winning refunds each human 90% of their fee. A cron (every 10 min) refunds matches stuck in escrow for 90+ minutes.
 - Auth: the game asks the Pipal app for the user's token via `pipal.user.token()` (needs the next app build; the Play online button hides itself until it exists).
 - **Never set `DEV_AUTH` in production.**
 
-### Go-live checklist (nothing below has been done; every step is production and needs the owner's go)
+### Go-live checklist (status 2026-11-20: steps 1, 2 and the game deploy are DONE; kill switch still 0; app build with `pipal.user.token` not started)
 1. Pipal repo: apply `20261121_online_escrow.sql` (adds tables/functions, widens the ledger kind check; kill switch stays 0).
 2. `cd online && npx wrangler secret put SUPABASE_URL | SUPABASE_PUBLISHABLE_KEY | SUPABASE_SECRET_KEY | ROOM_SECRET`, then `npx wrangler deploy`, then add a route/custom domain and put it in `ONLINE_URL` in `games/bluff-club/index.html` (done: wss://pipal-bluff-online.koshishtiwari.workers.dev).
 3. Ship an app build with `pipal.user.token` (lib/game-bridge.ts + GameWebViewModal.tsx), then deploy the game bundle and bump its `?v=`.
