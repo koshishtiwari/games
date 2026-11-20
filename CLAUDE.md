@@ -81,7 +81,7 @@ Contract: `online/PROTOCOL.md` (rules, money, endpoints, every message). Server:
 
 ### Go-live checklist (nothing below has been done; every step is production and needs the owner's go)
 1. Pipal repo: apply `20261121_online_escrow.sql` (adds tables/functions, widens the ledger kind check; kill switch stays 0).
-2. `cd online && npx wrangler secret put SUPABASE_URL | SUPABASE_PUBLISHABLE_KEY | SUPABASE_SECRET_KEY | ROOM_SECRET`, then `npx wrangler deploy`, then add a route/custom domain and put it in `ONLINE_URL` in `games/bluff-club/index.html` (default is a placeholder).
+2. `cd online && npx wrangler secret put SUPABASE_URL | SUPABASE_PUBLISHABLE_KEY | SUPABASE_SECRET_KEY | ROOM_SECRET`, then `npx wrangler deploy`, then add a route/custom domain and put it in `ONLINE_URL` in `games/bluff-club/index.html` (done: wss://pipal-bluff-online.koshishtiwari.workers.dev).
 3. Ship an app build with `pipal.user.token` (lib/game-bridge.ts + GameWebViewModal.tsx), then deploy the game bundle and bump its `?v=`.
 4. Test with the free tier first, then `UPDATE game_economy_limits SET value = 1 WHERE key = 'online_enabled'` to allow paid matches. Flip back to 0 to stop new paid matches instantly (settle/refund keep working).
 Known gaps: room state lives in memory (a Durable Object restart ends that match; the cron refunds the escrow later), settle retries 4x then only logs, paid-tier paths are untested against a live Supabase, the GIF reaction is not relayed online (emoji only).

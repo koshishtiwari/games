@@ -1895,7 +1895,7 @@ var GIF=(function(){
    Real players over a Cloudflare Worker (online/ in the games repo, contract in online/PROTOCOL.md). The server owns the deck, the hands, the timers
    and the money. This client only draws what the server says and sends two moves: play and call. The server's seats are rotated so you are always
    seat 0 here, which lets all of the single-player rendering and animation code be reused unchanged. */
-var ONLINE_URL=(function(){var m=(location.search||'').match(/[?&]ws=([^&]+)/);return m?decodeURIComponent(m[1]):'wss://pipal-bluff-online.workers.dev';})();   /* set to the deployed Worker route */
+var ONLINE_URL=(function(){var m=(location.search||'').match(/[?&]ws=([^&]+)/);return m?decodeURIComponent(m[1]):'wss://pipal-bluff-online.koshishtiwari.workers.dev';})();   /* the deployed Worker (online/) */
 var ONL=(function(){
   var qws=null,rws=null,ticker=0,retry=0,dz=3000;
   var AV=['🦁','🐯','🐻','🦄','🐙','🦉','🐧','🦋'],PAL=[['#ffd0a8','#e8742e'],['#b9e4ff','#3b82d9'],['#d9c2ff','#7a4fd6'],['#c8f2c2','#3aa14b'],['#ffc2d9','#d6457f']];
