@@ -631,13 +631,33 @@ function ctr(el){var r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.
 /* ================= CAMERA ================= */
 var world=$('#world'),stage=$('#stage');
 function camTo(target,s,ms,tilt,roll,ease,fy){
+  camSeq++;
   var w=world.clientWidth,h=world.clientHeight,px=w/2,py=h/2;ease=ease||'cubic-bezier(.65,0,.2,1)';
   if(target){var o=target,ox=0,oy=0,n=0;while(o&&o!==world&&n++<6){ox+=o.offsetLeft||0;oy+=o.offsetTop||0;o=o.offsetParent;}px=ox+target.offsetWidth/2;py=oy+target.offsetHeight/2;}
   var tx=w/2-s*px,ty=h*(fy||.43)-s*py;if(!target&&s===1){tx=0;ty=0;}
   world.style.setProperty('--cz',(1/s).toFixed(3));world.style.transition='transform '+ms+'ms '+ease;world.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';
   stage.style.transition='transform '+ms+'ms '+ease;stage.style.transform='rotateX('+(tilt||0)+'deg) rotateZ('+(roll||0)+'deg)';
 }
+var camSeq=0;
 function camReset(ms){camTo(null,1,ms||800,0,0);}
+/* Frame the table so everything on it sits inside [topY, bottomY] (screen px): zoom out only as much as needed, pan so the free strip opens at the bottom. */
+function camFitBand(topY,bottomY,ms){
+  var w=world.clientWidth,ext=null;
+  [].slice.call(world.querySelectorAll('.seat,#pile,#rv')).forEach(function(el){
+    if(!el.offsetWidth)return;
+    var o=el,oy=0,n=0;while(o&&o!==world&&n++<6){oy+=o.offsetTop||0;o=o.offsetParent;}
+    var pad=el.id==='pile'?[44,26]:[0,0],a=oy-pad[0],b=oy+el.offsetHeight+pad[1];
+    ext=ext?{a:Math.min(ext.a,a),b:Math.max(ext.b,b)}:{a:a,b:b};
+  });
+  if(!ext)return false;
+  var s=Math.max(.6,Math.min(1,(bottomY-topY)/(ext.b-ext.a))),ty=topY-s*ext.a;
+  if(s>=.999&&ty>=-.5)return false;                      /* already clear, leave the camera alone */
+  ty=Math.min(0,ty);
+  world.style.setProperty('--cz',(1/s).toFixed(3));world.style.transition='transform '+ms+'ms cubic-bezier(.65,0,.2,1)';
+  world.style.transform='translate('+(w/2*(1-s)).toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+s.toFixed(3)+')';
+  stage.style.transition='transform '+ms+'ms cubic-bezier(.65,0,.2,1)';stage.style.transform='rotateX(0deg) rotateZ(0deg)';
+  camSeq++;return true;
+}
 function shake(p){var el=$('#shake');el.style.setProperty('--sh',Math.min(5,p*.3).toFixed(2));el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
 var SLAM={red:['#ff4d4f','#a3262a','#fff'],green:['#51cf66','#2b8a3e','#08260f'],gold:['#fcc419','#b88a06','#241a00'],blue:['#4a9dff','#1f5fb0','#fff']};
 function slam(text,kind,sub){var s=$('#slam'),k=SLAM[kind]||SLAM.red;$('#slamT').innerHTML=text+(sub?'<small>'+sub+'</small>':'');s.style.setProperty('--sc',k[0]);s.style.setProperty('--sd',k[1]);s.style.setProperty('--sf',k[2]);s.classList.remove('fire');void s.offsetWidth;s.classList.add('fire');}
@@ -1638,14 +1658,25 @@ var GIF=(function(){
   function pop(idx,it){
     used(it);
     var av=idx===0?$('#me .av'):seatEl(idx).querySelector('.av');if(!av)return;
-    var r=av.getBoundingClientRect(),W=window.innerWidth,w=112,h=w/Math.max(.5,Math.min(2,it.ar));
+    var mine=idx===0&&!S.tut&&!document.body.classList.contains('cine');
+    var r=av.getBoundingClientRect(),W=window.innerWidth,w=mine?148:112,h=w/Math.max(.5,Math.min(2,it.ar));
+    if(mine&&h>120){w=Math.round(w*120/h);h=120;}
     var e=document.createElement('div');e.className='gifpop';
     e.innerHTML='<img src="'+it.url+'" alt=""><span class="kb">KLIPY</span>';
-    var x=Math.max(6,Math.min(W-w-6,r.left+r.width/2-w/2)),y=Math.max(6,r.top-h-6);
-    e.style.left=x+'px';e.style.top=y+'px';
+    var x=Math.max(6,Math.min(W-w-6,r.left+r.width/2-w/2)),y=Math.max(6,r.top-h-6),camSet=0,camNow=0;
+    if(mine){
+      /* park it just above the top of my hand, and pan/zoom the table up so nothing sits behind it */
+      var top=1e9;[].forEach.call(document.querySelectorAll('#hand .card'),function(c){top=Math.min(top,c.getBoundingClientRect().top);});
+      if(top>1e8){var hw=$('#handWrap');top=hw?hw.getBoundingClientRect().top:r.top;}
+      y=Math.max(6,top-h-6);x=Math.max(6,Math.min(W-w-6,W/2-w/2));
+      var hud=$('#hud'),limit=hud?hud.getBoundingClientRect().bottom+6:56;
+      if(camFitBand(limit,y-10,450)){camSet=camSeq;camNow=1;}
+    }
+    e.style.left=x+'px';e.style.top=y+'px';e.style.width=w+'px';
     $('#fx').parentNode.appendChild(e);
     e.animate([{opacity:0,transform:'scale(.4) translateY(20px)'},{opacity:1,transform:'none'}],{duration:260,easing:'cubic-bezier(.2,1.4,.4,1)',fill:'both'});
-    setTimeout(function(){var o=e.animate([{opacity:1},{opacity:0,transform:'scale(.85)'}],{duration:240,fill:'forwards'});o.onfinish=function(){e.remove();};},2600);
+    setTimeout(function(){var o=e.animate([{opacity:1},{opacity:0,transform:'scale(.85)'}],{duration:240,fill:'forwards'});o.onfinish=function(){e.remove();};
+      if(camNow&&camSeq===camSet)camReset(600);},2600);      /* only restore if nothing else moved the camera meanwhile */
   }
   function choose(it){
     close();Snd.pop();buzz('light');pop(0,it);
