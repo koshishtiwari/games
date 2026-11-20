@@ -197,7 +197,8 @@ body.cine #bars i{height:calc(11% + 3px)}
   opacity:0;pointer-events:none;transition:opacity .2s,transform .3s cubic-bezier(.3,1.6,.5,1);text-shadow:0 2px 14px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.7)}
 #hint.show{opacity:1;transform:translate(-50%,0)}
 #hIc{font-size:24px;line-height:1}#hTx{font-size:20px;font-weight:900;line-height:1.15}
-#spot{position:absolute;z-index:44;border-radius:16px;pointer-events:none;opacity:0;box-shadow:0 0 0 100vmax rgba(0,0,0,.6),0 0 26px 4px rgba(252,196,25,.55);transition:all .35s cubic-bezier(.3,1.2,.5,1)}
+#spot{position:absolute;z-index:44;border-radius:16px;pointer-events:none;opacity:0;box-shadow:0 0 0 3px var(--yellow),0 0 20px 3px rgba(252,196,25,.4);transition:all .35s cubic-bezier(.3,1.2,.5,1)}
+body.tut #hand .card.match::before{display:none}
 #spot.on{opacity:1}
 #finger{position:absolute;z-index:45;font-size:38px;pointer-events:none;opacity:0;transition:left .35s,top .35s,opacity .2s;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
 #finger.on{opacity:1;animation:fing .8s infinite}@keyframes fing{50%{margin-top:-12px}}
@@ -1389,10 +1390,10 @@ function hint(icon,text){var h=$('#hint');$('#hIc').textContent=icon;$('#hTx').t
 function hintOff(){$('#hint').classList.remove('show');}
 function ltShow(name,sub,col){$('#ltName').textContent=name;$('#ltSub').textContent=sub;$('#lt').style.setProperty('--lc',col);$('#lt').classList.add('show');}
 function ltHide(){$('#lt').classList.remove('show');}
-function spotOn(rect,pad){
+function spotOn(rect,pad,noFinger){
   var s=$('#spot'),f=$('#finger');pad=pad==null?8:pad;
   s.style.left=(rect.left-pad)+'px';s.style.top=(rect.top-pad)+'px';s.style.width=(rect.width+pad*2)+'px';s.style.height=(rect.height+pad*2)+'px';s.classList.add('on');
-  f.style.left=(rect.left+rect.width/2-16)+'px';f.style.top=(rect.top+rect.height+pad)+'px';f.classList.add('on');
+  f.style.left=(rect.left+rect.width/2-16)+'px';f.style.top=(rect.top+rect.height+pad)+'px';f.classList.toggle('on',!noFinger);
 }
 function spotOff(){$('#spot').classList.remove('on');$('#finger').classList.remove('on');}
 function unionRect(els){var l=1e9,t=1e9,r=-1e9,b=-1e9;els.forEach(function(e){var k=e.getBoundingClientRect();l=Math.min(l,k.left);t=Math.min(t,k.top);r=Math.max(r,k.right);b=Math.max(b,k.bottom);});return{left:l,top:t,width:r-l,height:b-t};}
@@ -1503,12 +1504,12 @@ async function tutBody(id){
   await sleep(300);chk(id);
   hint('🏁','Empty your hand to win');
   S.players.forEach(function(p){p.hand=p.shown;});S.phase='deal';
-  var dealMs=dealAnim();await sleep(dealMs+300);chk(id);await sleep(1800);chk(id);hintOff();
+  var dealMs=dealAnim();await sleep(Math.max(0,dealMs-250));chk(id);hintOff();   /* straight into the first move, no dead air */
   /* ---- your move ---- */
   S.cur=0;beginTurn();
   hint('👆','Tap an Ace');
-  await sleep(300);chk(id);
-  var aces=[].slice.call(document.querySelectorAll('#hand .card.match'));if(aces.length)spotOn(unionRect(aces),6);
+  await sleep(120);chk(id);
+  var hc=[].slice.call(document.querySelectorAll('#hand .card'));if(hc.length)spotOn(unionRect(hc),8,true);   /* one box around the whole hand, not individual cards */
   var waited=0;
   while(S.selN===0&&S.phase!=='window'){await sleep(120);chk(id);waited+=120;
     if(waited>3500){var c0=S.players[0].hand.filter(function(c){return c.r===0;})[0];if(c0)toggle(c0);}} /* hesitate and the game shows you */
