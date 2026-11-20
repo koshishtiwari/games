@@ -1512,7 +1512,7 @@ async function kinetic(id){
   await at(3600);                                                   /* the arch is complete (~2.9s). A held beat, THEN the middle card is pulled and the camera zooms into it */
   var mid=cards[3],pull=H*.48-(fanTop+ch/2);
   mid.style.zIndex=20;
-  cards.forEach(function(cc,k){if(k!==3){cc.style.transition='opacity .45s';cc.style.opacity=.3;}});
+  cards.forEach(function(cc,k){if(k!==3){cc.style.transition='filter .45s';cc.style.filter='brightness(.42)';}});   /* darken, never fade: overlapping see-through cards look messy */
   kA(mid,[{transform:'translate(0px,0px) scale(1)'},{transform:'translate(0px,'+pull+'px) scale(1.18)'}],280,'cubic-bezier(.3,.7,.35,1)');Snd.flick();
   kA(c1,[{transform:zm(W/2,fanTop+ch/2,1.07)},{transform:zm(W/2,H*.48,1.5)}],650,'cubic-bezier(.5,0,.2,1)');
   await at(4000);Snd.flipTick(2);                                   /* the flip */
