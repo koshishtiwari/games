@@ -1673,6 +1673,8 @@ var GIF=(function(){
       /* park it just above the top of my hand, and pan/zoom the table up so nothing sits behind it */
       var top=1e9;[].forEach.call(document.querySelectorAll('#hand .card'),function(c){top=Math.min(top,c.getBoundingClientRect().top);});
       if(top>1e8){var hw=$('#handWrap');top=hw?hw.getBoundingClientRect().top:r.top;}
+      /* also stay above whatever sits on top of the hand: the Say pill, the coach line, the open rank sheet */
+      ['#claimPill','#coachTxt','#rankSheet'].forEach(function(q){var el=$(q);if(el&&el.offsetWidth&&el.offsetHeight)top=Math.min(top,el.getBoundingClientRect().top);});
       y=Math.max(6,top-h-6);x=Math.max(6,Math.min(W-w-6,W/2-w/2));
       var hud=$('#hud'),limit=hud?hud.getBoundingClientRect().bottom+6:56;
       if(camFitBand(limit,y-10,450)){camSet=camSeq;camNow=1;}
