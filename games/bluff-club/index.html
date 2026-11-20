@@ -656,8 +656,11 @@ function camFitBand(topY,bottomY,ms){
     ext=ext?{a:Math.min(ext.a,a),b:Math.max(ext.b,b)}:{a:a,b:b};
   });
   if(!ext)return false;
-  var s=Math.max(.6,Math.min(1,(bottomY-topY)/(ext.b-ext.a))),ty=topY-s*ext.a;
-  if(s>=.999&&ty>=-.5)return false;                      /* already clear, leave the camera alone */
+  /* Move as little as possible: just enough pan to clear the strip, and only zoom out if the table can't move up that far. */
+  var need=ext.b-bottomY;if(need<=0)return false;           /* already clear, leave the camera alone */
+  var slack=Math.max(0,ext.a-topY),s=1,ty;
+  if(need<=slack)ty=-need;
+  else{s=Math.max(.75,(bottomY-topY)/(ext.b-ext.a));ty=topY-s*ext.a;}
   ty=Math.min(0,ty);
   world.style.setProperty('--cz',(1/s).toFixed(3));world.style.transition='transform '+ms+'ms cubic-bezier(.65,0,.2,1)';
   world.style.transform='translate('+(w/2*(1-s)).toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+s.toFixed(3)+')';
