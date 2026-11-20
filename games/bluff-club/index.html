@@ -1754,7 +1754,7 @@ var SND_ON='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6
 function sndIcon(){$('#sndBtn').innerHTML=Snd.isOn()?SND_ON:SND_OFF;}
 $('#sndBtn').addEventListener('click',function(){Snd.unlock();Snd.set(!Snd.isOn());sndIcon();});
 document.addEventListener('pointerdown',function(){Snd.unlock();},{passive:true});
-window.addEventListener('resize',function(){if(S.players.length&&S.players[0].hand)renderHand();});
+window.addEventListener('resize',function(){layoutTable();if(S.players.length&&S.players[0].hand)renderHand();});
 document.addEventListener('visibilitychange',function(){if(document.hidden)Snd.pause();else if(!paused){Snd.resume();FX.kick();}});
 if(P){
   document.body.classList.add('shell');   /* inside the Pipal app: sound + How to play are in the native settings menu */
@@ -1765,7 +1765,20 @@ if(P){
   P.on('resetGame',function(){save('wins',0);save('plays',0);save('seen',0);S.gid++;cancelAll(true);showMenu();});
 }
 
-buildEmojis();buildRankSheet();makePlayers();buildSeats();pileSync();renderAct();sndIcon();
+/* Centre the four seats + pile in the free space between the header and the hand (CSS vars drive the seat/pile tops). */
+function layoutTable(){
+  try{
+    var H=world.clientHeight,b=$('#bottom'),sEl=document.querySelector('.seat[data-i="2"]');if(!H||!b)return;
+    var T=Math.max(100,($('#hud')&&$('#hud').getBoundingClientRect().bottom||0)+10),B=b.offsetTop-54;
+    var sh=(sEl&&sEl.offsetHeight)||125,free=B-T;
+    var gap=Math.max(110,Math.min(210,free*.3)),block=2*sh+gap;
+    if(block>free){gap=Math.max(90,free-2*sh);block=2*sh+gap;}
+    var top=T+Math.max(0,(free-block)/2),r=document.documentElement.style;
+    r.setProperty('--row1',Math.round(top)+'px');r.setProperty('--row2',Math.round(top+sh+gap)+'px');r.setProperty('--mid',Math.round(top+sh+gap/2)+'px');
+  }catch(e){}
+}
+buildEmojis();buildRankSheet();makePlayers();buildSeats();layoutTable();pileSync();renderAct();sndIcon();
+setTimeout(layoutTable,250);setTimeout(layoutTable,1200);   /* the WebView can settle its size after first paint */
 showMenu();
 if(P&&P.ready){try{P.ready();}catch(e){}}
 })();
