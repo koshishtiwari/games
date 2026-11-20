@@ -568,7 +568,7 @@ var Snd=(function(){
       function bass(m,t,d,v){tone({type:'sawtooth',f:mtof(m),dur:d,vol:.15*v,lp:460,t:t,a:.004,bus:ibus});tone({type:'sine',f:mtof(m),dur:d,vol:.22*v,t:t,a:.004,bus:ibus});}
       function pluck(m,t,v){tone({type:'square',f:mtof(m),dur:.17,vol:.05*v,lp:2800,t:t,a:.002,bus:ibus});tone({type:'triangle',f:mtof(m+12),dur:.13,vol:.04*v,t:t,bus:ibus});}
       function stabC(t,v){[60,63,67,72].forEach(function(m,i){tone({type:'sawtooth',f:mtof(m),dur:.55,vol:.08*v,lp:2200,t:t,a:.006,det:i*4,bus:ibus});});}
-      var i,m;
+      var i,m,X=8;   /* X extra beats for the game cut, then the LIAR hit moves to beat 16+X */
       /* bar 1: just two hits, then a riser into the downbeat of the fan */
       kick(K(0),1);bass(36,K(0),.45,1.1);clap(K(1),1);bass(36,K(1),.45,1.1);
       noise({f:300,f2:6000,dur:1,q:2.2,vol:.2,t:K(2),a:.8,bus:ibus});tone({type:'sawtooth',f:180,f2:1500,dur:1,vol:.05,lp:3000,t:K(2),a:.7,bus:ibus});
@@ -588,13 +588,18 @@ var Snd=(function(){
       kick(K(12),1);kick(K(13),1);kick(K(14),1);clap(K(14),1);bass(36,K(12),.9,1.1);bass(39,K(14),.9,1.1);
       for(i=0;i<6;i++)clap(K(14.5)+i*B/6,.2+i*.1);
       noise({f:500,f2:7000,dur:.8,q:2.5,vol:.22,t:K(14.9),a:.7,bus:ibus});
-      /* silence from 15.5 to 16, then the hit */
+      /* the game cut (beats 16-23): four on the floor, plucked arp, a riser into the hit */
+      for(i=16;i<16+X;i++){kick(K(i),1);bass(bl[(i-16)%4],K(i)+B/2,.3,.9);if(i%2)clap(K(i),.8);}
+      for(i=0;i<16;i++)pluck(arp[i%8]+(i>=8?5:0),K(16)+i*B/2,.7);
+      noise({f:300,f2:6000,dur:2,q:2.2,vol:.2,t:K(22),a:1.7,bus:ibus});tone({type:'sawtooth',f:180,f2:1500,dur:2,vol:.05,lp:3000,t:K(22),a:1.6,bus:ibus});
+      for(i=0;i<4;i++)clap(K(23.5)+i*B/8,.25+i*.12);
+      /* then the hit */
       /* bar 5: LIAR! */
-      stabC(K(16),1.8);stabC(K(16)+.12,1.3);kick(K(16),1.2);bass(36,K(16),1.4,1.3);bass(24,K(16),1.4,1);
-      noise({f:2000,dur:1.3,vol:.22,q:.5,t:K(16),a:.01,bus:ibus});
-      [67,72,75,79].forEach(function(m,i){tone({type:'sawtooth',f:mtof(m),dur:1.2,vol:.06,lp:2400,t:K(16.5)+i*.06,a:.02,bus:ibus});});
-      ibus.gain.setValueAtTime(1,K(18.4));ibus.gain.linearRampToValueAtTime(0,K(19));
-      clearTimeout(introT);introT=setTimeout(api.introStop,B*19*1000+600);
+      stabC(K(16+X),1.8);stabC(K(16+X)+.12,1.3);kick(K(16+X),1.2);bass(36,K(16+X),1.4,1.3);bass(24,K(16+X),1.4,1);
+      noise({f:2000,dur:1.3,vol:.22,q:.5,t:K(16+X),a:.01,bus:ibus});
+      [67,72,75,79].forEach(function(m,i){tone({type:'sawtooth',f:mtof(m),dur:1.2,vol:.06,lp:2400,t:K(16.5+X)+i*.06,a:.02,bus:ibus});});
+      ibus.gain.setValueAtTime(1,K(18.4+X));ibus.gain.linearRampToValueAtTime(0,K(19+X));
+      clearTimeout(introT);introT=setTimeout(api.introStop,B*(19+X)*1000+600);
     },
     introStop:function(){
       if(!ctx)return;clearTimeout(introT);var now=ctx.currentTime;
@@ -1457,21 +1462,20 @@ async function kinetic(id){
   async function at(ms){var d=ms-(performance.now()-T0);if(d>0)await sleep(d);chk(id);}
   kin.innerHTML='';kin.style.clipPath='';kin.style.background='#0b0c10';kin.classList.add('on');
   Snd.intro();
-  /* beat 0-3: two words, from opposite sides */
-  var w1=kEl('kw','Cards.','top:31%;color:#fff'),w2;
-  kA(w1,[{opacity:0,transform:'translateX(-70%) scale(.8)'},{opacity:1,transform:'none'}],380);
-  await at(500);
-  w2=kEl('kw','Lies.','top:47%;color:var(--yellow)');
-  kA(w2,[{opacity:0,transform:'translateX(70%) scale(.8)'},{opacity:1,transform:'none'}],380);
-  await at(1650);
-  kA(w1,[{transform:'none'},{transform:'translateX(-140%)'}],300,SNAP);kA(w2,[{transform:'none'},{transform:'translateX(140%)'}],300,SNAP);
+  /* beat 0-3: THE SHUFFLE. Two halves of a deck riffle together on the riser and square up into one stack. */
+  var cw=Math.min(86,W*.22),sk;
+  for(i=0;i<14;i++){
+    var sd=i%2?1:-1,sc=kEl('kc','','left:calc(50% - '+cw/2+'px);top:30%;--cw:'+cw+'px;transform-origin:50% 190%');sc.appendChild(backEl());
+    kA(sc,[{opacity:0,transform:'translate('+sd*W*.7+'px,-30px) rotate('+sd*38+'deg)'},{opacity:1,transform:'translate('+sd*cw*.5+'px,-6px) rotate('+sd*7+'deg)',offset:.62},{opacity:1,transform:'translate('+((i%3)-1)*1.5+'px,'+(-i*.6)+'px) rotate('+(((i%5)-2)*.8)+'deg)'}],420,SPRING,i*95);
+    (function(d){setTimeout(function(){if(S.tutId===id)Snd.flick();},d);})(i*95+250);
+  }
   await at(1960);kin.innerHTML='';
   /* beat 4-7: seven cards flick in and fan, the middle one flips: a 9 */
-  var cw=Math.min(86,W*.22),cards=[];
+  var cards=[];
   for(i=0;i<7;i++){
     var c=kEl('kc','','left:calc(50% - '+cw/2+'px);top:30%;--cw:'+cw+'px;transform-origin:50% 190%');c.appendChild(backEl());cards.push(c);
     var side=i%2?1:-1,ang=(i-3)*10;
-    kA(c,[{opacity:0,transform:'translate('+side*W*.9+'px,'+H*.35+'px) rotate('+side*160+'deg)'},{opacity:1,transform:'rotate('+ang+'deg)'}],480,SPRING,i*60);
+    kA(c,[{opacity:1,transform:'rotate(0deg)'},{opacity:1,transform:'rotate('+ang+'deg)'}],480,SPRING,i*35);
   }
   await at(3000);
   var mid=cards[3];Snd.flipTick(2);
@@ -1512,16 +1516,54 @@ async function kinetic(id){
   await at(7700);
   kA(kin,[{transform:'none'},{transform:'scale(.92)',opacity:0}],220,SNAP);
   await at(7940);
-  kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';kin.style.background='#d9232d';
-  /* beat 16: LIAR! on the downbeat, then the iris */
+  kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';
+  /* beat 16-23 (8.0-12.0s): cut to THE GAME. Seat positions come from the same CSS vars as the real table, so it matches. */
   await at(8000);
+  var mc=castOf(['Uncle','Goatie','Foxy','Biralo']),slots=[['left','row2'],['left','row1'],['right','row1'],['right','row2']],tl4=[];
+  mc.forEach(function(rr,q){
+    var t=kEl('kc','',slots[q][0]+':6%;top:var(--'+slots[q][1]+');width:76px;display:flex;flex-direction:column;align-items:center');
+    t.innerHTML='<div class="av" style="--c1:'+rr.c1+';--c2:'+rr.c2+'"><span class="f">'+rr.em+'</span><span class="nm">'+rr.name+'</span></div>';
+    var fan=document.createElement('div');fan.style.cssText='position:relative;width:76px;height:52px';
+    for(var k=0;k<5;k++){var bk=backEl();bk.style.cssText='--cw:32px;position:absolute;left:'+(22+(k-2)*7)+'px;top:'+(3+Math.abs(k-2)*2)+'px;transform:rotate('+((k-2)*9)+'deg)';fan.appendChild(bk);}
+    t.appendChild(fan);tl4.push(t);
+    kA(t,[{opacity:0,transform:'scale(.5) translateY(24px)'},{opacity:1,transform:'none'}],320,SPRING,q*70);
+  });
+  var pileM=kEl('kc','','left:50%;top:var(--mid);width:130px;height:110px;margin:-55px 0 0 -65px');
+  [[-9,-6,-12],[8,4,9],[-2,10,3]].forEach(function(x){var bk=backEl();bk.style.cssText='--cw:56px;position:absolute;left:37px;top:20px;transform:translate('+x[0]+'px,'+x[1]+'px) rotate('+x[2]+'deg)';pileM.appendChild(bk);});
+  kA(pileM,[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'none'}],300,SPRING,200);
+  var panel=kEl('kc','','left:0;right:0;bottom:0;height:100px;background:var(--panel);border-radius:26px 26px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.4)');
+  panel.innerHTML='<div class="av" style="position:absolute;left:14px;top:18px;width:64px;height:64px;font-size:36px;--c1:#9ad0ff;--c2:#4a86e0;border-color:var(--yellow-d)"><span class="f">😎</span><span class="nm">You</span></div>'+
+    '<div class="mact" style="position:absolute;left:92px;right:92px;top:20px;height:60px;border-radius:30px;background:#2a2d34;color:#7d8492;font-weight:900;font-size:15px;line-height:60px;text-align:center">Tap cards, or drag to the pile</div>'+
+    '<div style="position:absolute;right:14px;top:18px;width:64px;height:64px;border-radius:18px;border:3px solid var(--yellow-d);background:linear-gradient(#ffd75e,#f08a1c);color:#241a00;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center">GIF</div>';
+  var hw=kEl('kc','','left:0;right:0;bottom:78px;height:84px');
+  [D(0,0),D(3,2),D(5,3),D(6,1),D(8,1),D(10,3),D(12,0)].forEach(function(c,k){var e=cardEl(c);e.style.cssText+=';--cw:58px;position:absolute;bottom:0;left:'+(W/2-29+(k-3)*34)+'px;transform-origin:50% 160%;transform:translateY('+((k-3)*(k-3)*2)+'px) rotate('+((k-3)*3.5)+'deg);z-index:'+k;hw.appendChild(e);});
+  kA(panel,[{transform:'translateY(100%)'},{transform:'none'}],340,SPRING);kA(hw,[{opacity:0,transform:'translateY(60%)'},{opacity:1,transform:'none'}],380,SPRING,80);
+  function ring(q){tl4.forEach(function(t,k){t.querySelector('.av').style.borderColor=(k===q?'var(--green)':'transparent');});}
+  function flyTo(fromEl,toEl){var a=ctr(fromEl),b=ctr(toEl),e=kEl('kc','','left:'+(a.x-28)+'px;top:'+(a.y-39)+'px;--cw:56px;z-index:5');e.appendChild(backEl());kA(e,[{transform:'translate(0,0) rotate(0deg)'},{transform:'translate('+(b.x-a.x)+'px,'+(b.y-a.y)+'px) rotate('+rnd(-14,14)+'deg)'}],380,'cubic-bezier(.3,.7,.35,1)');Snd.flick();return e;}
+  function pill(name,txt){var w=kEl('kc','','left:0;right:0;top:calc(var(--mid) - 98px);text-align:center;z-index:6');w.innerHTML='<span style="display:inline-block;background:#2d3139;padding:6px 12px;border-radius:11px;font-weight:800;font-size:15px;color:#e8ebf0"><small style="font-size:11px;color:var(--muted);margin-right:5px">'+name+'</small>'+txt+'</span>';kA(w,[{opacity:0,transform:'translateY(8px) scale(.9)'},{opacity:1,transform:'none'}],240,SPRING);return w;}
+  function bub(q,html,emo){var rr=ctr(tl4[q].querySelector('.av')),o=kEl('kc','','left:'+rr.x+'px;top:'+(rr.y-rr.h/2-6)+'px;transform:translate(-50%,-100%);z-index:7'),i2=document.createElement('div');i2.style.cssText=emo?'font-size:46px;line-height:1':'background:#fff;color:#17181c;padding:6px 11px;border-radius:12px;font-weight:900;font-size:15px;white-space:nowrap;box-shadow:0 6px 14px rgba(0,0,0,.5)';i2.innerHTML=html;o.appendChild(i2);kA(i2,[{opacity:0,transform:'scale(.3) translateY(14px)'},{opacity:1,transform:'none'}],300,SPRING);Snd.pop();return o;}
+  var pl,act=panel.querySelector('.mact');
+  await at(8500);ring(0);pl=pill('Uncle','One Ace');flyTo(tl4[0].querySelector('.av'),pileM);               /* beat 17: a claim, a card in */
+  await at(9000);bub(3,'😹',true);                                                                          /* beat 18: the cat laughs */
+  await at(9500);ring(1);kA(pl,[{opacity:1},{opacity:0}],160);pl=pill('Goatie','Two Twos');flyTo(tl4[1].querySelector('.av'),pileM);   /* beat 19 */
+  await at(10000);ring(2);bub(2,'Tait!');                                                                   /* beat 20: someone is suspicious */
+  await at(10500);ring(-1);act.style.background='#ed5b57';act.style.color='#fff';act.style.fontSize='22px';act.textContent='LIAR!';   /* beat 21: you call it */
+  kA(act,[{transform:'scale(.92)'},{transform:'scale(1)'}],200,SPRING);buzz('medium');
+  await at(11000);                                                                                          /* beat 22: the flip */
+  var pc=ctr(pileM),fc=kEl('kc','','left:'+(pc.x-30)+'px;top:'+(pc.y-42)+'px;--cw:60px;z-index:8');fc.appendChild(cardEl(D(8,1)));
+  kA(fc,[{transform:'scaleX(0) translateY(-10px)'},{transform:'scale(1.15)'}],260,SPRING);Snd.flipTick(2);
+  await at(11500);bub(1,'Satya nas!');bub(3,'😹',true);                                                      /* beat 23: busted, and the cat is delighted */
+  await at(11940);
+  kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';kin.style.background='#d9232d';
+  /* beat 24: LIAR! on the downbeat, then the iris */
+  await at(12000);
   var li=kEl('kw','LIAR!','top:var(--mid);font-size:min(38vw,160px);color:#fff');
   kA(li,[{opacity:0,transform:'scale(3) rotate(5deg)'},{opacity:1,transform:'rotate(-4deg)'}],280);buzz('heavy');
   var fl2=$('#flash');fl2.style.setProperty('--fc','#fff');fl2.classList.remove('fire');void fl2.offsetWidth;fl2.classList.add('fire');
-  await at(9000);
+  await at(13000);
   setCine(false);
   var ir=kin.animate([{clipPath:'circle(150% at 50% 50%)'},{clipPath:'circle(0% at 50% 50%)'}],{duration:500,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'});
-  Snd.whoosh();await at(9520);
+  Snd.whoosh();await at(13520);
   ir.cancel();killKin();
 }
 async function tutBody(id){
@@ -1592,7 +1634,9 @@ async function tutBody(id){
   /* ---- consequence, then the recap ---- */
   await sleep(300);chk(id);
   hint('😵','Liars take the pile');
-  await sleep(2600);chk(id);hintOff();
+  await sleep(500);chk(id);say(S.players[3],'😹',true);
+  await sleep(450);chk(id);say(S.players[4],'😹',true);
+  await sleep(1650);chk(id);hintOff();
   endTutorial(id);
 }
 function endTutorial(id){
