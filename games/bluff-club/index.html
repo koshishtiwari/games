@@ -704,13 +704,16 @@ function deckShow(total){
 }
 function deckTrim(n){var L=deckLayers(n);while(deckEls.length>L){deckEls.pop().remove();}}
 function deckHide(){$('#deck').style.display='none';}
-function flyCard(fromEl,toEl,sc,ms){
+/* Flying cards come from a small pool (no DOM creation per card) and use pre-measured start/end points (no layout reads per card). */
+var flyPool=[];
+function flyCardFast(a,b,sc,ms){
   try{
-    var a=ctr(fromEl),b=ctr(toEl),e=backEl();
-    e.style.cssText='--cw:56px;position:fixed;z-index:70;pointer-events:none;left:'+(a.x-28)+'px;top:'+(a.y-39)+'px';document.body.appendChild(e);
+    var e=flyPool.pop();
+    if(!e){e=backEl();e.style.cssText='--cw:56px;position:fixed;z-index:70;pointer-events:none;left:0;top:0;will-change:transform';document.body.appendChild(e);}
+    e.style.display='';e.style.left=(a.x-28)+'px';e.style.top=(a.y-39)+'px';
     var dx=b.x-a.x,dy=b.y-a.y;
-    e.animate([{transform:'translate(0,0) scale(1) rotate(0deg)'},{transform:'translate('+dx*.55+'px,'+(dy*.55-14)+'px) scale('+((1+sc)/2)+') rotate('+rnd(-12,12)+'deg)',offset:.6},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+') rotate('+rnd(-18,18)+'deg)'}],{duration:ms,easing:'cubic-bezier(.3,.7,.35,1)',fill:'forwards'});
-    setTimeout(function(){e.remove();},ms+30);
+    var an=e.animate([{transform:'translate(0,0) scale(1) rotate(0deg)'},{transform:'translate('+dx*.55+'px,'+(dy*.55-14)+'px) scale('+((1+sc)/2)+') rotate('+rnd(-12,12)+'deg)',offset:.6},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+') rotate('+rnd(-18,18)+'deg)'}],{duration:ms,easing:'cubic-bezier(.3,.7,.35,1)',fill:'forwards'});
+    an.onfinish=function(){an.cancel();e.style.display='none';flyPool.push(e);};
   }catch(err){}
 }
 function dealAnim(){
@@ -718,15 +721,18 @@ function dealAnim(){
   while(seq.length<total){if(left[i]>0){seq.push(i);left[i]--;}i=(i+1)%5;}
   S.dealShown=[0,0,0,0,0];S.dealing=true;S.dealTurn=-1;deckShow(total);
   var ms=$('#myStack');ms._m=-1;ms.style.display='block';renderAll();
+  var from=ctr(deckEls.length?deckEls[deckEls.length-1]:$('#deck')),tos=[ctr($('#myStack'))];for(var q=1;q<=4;q++)tos.push(ctr(seatEl(q).querySelector('.fan')));
+  var prevTurn=-1;
+  function dealActive(pi){if(prevTurn>=0)(prevTurn===0?$('#me'):seatEl(prevTurn)).classList.remove('active');(pi===0?$('#me'):seatEl(pi)).classList.add('active');prevTurn=pi;}
+  function dealLand(pi){var n=S.dealShown[pi];if(pi===0)renderMyStack(n);else{var el=seatEl(pi),cn=el.querySelector('.cnt');cn.textContent=n;cn.style.display=n?'':'none';renderFan(pi,n);}}
   var gap=52,pause=90,flight=320,t=0,times=[];
   seq.forEach(function(pi,n){times.push(t);t+=gap+(pi===seq[Math.min(n+1,seq.length-1)]||pi===4?pause:0);});
   seq.forEach(function(pi,n){
     setTimeout(function(){
       if(g!==S.gid)return;
-      S.dealTurn=pi;renderSeats();
-      var to=pi===0?$('#myStack'):seatEl(pi).querySelector('.fan');
-      flyCard(deckEls.length?deckEls[deckEls.length-1]:$('#deck'),to,pi===0?.79:.54,flight);deckTrim(total-n-1);Snd.flick();
-      setTimeout(function(){if(g!==S.gid)return;S.dealShown[pi]++;renderSeats();},flight);
+      S.dealTurn=pi;dealActive(pi);
+      flyCardFast(from,tos[pi],pi===0?.79:.54,flight);deckTrim(total-n-1);Snd.flick();
+      setTimeout(function(){if(g!==S.gid)return;S.dealShown[pi]++;dealLand(pi);},flight);
     },times[n]);
   });
   var end=t+flight+260,mine=S.players[0].hand.length;
@@ -763,22 +769,27 @@ function buildSeats(){
 }
 function seatEl(i){return i===0?$('#me'):document.querySelector('.seat[data-i="'+i+'"]');}
 function shownCount(i){return S.dealing?(S.dealShown[i]||0):S.players[i].hand.length;}
+/* Card backs are reused: only the count of elements and their positions change, nothing is rebuilt on every deal tick. */
+function syncBacks(box,m,place){
+  var els=(box._els||(box._els=[])).filter(function(e){return e.parentNode===box;});box._els=els;
+  var cnt=box.querySelector('.cnt');
+  while(els.length>m)els.pop().remove();
+  while(els.length<m){var e=backEl();box.insertBefore(e,cnt);els.push(e);}
+  for(var k=0;k<m;k++)place(els[k],k);
+}
 function renderFan(i,n){
   var fan=seatEl(i).querySelector('.fan'),m=Math.min(n,8);
   if(fan._m===m)return;fan._m=m;
-  var old=fan.querySelectorAll('.card');for(var q=0;q<old.length;q++)old[q].remove();
-  var cnt=fan.querySelector('.cnt');
-  for(var k=0;k<m;k++){
-    var t=m>1?(k/(m-1)-.5):0,e=backEl();
+  syncBacks(fan,m,function(e,k){
+    var t=m>1?(k/(m-1)-.5):0;
     e.style.left=(18+t*Math.min(36,6*(m-1)))+'px';e.style.top=(2+Math.abs(t)*5)+'px';e.style.transform='rotate('+(t*28).toFixed(1)+'deg)';e.style.zIndex=k;
-    fan.insertBefore(e,cnt);
-  }
+  });
 }
 function renderSeats(){
   for(var i=1;i<=4;i++){
     var el=seatEl(i),n=shownCount(i),cn=el.querySelector('.cnt');
     cn.textContent=n;cn.style.display=n?'':'none';renderFan(i,n);
-    if(lastCounts[i]!==undefined&&lastCounts[i]!==n){cn.classList.remove('tick');void cn.offsetWidth;cn.classList.add('tick');}
+    if(!S.dealing&&lastCounts[i]!==undefined&&lastCounts[i]!==n){cn.classList.remove('tick');void cn.offsetWidth;cn.classList.add('tick');}
     lastCounts[i]=n;
     el.classList.toggle('active',(S.phase==='turn'&&S.cur===i&&S.tut)||(S.dealing&&S.dealTurn===i));
     el.classList.toggle('thinking',S.phase==='turn'&&S.cur===i&&!S.tut);
@@ -789,9 +800,10 @@ function renderSeats(){
 function renderMyStack(n){
   var st=$('#myStack'),m=Math.min(n,9);st.querySelector('.cnt').textContent=n;
   if(st._m===m)return;st._m=m;
-  var old=st.querySelectorAll('.card');for(var q=0;q<old.length;q++)old[q].remove();
-  var cnt=st.querySelector('.cnt');
-  for(var k=0;k<m;k++){var t=m>1?(k/(m-1)-.5):0,e=backEl();e.style.left=(43+t*Math.min(60,9*(m-1)))+'px';e.style.top=(10+Math.abs(t)*8)+'px';e.style.transform='rotate('+(t*34).toFixed(1)+'deg)';e.style.zIndex=k;st.insertBefore(e,cnt);}
+  syncBacks(st,m,function(e,k){
+    var t=m>1?(k/(m-1)-.5):0;
+    e.style.left=(43+t*Math.min(60,9*(m-1)))+'px';e.style.top=(10+Math.abs(t)*8)+'px';e.style.transform='rotate('+(t*34).toFixed(1)+'deg)';e.style.zIndex=k;
+  });
 }
 
 /* ---- the pile is made of real card elements: the cards you throw ARE the cards that land ---- */
