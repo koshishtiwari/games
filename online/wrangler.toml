@@ -1,0 +1,24 @@
+name = "pipal-bluff-online"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# No routes here: the owner adds them.
+# No [vars]. Set these as secrets (never commit values):
+#   wrangler secret put SUPABASE_URL
+#   wrangler secret put SUPABASE_PUBLISHABLE_KEY
+#   wrangler secret put SUPABASE_SECRET_KEY
+#   wrangler secret put ROOM_SECRET
+# DEV_AUTH must NEVER be set in production. It accepts `dev:<name>` tokens and
+# disables all money movement. Local dev only: `--var DEV_AUTH:1`.
+
+[[durable_objects.bindings]]
+name = "MATCHMAKER"
+class_name = "Matchmaker"
+
+[[durable_objects.bindings]]
+name = "ROOM"
+class_name = "Room"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Matchmaker", "Room"]

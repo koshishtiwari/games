@@ -1,0 +1,15 @@
+{
+  "name": "pipal-bluff-online",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/engine.test.mjs test/sim.test.mjs",
+    "e2e": "node test/e2e.mjs",
+    "dev": "wrangler dev --local --var DEV_AUTH:1 --var ROOM_SECRET:dev-room-secret"
+  },
+  "devDependencies": {
+    "wrangler": "^4",
+    "ws": "^8"
+  }
+}

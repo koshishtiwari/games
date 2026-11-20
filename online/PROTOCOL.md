@@ -13,7 +13,7 @@ Rules of the game itself are the ones in `games/bluff-club/index.html` (`play`, 
     If honest and the player who played now has 0 cards, that player wins. Otherwise the next turn is `next(player who played)`.
 - Phases: `lobby`, `turn`, `window`, `reveal`, `over`. `reveal` lasts `REVEAL_MS` (clients animate), then the next `turn` starts.
 - Turn timer `TURN_MS`. On timeout the server auto-plays one random card claiming its true rank. 2 timeouts in a row (or a disconnect longer than `GRACE_MS`) and that seat is taken over by a bot ("forfeited").
-- Constants: `WINDOW_MS=5000`, `TURN_MS=25000`, `REVEAL_MS=6500`, `GRACE_MS=25000`, `MIN_HUMANS=2`, `QUEUE_FILL_MS=8000`, `FREE_SOLO_MS=20000`.
+- Constants: `WINDOW_MS=5000`, `TURN_MS=25000`, `REVEAL_MS=8000`, `GRACE_MS=25000`, `MIN_HUMANS=2`, `QUEUE_FILL_MS=8000`, `FREE_SOLO_MS=20000`.
 
 ## 2. Money (fee tiers: 0, 10, 50 gems; `0` = free practice, no escrow)
 - At match start each human pays `fee` into escrow (all-or-nothing via RPC). `pot = fee * humans`. `rake = floor(pot * 0.10)` is burned (a sink).
