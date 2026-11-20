@@ -1,0 +1,13 @@
+{
+  "name": "pipal-games",
+  "private": true,
+  "scripts": {
+    "manifest": "node scripts/games-manifest.js",
+    "build:flip": "node scripts/build-flip.cjs",
+    "deploy": "bash scripts/deploy.sh"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "wrangler": "^4.0.0"
+  }
+}

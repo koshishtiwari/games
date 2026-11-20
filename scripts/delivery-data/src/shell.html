@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#0b1522"/>
+<title>Delivery</title>
+<style>
+__CSS__
+</style>
+</head>
+<body>
+<div id="boot">
+  <div class="b-top"><span>Nepal, 77 districts</span></div>
+  <div class="b-main">
+    <div class="b-title">Delivery</div>
+    <div class="b-sub">Fly the mountains. Learn the map.</div>
+    <div class="b-bar"><i id="b-fill"></i></div>
+    <div id="b-txt">Starting</div>
+  </div>
+</div>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hide">
+  <div id="topbar">
+    <button id="mapBtn" aria-label="Map zoom"><canvas id="mini"></canvas><span id="mapScale">200 km</span></button>
+    <div id="ticket">
+      <div class="t-row"><span id="t-leg">Delivery 1 of 8</span><span id="t-pts">0</span></div>
+      <div class="t-to">Deliver to</div>
+      <b id="m-name"></b>
+      <span id="m-alias"></span>
+      <div id="m-hints"></div>
+    </div>
+    <button id="pauseBtn" aria-label="Pause"><i></i><i></i></button>
+  </div>
+  <div id="peaks"></div>
+  <svg id="hintArrow" viewBox="-20 -20 40 40"><path d="M0 -15 L12 11 L0 5 L-12 11 Z"/></svg>
+  <div id="outside"><b>Outside Nepal</b><span id="outName"></span></div>
+  <div id="warn">Terrain</div>
+  <div id="tip"></div>
+  <div id="instr"><span id="i-clock">06:30</span><span id="i-alt">0 m</span><span id="i-hdg">000</span><span id="i-spd">0</span></div>
+  <div id="away">Package away</div>
+  <svg id="ring" viewBox="0 0 48 48"><circle class="t" cx="24" cy="24" r="22"/><circle class="p" cx="24" cy="24" r="22"/></svg>
+  <div id="ctl">
+    <button id="hintBtn"><span class="lab">Hint</span><span id="hintDots"></span></button>
+    <button id="dropBtn"><svg viewBox="0 0 100 100"><circle class="rt" cx="50" cy="50" r="47"/><circle class="rp" cx="50" cy="50" r="47"/></svg><span id="dropLab">Drop</span></button>
+  </div>
+</div>
+<div id="cine" class="hide"><i></i><i></i></div>
+<div id="reveal"><div id="rv-k"></div><div id="rv-h"></div><div id="rv-1"></div><div id="rv-2"></div><div id="rv-3">Tap to continue</div></div>
+
+<div id="pre" class="screen hide">
+  <div class="pass">
+    <div class="kick">Departure</div>
+    <div class="p-ap" id="pre-ap"></div>
+    <div class="p-sub" id="pre-sub"></div>
+    <div class="grid3">
+      <div><span>Local time</span><b id="pre-time">06:30</b></div>
+      <div><span>Learned</span><b id="pre-learn">0/77</b></div>
+      <div><span>Mastered</span><b id="pre-mast">0/77</b></div>
+    </div>
+    <div class="bar"><i id="pre-bar"></i></div>
+    <button class="row" id="bordBtn"><span>Borders</span><b id="bordV">On</b></button>
+    <button class="row" id="peakBtn"><span>Peak labels</span><b id="peakV">On</b></button>
+    <button class="row" id="namesBtn"><span>Names on map</span><b id="namesV">On</b></button>
+    <div class="note" id="bordNote"></div>
+    <button class="go" id="goBtn">Take off</button>
+  </div>
+  <div class="credit">Boundaries: Survey Department of Nepal / UN OCHA, CC BY 3.0 IGO. Elevation: AWS Terrain Tiles. Roads, buildings and peaks: © OpenStreetMap contributors (ODbL), Overture Maps, Microsoft and Google open buildings (CDLA-Permissive-2.0, ODbL). Country shapes: Natural Earth.</div>
+</div>
+
+<div id="pause" class="screen hide">
+  <div class="pass">
+    <div class="kick">Paused</div>
+    <div class="p-ap">Flight</div>
+    <button class="row" id="pBord"><span>Borders</span><b id="pBordV">On</b></button>
+    <button class="row" id="pPeak"><span>Peak labels</span><b id="pPeakV">On</b></button>
+    <button class="row" id="pNames"><span>Names on map</span><b id="pNamesV">On</b></button>
+    <button class="row" id="pSound"><span>Sound</span><b id="pSoundV">On</b></button>
+    <button class="go" id="resumeBtn">Resume</button>
+    <button class="go quiet" id="endBtn">End flight</button>
+  </div>
+</div>
+
+<div id="res" class="screen hide">
+  <div class="log">
+    <div class="log-head"><div class="kick">Flight log</div><div class="big" id="res-h"></div><div class="mid" id="res-sub"></div></div>
+    <div class="log-body">
+      <div id="atlas-wrap"><canvas id="atlas"></canvas><div id="legend"><i style="background:var(--hit)"></i>Hit<i style="background:var(--near)"></i>Near<i style="background:var(--far)"></i>Far</div></div>
+      <div class="log-side"><div id="log-rows"></div><div class="stats" id="res-stats"></div></div>
+    </div>
+    <button class="go" id="againBtn">Fly again</button>
+    <div class="credit">Boundaries: Survey Department of Nepal / UN OCHA, CC BY 3.0 IGO. Elevation: AWS Terrain Tiles. Map data © OpenStreetMap contributors, Overture Maps.</div>
+  </div>
+</div>
+
+<script type="text/plain" id="src-three">__THREE__</script>
+<script type="text/plain" id="src-game">__GAME__</script>
+<script>
+// Let the boot screen paint before the heavy scripts are parsed.
+(function(){
+  function run(id){var s=document.createElement('script');s.text=document.getElementById(id).text;document.head.appendChild(s);}
+  function go(){
+    try{run('src-three');run('src-game');}
+    catch(e){var t=document.getElementById('b-txt');if(t)t.textContent='Could not start: '+e.message;}
+  }
+  requestAnimationFrame(function(){setTimeout(go,30);});
+})();
+</script>
+</body>
+</html>

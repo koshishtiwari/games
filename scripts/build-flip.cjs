@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const esbuild = require('esbuild');
+const root = path.resolve(__dirname, '../games/flip');
+const result = esbuild.buildSync({ entryPoints: [path.join(root, 'src/game.mjs')], bundle: true, format: 'iife', platform: 'browser', target: 'es2020', minify: true, legalComments: 'inline', write: false });
+const css = fs.readFileSync(path.join(root, 'src/style.css'), 'utf8');
+const script = result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
+const html = fs.readFileSync(path.join(root, 'src/shell.html'), 'utf8').replace('/* FLIP_STYLE */', () => css).replace('/* FLIP_SCRIPT */', () => script);
+fs.writeFileSync(path.join(root, 'index.html'), html);
+console.log('Built self-contained Flip bundle:', Buffer.byteLength(html), 'bytes');
