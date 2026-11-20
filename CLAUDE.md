@@ -69,7 +69,7 @@ New games should normally set: `signalsReady: true`, `sendsLayout: true`, `gemPi
 
 
 ### Per-game notes
-- **bluff-club:** inside the shell it relies on the native settings menu for Sound and How to play, so its `games.capabilities` must be `{"sound": true, "menuItems": [{"id":"help","label":"How to play","icon":"help-circle-outline","event":"howToPlay"}]}` (plus `signalsReady`/`gemPill` as wanted). The game hides its own sound and help buttons once the shell sends its first `settings` message, and shows them again in a plain browser. Reactions open from tapping the player's own avatar (bottom left), with a light blur behind.
+- **bluff-club:** inside the shell it relies on the native settings menu for Sound and How to play, so its `games.capabilities` must include `"sound": true, "menuItems": [{"id":"help","label":"How to play","icon":"help-circle-outline","event":"howToPlay"}]` (plus `signalsReady`/`gemPill` as wanted). The game hides its own sound and help buttons whenever `window.pipal` exists, and shows them in a plain browser (no gear there). Reactions open from tapping the player's own avatar (bottom left), with a light blur behind.
 
 ## Build and deploy
 ```bash

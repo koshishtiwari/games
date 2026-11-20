@@ -106,7 +106,6 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 body.shell #sndBtn,body.shell #helpBtn{display:none}
 #rxBlur{position:absolute;inset:0;z-index:34;display:none;background:rgba(8,10,14,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 #rxBlur.open{display:block;animation:rxin .18s ease-out}@keyframes rxin{from{opacity:0}}
-#me .rxb{position:absolute;right:-4px;top:-4px;z-index:2;width:22px;height:22px;border-radius:11px;background:#fff;color:#241a00;font-size:12px;line-height:22px;text-align:center;box-shadow:0 2px 0 rgba(0,0,0,.35);pointer-events:none}
 #me .av{cursor:pointer}
 #emojis{position:absolute;left:10px;bottom:120px;transform-origin:50% 100%;width:58px;padding:8px 0;border-radius:29px;background:#2a2d34;display:none;flex-direction:column;align-items:center;gap:6px;z-index:35;box-shadow:0 8px 28px rgba(0,0,0,.6)}
 #emojis.open{display:flex;animation:rxpop .2s cubic-bezier(.2,1.3,.4,1)}@keyframes rxpop{from{opacity:0;transform:translateY(12px) scale(.85)}}
@@ -314,7 +313,7 @@ body.tut #hud{display:none}
     <div id="rankSheet"></div>
     <div id="handWrap"><div id="myStack"><div class="cnt"></div></div><div id="hand"></div></div>
     <div id="panel">
-      <div id="me" class="me"><div class="bub" id="meBub"></div><div class="mood"></div><div class="av"><span class="f">😎</span><span class="nm">You</span></div><i class="rxb">💬</i></div>
+      <div id="me" class="me"><div class="bub" id="meBub"></div><div class="mood"></div><div class="av"><span class="f">😎</span><span class="nm">You</span></div></div>
       <button id="act" class="wait" disabled><span id="actTxt"></span><i id="bar" style="display:none"></i></button>
       <button id="gifBtn" aria-label="Send a GIF"><svg viewBox="0 0 24 24" fill="none" stroke="#241a00" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="M10 9.5l5 2.5-5 2.5z" fill="#241a00"/></svg><span>GIF</span></button>
     </div>
@@ -1753,9 +1752,10 @@ document.addEventListener('pointerdown',function(){Snd.unlock();},{passive:true}
 window.addEventListener('resize',function(){if(S.players.length&&S.players[0].hand)renderHand();});
 document.addEventListener('visibilitychange',function(){if(document.hidden)Snd.pause();else if(!paused){Snd.resume();FX.kick();}});
 if(P){
+  document.body.classList.add('shell');   /* inside the Pipal app: sound + How to play are in the native settings menu */
   P.on('pause',function(){paused=true;Snd.pause();});
   P.on('resume',function(){paused=false;Snd.resume();FX.kick();});
-  P.on('settings',function(m){if(m&&typeof m.sound==='boolean'){document.body.classList.add('shell');Snd.set(m.sound);sndIcon();}});
+  P.on('settings',function(m){if(m&&typeof m.sound==='boolean'){Snd.set(m.sound);sndIcon();}});
   P.on('howToPlay',function(){rxSet(false);Snd.unlock();startTutorial();});
   P.on('resetGame',function(){save('wins',0);save('plays',0);save('seen',0);S.gid++;cancelAll(true);showMenu();});
 }
