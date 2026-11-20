@@ -973,7 +973,18 @@ function renderAll(){renderSeats();pileSync();renderHand();renderAct();renderCla
 
 /* ================= SPEECH ================= */
 var bubT={};
+var faceT=0;
 function say(p,text,emo){
+  /* your own reaction replaces your face for a few seconds, no speech bubble */
+  if(emo&&p.idx===0){
+    var f=$('#me .av .f');
+    if(f){
+      if(!f.dataset.o)f.dataset.o=f.textContent;
+      f.textContent=text;f.animate([{transform:'scale(.4)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:320,easing:'cubic-bezier(.2,1.4,.4,1)'});
+      clearTimeout(faceT);faceT=setTimeout(function(){f.textContent=f.dataset.o;delete f.dataset.o;},3000);
+    }
+    Snd.pop();return;
+  }
   var el=p.idx===0?$('#meBub'):seatEl(p.idx).querySelector('.bub');if(!el)return;
   el.textContent=text;el.classList.toggle('emo',!!emo);el.classList.add('show');
   clearTimeout(bubT[p.idx]);bubT[p.idx]=setTimeout(function(){el.classList.remove('show');},emo?1700:2200);
