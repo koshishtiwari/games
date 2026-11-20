@@ -67,6 +67,10 @@ A game's chrome is configured by the `games.capabilities` jsonb column on its ro
 
 New games should normally set: `signalsReady: true`, `sendsLayout: true`, `gemPill` as appropriate (false if the game has no gem economy), `freezeOnPause: true` if dt is clamped. Changing the shell itself (new chrome, new capability keys) is a change in the `pipal` repo plus an app build, so ask the user before assuming a new capability exists.
 
+
+### Per-game notes
+- **bluff-club:** inside the shell it relies on the native settings menu for Sound and How to play, so its `games.capabilities` must be `{"sound": true, "menuItems": [{"id":"help","label":"How to play","icon":"help-circle-outline","event":"howToPlay"}]}` (plus `signalsReady`/`gemPill` as wanted). The game hides its own sound and help buttons once the shell sends its first `settings` message, and shows them again in a plain browser. Reactions open from tapping the player's own avatar (bottom left), with a light blur behind.
+
 ## Build and deploy
 ```bash
 npm install

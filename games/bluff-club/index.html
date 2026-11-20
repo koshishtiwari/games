@@ -101,12 +101,17 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .hb{position:absolute;top:0;width:34px;height:34px;border-radius:17px;background:rgba(0,0,0,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;pointer-events:auto;font-size:15px;font-weight:900}
 .hb svg{width:20px;height:20px}
 .hb:active{transform:scale(.92)}
-#sndBtn{left:94px}#helpBtn{left:136px}#chatBtn{right:58px}
-#emojis{position:absolute;top:calc(env(safe-area-inset-top) + 3px);right:46px;width:58px;padding:8px 0;border-radius:29px;background:#2a2d34;display:none;flex-direction:column;align-items:center;gap:6px;z-index:35;box-shadow:0 8px 28px rgba(0,0,0,.6)}
-#emojis.open{display:flex}
+#sndBtn{left:94px}#helpBtn{left:136px}
+/* inside the Pipal app, sound and How to play live in the native settings menu */
+body.shell #sndBtn,body.shell #helpBtn{display:none}
+#rxBlur{position:absolute;inset:0;z-index:34;display:none;background:rgba(8,10,14,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#rxBlur.open{display:block;animation:rxin .18s ease-out}@keyframes rxin{from{opacity:0}}
+#me .rxb{position:absolute;right:-4px;top:-4px;z-index:2;width:22px;height:22px;border-radius:11px;background:#fff;color:#241a00;font-size:12px;line-height:22px;text-align:center;box-shadow:0 2px 0 rgba(0,0,0,.35);pointer-events:none}
+#me .av{cursor:pointer}
+#emojis{position:absolute;left:10px;bottom:120px;transform-origin:50% 100%;width:58px;padding:8px 0;border-radius:29px;background:#2a2d34;display:none;flex-direction:column;align-items:center;gap:6px;z-index:35;box-shadow:0 8px 28px rgba(0,0,0,.6)}
+#emojis.open{display:flex;animation:rxpop .2s cubic-bezier(.2,1.3,.4,1)}@keyframes rxpop{from{opacity:0;transform:translateY(12px) scale(.85)}}
 #emojis button{width:46px;height:46px;font-size:30px;border-radius:23px;line-height:1}
 #emojis button:active{background:#3a3f48}
-#emojis .x{font-size:24px;font-weight:900}
 body.cine #hud{opacity:0;pointer-events:none}
 
 /* bottom */
@@ -298,8 +303,8 @@ body.tut #hud{display:none}
   <div id="hud">
     <button class="hb" id="sndBtn" aria-label="Sound"></button>
     <button class="hb" id="helpBtn" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.2 9.3a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.3-2.8 4"/><circle cx="12" cy="17.4" r=".6" fill="#fff"/></svg></button>
-    <button class="hb" id="chatBtn" aria-label="Reactions"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h14a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-6.5L7.5 20.5V16.5H5A2.5 2.5 0 0 1 2.5 14V7A2.5 2.5 0 0 1 5 4.5z"/><path d="M8 10.5h.01M12 10.5h.01M16 10.5h.01" stroke-width="3.4"/></svg></button>
   </div>
+  <div id="rxBlur"></div>
   <div id="emojis"></div>
   <div id="gifSheet"><div class="gh"><input id="gifQ" type="search" placeholder="Search KLIPY" autocomplete="off"><button class="gx" id="gifX" aria-label="Close">✕</button></div><div class="chips" id="gifChips"></div><div id="gifGrid"></div><div class="kl">POWERED BY KLIPY</div></div>
 
@@ -309,7 +314,7 @@ body.tut #hud{display:none}
     <div id="rankSheet"></div>
     <div id="handWrap"><div id="myStack"><div class="cnt"></div></div><div id="hand"></div></div>
     <div id="panel">
-      <div id="me" class="me"><div class="bub" id="meBub"></div><div class="mood"></div><div class="av"><span class="f">😎</span><span class="nm">You</span></div></div>
+      <div id="me" class="me"><div class="bub" id="meBub"></div><div class="mood"></div><div class="av"><span class="f">😎</span><span class="nm">You</span></div><i class="rxb">💬</i></div>
       <button id="act" class="wait" disabled><span id="actTxt"></span><i id="bar" style="display:none"></i></button>
       <button id="gifBtn" aria-label="Send a GIF"><svg viewBox="0 0 24 24" fill="none" stroke="#241a00" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="M10 9.5l5 2.5-5 2.5z" fill="#241a00"/></svg><span>GIF</span></button>
     </div>
@@ -1599,7 +1604,7 @@ var GIF=(function(){
     }).catch(function(){if(my===seq)msg('No connection. Emojis still work.');});
   }
   function open(){
-    $('#emojis').classList.remove('open');$('#gifSheet').classList.add('open');Snd.pop();
+    rxSet(false);$('#gifSheet').classList.add('open');Snd.pop();
     if(!$('#gifChips').children.length){
       CHIPS.forEach(function(c,i){var b=document.createElement('button');b.textContent=c[0];if(!i)b.className='on';
         b.addEventListener('click',function(){[].forEach.call($('#gifChips').children,function(x){x.classList.remove('on');});b.classList.add('on');$('#gifQ').value='';load(c[1]);});
@@ -1695,18 +1700,17 @@ var GIF=(function(){
 
 /* ================= REACTIONS + WIRING ================= */
 function buildEmojis(){
-  var box=$('#emojis');box.innerHTML='<button class="x" aria-label="Close">✕</button>';
+  var box=$('#emojis');box.innerHTML='';
   REACTS.forEach(function(em){
     var b=document.createElement('button');b.textContent=em;
     b.addEventListener('click',function(){
-      say(S.players[0]||{idx:0},em,true);box.classList.remove('open');buzz('light');
+      say(S.players[0]||{idx:0},em,true);rxSet(false);buzz('light');
       if(S.players.length>1&&!S.tut&&Math.random()<.6){
         var o=pick(S.players.slice(1)),reply=em==='🤥'?'😠':em==='😠'?'😬':em==='🤢'?'🤢':pick(['😂','❤️','🤡']);
         setTimeout(function(){say(o,reply,true);},700+ri(900));}
     });
     box.appendChild(b);
   });
-  box.querySelector('.x').addEventListener('click',function(){box.classList.remove('open');});
   var gb=document.createElement('button');gb.className='gifb';gb.textContent='GIF';gb.addEventListener('click',function(){GIF.open();});box.appendChild(gb);
 }
 $('#act').addEventListener('click',function(){
@@ -1714,10 +1718,20 @@ $('#act').addEventListener('click',function(){
   if(S.phase==='turn'&&S.cur===0&&S.selN){var me=S.players[0],cards=me.hand.filter(function(c){return S.sel[c.id];});buzz('medium');play(me,cards);}
   else if(S.phase==='window'&&S.last&&S.last.by.idx!==0){callLiar(S.players[0]);}
 });
-$('#gifBtn').addEventListener('click',function(){Snd.unlock();$('#emojis').classList.remove('open');GIF.open();});
+$('#gifBtn').addEventListener('click',function(){Snd.unlock();rxSet(false);GIF.open();});
 $('#claimPill').addEventListener('click',function(){Snd.unlock();$('#rankSheet').classList.toggle('open');Snd.pop();});
 document.addEventListener('pointerdown',function(ev){var sh=$('#rankSheet');if(sh.classList.contains('open')&&ev.target&&ev.target.closest&&!ev.target.closest('#rankSheet')&&!ev.target.closest('#claimPill'))sh.classList.remove('open');},true);
-$('#chatBtn').addEventListener('click',function(){Snd.unlock();$('#emojis').classList.toggle('open');Snd.pop();});
+/* Tap your own avatar (bottom left) for the reactions dropdown; the table blurs a little behind it. */
+function rxSet(on){
+  var box=$('#emojis'),bl=$('#rxBlur');
+  if(on){
+    var av=$('#me .av').getBoundingClientRect();
+    box.style.left=Math.max(6,av.left+av.width/2-29)+'px';box.style.bottom=Math.round(window.innerHeight-av.top+10)+'px';
+  }
+  box.classList.toggle('open',!!on);bl.classList.toggle('open',!!on);
+}
+$('#me .av').addEventListener('click',function(){if(S.tut)return;Snd.unlock();rxSet(!$('#emojis').classList.contains('open'));Snd.pop();});
+$('#rxBlur').addEventListener('click',function(){rxSet(false);});
 var SND_ON='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#fff"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>',
     SND_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#fff"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
 function sndIcon(){$('#sndBtn').innerHTML=Snd.isOn()?SND_ON:SND_OFF;}
@@ -1728,7 +1742,8 @@ document.addEventListener('visibilitychange',function(){if(document.hidden)Snd.p
 if(P){
   P.on('pause',function(){paused=true;Snd.pause();});
   P.on('resume',function(){paused=false;Snd.resume();FX.kick();});
-  P.on('settings',function(m){if(m&&typeof m.sound==='boolean'){Snd.set(m.sound);sndIcon();}});
+  P.on('settings',function(m){if(m&&typeof m.sound==='boolean'){document.body.classList.add('shell');Snd.set(m.sound);sndIcon();}});
+  P.on('howToPlay',function(){rxSet(false);Snd.unlock();startTutorial();});
   P.on('resetGame',function(){save('wins',0);save('plays',0);save('seen',0);S.gid++;cancelAll(true);showMenu();});
 }
 
