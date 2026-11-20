@@ -577,7 +577,7 @@ var Snd=(function(){
       var arp=[60,63,67,72,67,63,67,70],bl=[36,36,39,43];
       for(i=4;i<8;i++){kick(K(i),1);bass(bl[i-4],K(i)+B/2,.3,.9);if(i%2)clap(K(i),.8);}
       for(i=0;i<8;i++)pluck(arp[i],K(4)+i*B/2,.9);
-      tone({f:900,f2:2400,dur:.18,vol:.1,t:K(7.6),bus:ibus});                         /* the flip */
+      tone({f:900,f2:2400,dur:.18,vol:.1,t:t0+8*B,bus:ibus});                         /* the flip */
       /* the held beat (3 beats, 4.0-5.5s): the groove carries on while the arch breathes, then the 9 */
       for(i=0;i<HOLD;i++){var hb=t0+(8+i)*B;kick(hb,1);bass(bl[i%4],hb+B/2,.3,.9);if(i%2===0)clap(hb,.7);}
       for(i=0;i<HOLD*2;i++)pluck(arp[(i+2)%8],t0+8*B+i*B/2,.7);
@@ -1501,19 +1501,24 @@ async function kinetic(id){
       {transform:'translate(0px,'+dy0+'px) rotate('+(((i%3)-1)*1.2)+'deg)',offset:0,easing:'ease-out'},                                     /* on the deck */
       {transform:'translate('+(fx*.1)+'px,'+(dy0-ch*.14)+'px) rotate('+(th*.15)+'deg) scale(1.05)',offset:.16,easing:'cubic-bezier(.3,.6,.4,1)'},   /* peels up off the top */
       {transform:'translate('+(fx*.7)+'px,'+(dy0*.36+fy*.55)+'px) rotate('+(th*.78)+'deg) scale(1.03)',offset:.68,easing:'cubic-bezier(.2,.7,.3,1)'}, /* slides across */
-      {transform:'translate('+fx+'px,'+fy+'px) rotate('+th+'deg)',offset:1}],400,'linear',i*35);
+      {transform:'translate('+fx+'px,'+fy+'px) rotate('+th+'deg)',offset:1}],400,'linear',340+i*35);
   }
-  kA(c1,[{transform:'none'},{transform:zm(W/2,fanTop+ch/2,1.07)}],1440,'cubic-bezier(.3,.6,.3,1)');   /* slow push toward the fan, runs through the held beat */
-  await at(3400);                                                   /* the arch is complete (~2.57s). A held beat (the camera keeps drifting), THEN the middle card is pulled and the camera zooms into it */
+  kA(c1,[{transform:'none'},{transform:zm(W/2,H*.78,1.25)}],340,'cubic-bezier(.3,.6,.3,1)');          /* the shuffle is done: zoom in a bit on the deck */
+  kA(hl,[{opacity:1},{opacity:0}],300,'ease-out',640);                                              /* the deck is gone by the time the last card leaves it */
+  await at(2300);                                                   /* as the cards slide: pan up and zoom out to the fan */
+  kA(c1,[{transform:zm(W/2,H*.78,1.25)},{transform:'none'}],700,'cubic-bezier(.4,0,.2,1)');
+  await at(3000);                                                   /* the held beat: a slow push toward the fan */
+  kA(c1,[{transform:'none'},{transform:zm(W/2,fanTop+ch/2,1.07)}],600,'cubic-bezier(.3,.6,.3,1)');
+  await at(3600);                                                   /* the arch is complete (~2.9s). A held beat, THEN the middle card is pulled and the camera zooms into it */
   var mid=cards[3],pull=H*.48-(fanTop+ch/2);
   mid.style.zIndex=20;
   cards.forEach(function(cc,k){if(k!==3){cc.style.transition='opacity .45s';cc.style.opacity=.3;}});
   kA(mid,[{transform:'translate(0px,0px) scale(1)'},{transform:'translate(0px,'+pull+'px) scale(1.18)'}],280,'cubic-bezier(.3,.7,.35,1)');Snd.flick();
-  kA(c1,[{transform:zm(W/2,fanTop+ch/2,1.07)},{transform:zm(W/2,H*.48,2.05)}],650,'cubic-bezier(.5,0,.2,1)');
-  await at(3800);Snd.flipTick(2);                                   /* the flip */
+  kA(c1,[{transform:zm(W/2,fanTop+ch/2,1.07)},{transform:zm(W/2,H*.48,1.5)}],650,'cubic-bezier(.5,0,.2,1)');
+  await at(4000);Snd.flipTick(2);                                   /* the flip */
   var pm='translate(0px,'+pull+'px) scale(1.18)';
   kA(mid,[{transform:pm},{transform:pm+' scaleX(0)'}],130,'ease-in');
-  await at(3930);
+  await at(4130);
   mid.innerHTML='';mid.appendChild(cardEl(D(8,1)));
   kA(mid,[{transform:pm+' scaleX(0)'},{transform:pm}],260,SPRING);
   var t=kEl('kw','It\'s a <span style="color:var(--yellow)">9</span>.','top:76%;font-size:min(15vw,62px);color:#fff');
