@@ -1498,17 +1498,17 @@ async function kinetic(id){
       {transform:'translate(0px,'+dy0+'px) rotate('+(((i%3)-1)*1.2)+'deg)',offset:0,easing:'ease-out'},                                     /* on the deck */
       {transform:'translate('+(fx*.1)+'px,'+(dy0-ch*.14)+'px) rotate('+(th*.15)+'deg) scale(1.05)',offset:.16,easing:'cubic-bezier(.3,.6,.4,1)'},   /* peels up off the top */
       {transform:'translate('+(fx*.7)+'px,'+(dy0*.36+fy*.55)+'px) rotate('+(th*.78)+'deg) scale(1.03)',offset:.68,easing:'cubic-bezier(.2,.7,.3,1)'}, /* slides across */
-      {transform:'translate('+fx+'px,'+fy+'px) rotate('+th+'deg)',offset:1}],480,'linear',i*55);
+      {transform:'translate('+fx+'px,'+fy+'px) rotate('+th+'deg)',offset:1}],400,'linear',i*35);
   }
   kA(c1,[{transform:'none'},{transform:zm(W/2,fanTop+ch/2,1.07)}],1100,'cubic-bezier(.3,.6,.3,1)');   /* gentle push toward the fan */
-  await at(2450);                                                   /* the middle card is pulled down; the camera zooms into it */
+  await at(2720);                                                   /* the arch is complete (~2.57s), a short beat, THEN the middle card is pulled and the camera zooms into it */
   var mid=cards[3],pull=H*.48-(fanTop+ch/2);
   mid.style.zIndex=20;
   cards.forEach(function(cc,k){if(k!==3){cc.style.transition='opacity .45s';cc.style.opacity=.3;}});
-  kA(mid,[{transform:'translate(0px,0px) rotate(0deg) scale(1)'},{transform:'translate(0px,'+pull*.55+'px) rotate(-4deg) scale(1.1)',offset:.55},{transform:'translate(0px,'+pull+'px) rotate(0deg) scale(1.18)'}],420,'cubic-bezier(.3,.7,.35,1)');Snd.flick();
-  kA(c1,[{transform:zm(W/2,fanTop+ch/2,1.07)},{transform:zm(W/2,H*.48,2.05)}],700,'cubic-bezier(.5,0,.2,1)');
+  kA(mid,[{transform:'translate(0px,0px) scale(1)'},{transform:'translate(0px,'+pull+'px) scale(1.18)'}],280,'cubic-bezier(.3,.7,.35,1)');Snd.flick();
+  kA(c1,[{transform:zm(W/2,fanTop+ch/2,1.07)},{transform:zm(W/2,H*.48,2.05)}],650,'cubic-bezier(.5,0,.2,1)');
   await at(3000);Snd.flipTick(2);                                   /* the flip */
-  var pm='translate(0px,'+pull+'px) rotate(0deg) scale(1.18)';
+  var pm='translate(0px,'+pull+'px) scale(1.18)';
   kA(mid,[{transform:pm},{transform:pm+' scaleX(0)'}],130,'ease-in');
   await at(3130);
   mid.innerHTML='';mid.appendChild(cardEl(D(8,1)));
