@@ -1,4 +1,5 @@
 import { FEES } from './config.js';
+import { sweepStale } from './supa.js';
 export { Matchmaker } from './matchmaker.js';
 export { Room } from './room.js';
 
@@ -19,6 +20,10 @@ function errorSocket(code) {
 }
 
 export default {
+  // cron trigger (wrangler.toml): refund matches stuck in escrow for 90+ minutes
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sweepStale(env, 90).then((r) => { if (!r.ok) console.log('sweepStale failed', JSON.stringify(r)); else if (r.refunded) console.log('sweepStale refunded', r.refunded); }));
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });

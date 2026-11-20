@@ -71,6 +71,21 @@ New games should normally set: `signalsReady: true`, `sendsLayout: true`, `gemPi
 ### Per-game notes
 - **bluff-club:** inside the shell it relies on the native settings menu for Sound and How to play, so its `games.capabilities` must include `"sound": true, "menuItems": [{"id":"help","label":"How to play","icon":"help-circle-outline","event":"howToPlay"}]` (plus `signalsReady`/`gemPill` as wanted). The game hides its own sound and help buttons whenever `window.pipal` exists, and shows them in a plain browser (no gear there). Reactions open from tapping the player's own avatar (bottom left), with a light blur behind.
 
+
+## Online mode (Bluff, quick match with gem entry fees)
+Contract: `online/PROTOCOL.md` (rules, money, endpoints, every message). Server: `online/` (Cloudflare Worker + two Durable Objects, plain JS). Client: the ONLINE MODE block in `games/bluff-club/index.html`. Database: `supabase/migrations/20261121_online_escrow.sql` in the pipal repo (escrow/settle/refund RPCs, service_role only, kill switch `online_enabled`, default 0 = OFF).
+- Tests: `cd online && npm test` (engine + 300-game sim), `npm run e2e` (local wrangler, free tier only). Local play: `npm run dev`, then open the game with `?dev=alice&ws=ws://localhost:8787` (DEV_AUTH: no money moves, fee 0).
+- Money: fee tiers 0/10/50. Winner gets pot minus 10% (burned). A bot or forfeited seat winning refunds each human 90% of their fee. A cron (every 10 min) refunds matches stuck in escrow for 90+ minutes.
+- Auth: the game asks the Pipal app for the user's token via `pipal.user.token()` (needs the next app build; the Play online button hides itself until it exists).
+- **Never set `DEV_AUTH` in production.**
+
+### Go-live checklist (nothing below has been done; every step is production and needs the owner's go)
+1. Pipal repo: apply `20261121_online_escrow.sql` (adds tables/functions, widens the ledger kind check; kill switch stays 0).
+2. `cd online && npx wrangler secret put SUPABASE_URL | SUPABASE_PUBLISHABLE_KEY | SUPABASE_SECRET_KEY | ROOM_SECRET`, then `npx wrangler deploy`, then add a route/custom domain and put it in `ONLINE_URL` in `games/bluff-club/index.html` (default is a placeholder).
+3. Ship an app build with `pipal.user.token` (lib/game-bridge.ts + GameWebViewModal.tsx), then deploy the game bundle and bump its `?v=`.
+4. Test with the free tier first, then `UPDATE game_economy_limits SET value = 1 WHERE key = 'online_enabled'` to allow paid matches. Flip back to 0 to stop new paid matches instantly (settle/refund keep working).
+Known gaps: room state lives in memory (a Durable Object restart ends that match; the cron refunds the escrow later), settle retries 4x then only logs, paid-tier paths are untested against a live Supabase, the GIF reaction is not relayed online (emoji only).
+
 ## Build and deploy
 ```bash
 npm install

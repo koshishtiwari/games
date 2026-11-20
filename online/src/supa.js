@@ -86,3 +86,10 @@ export async function refund(env, matchId) {
   const r = await rpc(env, 'online_match_refund', { p_match: matchId });
   return r.ok && r.data ? r.data : { ok: false, reason: r.error || 'server' };
 }
+
+// Safety net: refund any match stuck in escrow (Worker/DO crashed mid-game). Called by the cron trigger.
+export async function sweepStale(env, minutes = 90) {
+  if (isDev(env)) return { ok: true, skipped: true };
+  const r = await rpc(env, 'online_match_refund_stale', { p_older_than_minutes: minutes });
+  return r.ok ? { ok: true, refunded: r.data } : { ok: false, reason: r.error || 'server' };
+}

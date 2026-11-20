@@ -11,6 +11,10 @@ compatibility_date = "2026-10-01"
 # DEV_AUTH must NEVER be set in production. It accepts `dev:<name>` tokens and
 # disables all money movement. Local dev only: `--var DEV_AUTH:1`.
 
+# Every 10 minutes: refund any match stuck in escrow (safety net for crashes). Needs SUPABASE_* secrets.
+[triggers]
+crons = ["*/10 * * * *"]
+
 [[durable_objects.bindings]]
 name = "MATCHMAKER"
 class_name = "Matchmaker"
