@@ -19,15 +19,17 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
  35%{transform:translate(calc(var(--sh)*1px),calc(var(--sh)*-.8px))}55%{transform:translate(calc(var(--sh)*-.6px),calc(var(--sh)*.4px))}75%{transform:translate(calc(var(--sh)*.4px),calc(var(--sh)*-.3px))}}
 #stage{position:absolute;inset:0;transform-origin:50% 45%}
 #world{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
-#glow{position:absolute;left:50%;top:38%;width:560px;height:560px;margin:-280px 0 0 -280px;border-radius:50%;pointer-events:none;
+#glow{position:absolute;left:50%;top:var(--mid);width:560px;height:560px;margin:-280px 0 0 -280px;border-radius:50%;pointer-events:none;
   background:radial-gradient(circle,rgba(255,255,255,.075) 0,rgba(255,255,255,.03) 35%,transparent 68%)}
 
 /* seats: tile + name strip + card fan, like the reference */
 .seat{position:absolute;width:76px;display:flex;flex-direction:column;align-items:center}
-.seat[data-i="1"]{left:6%;top:48%}
-.seat[data-i="2"]{left:6%;top:20%}
-.seat[data-i="3"]{right:6%;top:20%}
-.seat[data-i="4"]{right:6%;top:48%}
+/* table layout, nudged up: the old 20/38/48 left a big empty gap above the hand. Top row stays clear of the native header. */
+:root{--row1:max(100px,13%);--row2:40%;--mid:31%}
+.seat[data-i="1"]{left:6%;top:var(--row2)}
+.seat[data-i="2"]{left:6%;top:var(--row1)}
+.seat[data-i="3"]{right:6%;top:var(--row1)}
+.seat[data-i="4"]{right:6%;top:var(--row2)}
 .av{position:relative;width:70px;height:70px;border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:40px;
   background:linear-gradient(var(--c1),var(--c2));border:3px solid transparent;transition:border-color .2s,transform .2s}
 .av .f{margin-top:-8px;animation:bob 3.4s ease-in-out infinite}
@@ -55,11 +57,11 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 @keyframes moodp{0%{opacity:0;transform:scale(.3)}15%{opacity:1;transform:scale(1.25)}28%{transform:scale(1)}85%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
 
 /* claim chip + pile */
-#pile{position:absolute;left:50%;top:38%;width:130px;height:110px;margin:-55px 0 0 -65px}
+#pile{position:absolute;left:50%;top:var(--mid);width:130px;height:110px;margin:-55px 0 0 -65px}
 #pileStack{position:absolute;inset:0}
 #pileStack.press{animation:press .22s}@keyframes press{40%{transform:scale(.97)}}
 #pileStack .card{--cw:56px;position:absolute;left:37px;top:20px}
-#deck{position:absolute;left:50%;top:38%;width:130px;height:110px;margin:-55px 0 0 -65px;pointer-events:none;display:none}
+#deck{position:absolute;left:50%;top:var(--mid);width:130px;height:110px;margin:-55px 0 0 -65px;pointer-events:none;display:none}
 #deck .card{--cw:56px;position:absolute;left:37px}
 #pile.drop #pileStack{transform:scale(1.07)}#pile.drop #pileChip{color:var(--yellow)}
 #pileStack{transition:transform .15s}
@@ -68,8 +70,8 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
   font-size:14px;font-weight:900;opacity:0;transition:opacity .15s,transform .25s;box-shadow:0 0 0 1.5px rgba(255,255,255,.2),0 6px 14px rgba(0,0,0,.5);z-index:6}
 #claimTxt.show{opacity:1;transform:translateX(-50%) scale(var(--cz,1))}
 #claimTxt small{font-size:11px;color:var(--muted);font-weight:800;margin-right:5px}
-#rv{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);display:flex;gap:7px;z-index:8;pointer-events:none}
-#rvLbl{position:absolute;left:50%;top:calc(38% - 80px);transform:translateX(-50%);font-size:12px;font-weight:900;letter-spacing:.1em;background:var(--yellow);color:#241a00;padding:4px 11px;border-radius:9px;z-index:9;display:none;white-space:nowrap}
+#rv{position:absolute;left:50%;top:var(--mid);transform:translate(-50%,-50%);display:flex;gap:7px;z-index:8;pointer-events:none}
+#rvLbl{position:absolute;left:50%;top:calc(var(--mid) - 80px);transform:translateX(-50%);font-size:12px;font-weight:900;letter-spacing:.1em;background:var(--yellow);color:#241a00;padding:4px 11px;border-radius:9px;z-index:9;display:none;white-space:nowrap}
 #rv .fc{--cw:54px;animation:rvin .3s both}
 @keyframes rvin{from{transform:translateY(20px) scale(.6);opacity:0}}
 .fc{position:relative;width:var(--cw);height:calc(var(--cw)*1.4);perspective:700px}
@@ -1469,7 +1471,7 @@ async function kinetic(id){
   kin.getAnimations().forEach(function(a){a.cancel();});kin.innerHTML='';kin.style.background='#d9232d';
   /* beat 16: LIAR! on the downbeat, then the iris */
   await at(8000);
-  var li=kEl('kw','LIAR!','top:38%;font-size:min(38vw,160px);color:#fff');
+  var li=kEl('kw','LIAR!','top:var(--mid);font-size:min(38vw,160px);color:#fff');
   kA(li,[{opacity:0,transform:'scale(3) rotate(5deg)'},{opacity:1,transform:'rotate(-4deg)'}],280);buzz('heavy');
   var fl2=$('#flash');fl2.style.setProperty('--fc','#fff');fl2.classList.remove('fire');void fl2.offsetWidth;fl2.classList.add('fire');
   await at(9000);
